@@ -681,6 +681,7 @@ function page(name) {
   if (name === 'deposit') return depositPage();
   if (name === 'withdraw') return withdrawPage();
   if (name === 'withdrawRecord') return withdrawRecordPage();
+  if (name === 'depositRecord') return depositRecordPage();
   if (name === 'history') return historyPage();
   if (name === 'profitloss') return profitLossPage();
 
@@ -749,6 +750,24 @@ function syncDemoAmountInput(){
     el.setAttribute('aria-pressed',selected?'true':'false');
   });
 }
+async function depositRecordPage(){
+  if(!me) return showAuth();
+  shell(`<div class="page member-subpage">
+    <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Deposit Record</h2></div>
+    <div id="memberDepositHistory" class="card">লোড হচ্ছে…</div>
+    <button class="secondary" onclick="page('member')">Member Center</button>
+  </div>`);
+  try {
+    const d=await api('/demo-deposits');
+    const box=document.getElementById('memberDepositHistory');
+    if(!box)return;
+    box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · '+esc(depositText('currencyPrefix'))+Number(x.amount)+' '+esc(depositText('historyDemoSuffix'))+'<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?depositText('statusPending'):x.status==='accepted'?depositText('statusAccepted'):depositText('statusCancelled'))+'</b></div>').join('')||esc(depositText('emptyHistory'));
+  } catch(e) {
+    const box=document.getElementById('memberDepositHistory');
+    if(box)box.textContent=e.message;
+  }
+}
+
 async function depositPage(){
   if(!me) return showAuth();
   const t=depositText;
@@ -789,10 +808,8 @@ async function depositPage(){
       <button class="primary" onclick="submitDemoDeposit()">${esc(t('submitButton'))}</button>
       <p id="demoDepositMsg" class="muted"></p>
     </div>
-    <h3>${esc(t('historyTitle'))}</h3><div id="demoDepositHistory" class="card">${esc(t('loadingText'))}</div>
     <button class="secondary" onclick="page('member')">${esc(t('backButton'))}</button>
   </div>`);
-  loadDemoDeposits();
 }
 function copyDemoNumber(button){
   const number=document.getElementById('demoDisplayNumber')?.textContent.trim()||'01790365006';
