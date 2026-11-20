@@ -396,6 +396,17 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
+    if (p === "/api/slot-display-images" && method === "GET") {
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'slot_display_image_%'").all();
+      const images = {};
+      for (const row of (rows.results || [])) {
+        const id = String(row.key).replace(/^slot_display_image_/, "");
+        const url = String(row.value || "").trim();
+        if (/^https:\/\//i.test(url)) images[id] = url;
+      }
+      return json({ images });
+    }
+
     if (p === "/api/support-settings" && method === "GET") {
       const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url')").all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
