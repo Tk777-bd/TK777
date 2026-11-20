@@ -217,7 +217,7 @@ async function crashState(env, gameId) {
     FROM crash_sessions
     WHERE game_id=? AND status='crashed'
     ORDER BY created_at DESC
-    LIMIT 10
+    LIMIT 25
   `).bind(gameId).all();
 
   return {
