@@ -5,10 +5,11 @@ let crashTimer = null;
 let crashGameId = null;
 let crashPollBusy = false;
 let crashPhase = 'countdown';
+let crashHistoryData = [];
 
 let crashSlots = [
-  { roundId:null,busy:false,status:'ready',auto:false,autoTarget:2 },
-  { roundId:null,busy:false,status:'ready',auto:false,autoTarget:2 }
+  { roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null },
+  { roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null }
 ];
 
 const $ = s => document.querySelector(s);
@@ -419,8 +420,8 @@ function aviator(g) {
   stopCrashMonitor();
 
   crashSlots = [
-    {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2},
-    {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2}
+    {roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null},
+    {roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null}
   ];
   crashGameId = g.id;
   crashPhase = 'countdown';
@@ -540,6 +541,7 @@ function aviator(g) {
                 </div>
               </div>
               <div class="aviator-auto-row" id="autoOptions${i}">
+                <label><input type="checkbox" id="autoBetToggle${i}" onchange="toggleAutoBet(${i},this.checked)"> Auto Bet</label>
                 <label><input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)"> Auto Cash Out</label>
                 <label class="auto-cash-label">Auto Cash Out
                   <input type="number" id="autoTarget${i}" min="1.01" max="1000" step=".01" value="2.00"><span>x</span>
@@ -611,6 +613,7 @@ function startCrashMonitor(gameId) {
 }
 
 function updateCrashHistory(previous) {
+  crashHistoryData = Array.isArray(previous) ? previous.slice() : [];
   const el = $('#crashHistory');
   const ticker = $('#crashHistoryTicker');
   if (!previous || !previous.length) {
@@ -641,11 +644,13 @@ function updateSlotButtons(i) {
   const cash = $('#cashoutBtn'+i);
   const cancel = $('#cancelAuto'+i);
   const autoToggle = $('#autoToggle'+i);
+  const autoBetToggle = $('#autoBetToggle'+i);
   const targetInput = $('#autoTarget'+i);
 
   if (!start || !cash) return;
 
   if (autoToggle) autoToggle.checked = !!slot.auto;
+  if (autoBetToggle) autoBetToggle.checked = !!slot.autoBet;
 
   if (targetInput && document.activeElement !== targetInput) {
     targetInput.value = Number(slot.autoTarget || 2).toFixed(2);
@@ -706,6 +711,10 @@ async function pollCrashState() {
       }
 
       crashSlots.forEach((slot,i) => {
+        if (slot.autoBet && !slot.roundId && !slot.busy && slot.lastAutoSessionId !== state.sessionId) {
+          slot.lastAutoSessionId = state.sessionId;
+          startCrash(i);
+        }
         if (!slot.roundId && !slot.busy && slot.status !== 'ready') {
           slot.status = 'ready';
           updateSlotStatus(i,'READY');
@@ -862,6 +871,15 @@ function updateFlightCurve(multiplier) {
 /* ==========================================
    AUTO CASH OUT
 ========================================== */
+
+function toggleAutoBet(index,enabled) {
+  const slot = crashSlots[index];
+  if (!slot) return;
+  slot.autoBet = !!enabled;
+  if (enabled) { slot.lastAutoSessionId = null; toast('Auto Bet চালু হয়েছে'); }
+  else toast('Auto Bet বন্ধ করা হয়েছে');
+  updateSlotButtons(index);
+}
 
 function toggleAuto(index,enabled) {
   const slot = crashSlots[index];
