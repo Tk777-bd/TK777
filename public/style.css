@@ -957,3 +957,16 @@ body{background:#063b39}
   color:#fff;font-size:15px;font-weight:700;line-height:14px;
   cursor:pointer;text-shadow:0 1px 2px #0008;
 }
+
+
+/* The Bet control itself becomes the red Cancel control during countdown. */
+.aviator-bet-button.is-bet-cancel{
+  background:#e00024!important;color:#fff!important;
+  border:1px solid #ff526b!important;
+  box-shadow:inset 0 1px #ffffff40,0 0 7px #e0002455;
+  font-size:clamp(16px,4vw,25px)!important;font-weight:800;
+}
+.aviator-bet-button.is-bet-cancel:disabled{opacity:1!important}
+.aviator-cancel-button{display:none}
+.aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-bet-button{display:none}
+.aviator-cashout-popup{min-width:190px;padding-left:18px;padding-right:25px}
