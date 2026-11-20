@@ -376,3 +376,147 @@ body{background:#063b39}
   .crash-bet-panel{padding:12px}
   .plane-wrap svg{width:82px}
 }
+
+
+/* AVIATOR DEMO-INSPIRED GAME-ONLY REDESIGN v2
+   All selectors are scoped to the flight game; site pages remain unchanged. */
+.shell:has(.game-screen){max-width:980px;background:#101820}
+.shell:has(.game-screen) .game-top{
+  height:62px;padding:0 18px;
+  background:linear-gradient(90deg,#101b28,#182638 55%,#101b28);
+  border-bottom:1px solid #314459;
+}
+.shell:has(.game-screen) .game-screen{
+  min-height:calc(100vh - 126px);padding:12px 14px 28px;
+  background:#101820;
+  background-image:radial-gradient(ellipse at 50% 0%,#26384a55,transparent 55%);
+}
+.shell:has(.game-screen) .aviator-stage{
+  height:clamp(340px,48vw,510px);min-height:340px;
+  border-radius:5px;border:1px solid #34495c;
+  background:
+    radial-gradient(ellipse at 50% 100%,#213b50 0,transparent 60%),
+    linear-gradient(180deg,#18293b 0%,#142438 55%,#101d2c 100%);
+  box-shadow:0 8px 28px #0006,inset 0 0 70px #07111caa;
+}
+.shell:has(.game-screen) .aviator-stage:after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(180deg,#08152200 65%,#08152288 100%);
+}
+.shell:has(.game-screen) .aviator-stage:before{
+  opacity:.7;background-size:52px 52px;
+  background-image:linear-gradient(#b7d4ed0b 1px,transparent 1px),linear-gradient(90deg,#b7d4ed0b 1px,transparent 1px);
+}
+.shell:has(.game-screen) .aviator-sky{opacity:.65}
+.shell:has(.game-screen) .aviator-clouds{filter:blur(12px);height:110px}
+.shell:has(.game-screen) .cloud-back{top:20%;opacity:.35}
+.shell:has(.game-screen) .cloud-middle{top:44%;opacity:.55}
+.shell:has(.game-screen) .cloud-front{bottom:0;opacity:.5}
+.shell:has(.game-screen) .multiplier{
+  top:25%;font-size:clamp(52px,9vw,82px);font-weight:800;
+  letter-spacing:-3px;color:#f8fbff;
+  text-shadow:0 3px 12px #0009,0 0 30px #ff5b4c55;
+}
+.shell:has(.game-screen) .crash-status{
+  bottom:18px;font-size:12px;letter-spacing:2.5px;color:#d0dfed;
+}
+.shell:has(.game-screen) .round-label{
+  top:17px;left:18px;color:#9db2c7;font-size:11px;
+}
+.shell:has(.game-screen) .stage-bottom-label{
+  right:18px;bottom:18px;color:#9db2c7;
+}
+.shell:has(.game-screen) .flight-chart{z-index:2}
+.shell:has(.game-screen) .flight-path{stroke-width:5.5}
+.shell:has(.game-screen) .flight-dot{r:7}
+.shell:has(.game-screen) .plane-wrap{z-index:3}
+.shell:has(.game-screen) .plane-wrap svg{width:clamp(88px,14vw,132px)}
+.shell:has(.game-screen) .plane-fire{width:32px;height:9px;filter:blur(4px)}
+.shell:has(.game-screen) .aviator-stage.running{
+  background:
+    radial-gradient(ellipse at 50% 100%,#244d5d 0,transparent 62%),
+    linear-gradient(180deg,#1b3045,#142438 58%,#101d2c);
+}
+.shell:has(.game-screen) .aviator-stage.crashed{
+  background:radial-gradient(ellipse at 50% 70%,#713944 0,transparent 58%),linear-gradient(180deg,#302433,#171923);
+}
+.shell:has(.game-screen) .card:has(.crash-history-title){
+  margin:10px 0 12px;padding:12px 15px;
+  border-radius:5px;background:#192737;border:1px solid #30465c;
+  box-shadow:0 3px 12px #0003;
+}
+.shell:has(.game-screen) .crash-history-title{font-size:12px}
+.shell:has(.game-screen) .crash-history{padding:10px 0 1px;gap:7px}
+.shell:has(.game-screen) .crash-history span{
+  min-width:62px;padding:7px 12px;border-radius:4px;
+  font-size:12px;background:#24374b;border:1px solid #3b5269;
+}
+.shell:has(.game-screen) .crash-history .history-high{
+  color:#ff7884;background:#482a38;border-color:#9a4a5b;
+}
+.shell:has(.game-screen) .crash-history .history-low{
+  color:#b8d8f3;background:#20394d;border-color:#42627d;
+}
+.shell:has(.game-screen) .crash-panels{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:0;
+}
+.shell:has(.game-screen) .crash-bet-panel{
+  padding:15px;border-radius:5px;background:#1a2939;
+  border:1px solid #354b61;box-shadow:0 5px 16px #0003;
+}
+.shell:has(.game-screen) .crash-panel-head{
+  padding-bottom:10px;margin-bottom:11px;border-bottom:1px solid #35495d;
+  font-size:12px;
+}
+.shell:has(.game-screen) .crash-panel-head span{
+  border-radius:3px;background:#2b4055;color:#c3d5e5;padding:5px 9px;
+}
+.shell:has(.game-screen) .crash-bet-panel>label{
+  color:#a8bbcd;font-size:10px;font-weight:700;
+}
+.shell:has(.game-screen) .crash-bet-panel input{
+  background:#101c29;border:1px solid #3b5268;border-radius:4px;
+  color:#f4f8fc;padding:11px;font-size:14px;
+}
+.shell:has(.game-screen) .auto-row{padding:3px 0 6px}
+.shell:has(.game-screen) .auto-check,.shell:has(.game-screen) .auto-target{
+  color:#b8c9d8;font-size:10px;font-weight:700;
+}
+.shell:has(.game-screen) .auto-check input{accent-color:#ef5a52}
+.shell:has(.game-screen) .auto-target input{
+  width:65px;text-align:center;padding:7px;border-radius:4px;
+}
+.shell:has(.game-screen) .bet-actions{gap:8px;margin-top:10px}
+.shell:has(.game-screen) .bet-actions button{
+  min-height:47px;border-radius:4px;font-size:12px;font-weight:800;
+  letter-spacing:.6px;
+}
+.shell:has(.game-screen) .bet-actions .primary{
+  background:linear-gradient(180deg,#f5c85e,#e7a936);
+  color:#2b210e;box-shadow:inset 0 1px #ffe7a3;
+}
+.shell:has(.game-screen) .bet-actions .cashout{
+  background:linear-gradient(180deg,#29d68b,#13a968);
+  color:#06281a;box-shadow:inset 0 1px #8affc5;
+}
+.shell:has(.game-screen) .bet-actions .cancel-auto{
+  background:#2b4055;color:#dce8f3;border:1px solid #49627a;
+}
+.shell:has(.game-screen) .crash-bet-panel .notice{
+  background:#142231;border:1px solid #30465b;border-radius:4px;
+  color:#b5c6d5;padding:9px 10px;
+}
+.shell:has(.game-screen) .game-top .secondary{
+  border-radius:4px;background:#293d52;border-color:#496078;
+}
+.shell:has(.game-screen) .game-top span{
+  border-radius:4px;background:#101c29;border-color:#40566c;
+}
+@media(max-width:620px){
+  .shell:has(.game-screen) .game-screen{padding:8px 8px 22px}
+  .shell:has(.game-screen) .aviator-stage{height:clamp(300px,78vw,390px);min-height:300px}
+  .shell:has(.game-screen) .crash-panels{grid-template-columns:1fr;gap:9px}
+  .shell:has(.game-screen) .crash-bet-panel{padding:12px}
+  .shell:has(.game-screen) .multiplier{top:27%;font-size:clamp(48px,13vw,68px)}
+  .shell:has(.game-screen) .plane-wrap svg{width:88px}
+}
