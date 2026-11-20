@@ -429,12 +429,13 @@ async function route(req, env) {
     }
 
     if (p === "/api/support-settings" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number')").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number','demo_number_bkash','demo_number_nagad','demo_number_rocket')").all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
       const image = String(values.support_telegram_image_url || '');
       const validImage = key => /^https:\/\//i.test(String(values[key] || '')) ? String(values[key]) : '';
       const demoNumber = /^01[3-9][0-9]{8}$/.test(String(values.demo_display_number || '')) ? String(values.demo_display_number) : '01790365006';
-      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')}});
+      const validDemoNumber=(key,fallback)=>/^\\d{11}$/.test(String(values[key]||''))?String(values[key]):fallback;
+      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_numbers:{bkash:validDemoNumber('demo_number_bkash','12345678912'),nagad:validDemoNumber('demo_number_nagad','55555555555'),rocket:validDemoNumber('demo_number_rocket','33333333333')},demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')}});
     }
 
   if (p === "/api/home-banners" && method === "GET") {
@@ -1498,6 +1499,9 @@ async function route(req, env) {
 
       if (key === 'demo_display_number' && !/^01[3-9][0-9]{8}$/.test(String(value || ''))) {
         return json({ error: "সঠিক ১১ সংখ্যার Demo নম্বর দিন" }, 400);
+      }
+      if (['demo_number_bkash','demo_number_nagad','demo_number_rocket'].includes(key) && !/^\\d{11}$/.test(String(value || ''))) {
+        return json({ error: "Demo নম্বর অবশ্যই ১১ সংখ্যার হতে হবে" }, 400);
       }
 
       if (!key || String(key).length > 80) {
