@@ -1,8 +1,16 @@
 const $=s=>document.querySelector(s);
 let token=localStorage.getItem('tk777_token')||'',me=null,categories=[],games=[],crashTimer=null;
 const api=async(path,body=null)=>{
-  const r=await fetch('/api'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
-  const d=await r.json();if(!r.ok)throw Error(d.error||'সমস্যা হয়েছে');return d;
+ const raw=await r.text();
+let d;
+try {
+  d=JSON.parse(raw);
+} catch {
+  console.error('TK777 API non-JSON response', {path,status:r.status,body:raw});
+  throw Error(`API Error: HTTP ${r.status}; JSON নয়; Response: ${raw.slice(0,180).replace(/\s+/g,' ')}`);
+}
+if(!r.ok)throw Error(d.error||'সমস্যা হয়েছে');
+return d;
 };
 const money=n=>Number(n||0).toLocaleString('en-US')+' ক্রেডিট';
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
