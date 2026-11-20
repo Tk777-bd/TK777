@@ -554,9 +554,12 @@ function syncBetButton(index) {
   const input = $('#crashBet'+index);
   const btn = $('#startCrash'+index);
   if (!input || !btn) return;
+  const slot = crashSlots[index];
+  if (slot?.roundId && crashPhase === 'countdown') return;
   const amount = Number(input.value);
   const shown = Number.isFinite(amount) && amount >= 0 ? amount : 0;
   btn.innerHTML = 'Bet<br><b>BDT '+shown.toFixed(2)+'</b>';
+  btn.classList.remove('is-bet-cancel');
 }
 
 function setQuickBet(index, amount) {
@@ -684,15 +687,19 @@ function updateSlotButtons(i) {
   }
 
   if (cancel) {
-    const canCancelBet = !!slot.roundId && crashPhase === 'countdown' && !slot.busy;
-    cancel.disabled = !(canCancelBet || slot.auto);
-    cancel.textContent = canCancelBet ? 'Cancel' : 'Cancel';
+    cancel.disabled = !slot.auto || slot.busy;
   }
 
-  start.disabled =
-    !!slot.roundId ||
-    slot.busy ||
-    crashPhase !== 'countdown';
+  const canCancelBet = !!slot.roundId && crashPhase === 'countdown';
+  start.disabled = slot.busy || (!canCancelBet && crashPhase !== 'countdown');
+  if (canCancelBet) {
+    start.innerHTML = 'Cancel';
+    start.classList.add('is-bet-cancel');
+  } else {
+    const amount = Math.max(0,Number($('#crashBet'+i)?.value || 0));
+    start.innerHTML = 'Bet<br><b>BDT '+amount.toFixed(2)+'</b>';
+    start.classList.remove('is-bet-cancel');
+  }
 
   cash.disabled =
     !slot.roundId ||
@@ -1044,6 +1051,12 @@ async function cancelAuto(index) {
       slot.roundId = null;
       slot.status = 'cancelled';
       slot.auto = false;
+      const betButton = $('#startCrash'+index);
+      if (betButton) {
+        betButton.classList.remove('is-bet-cancel');
+        const amount = Math.max(0,Number($('#crashBet'+index)?.value || 0));
+        betButton.innerHTML = 'Bet<br><b>BDT '+amount.toFixed(2)+'</b>';
+      }
       if (r.balance !== undefined) {
         me.balance = r.balance;
         const bal = $('#gameBalance');
@@ -1076,7 +1089,13 @@ async function cancelAuto(index) {
 async function startCrash(index) {
   const slot = crashSlots[index];
 
-  if (!slot || slot.roundId || slot.busy) return;
+  if (!slot || slot.busy) return;
+
+  if (slot.roundId && crashPhase === 'countdown') {
+    await cancelAuto(index);
+    return;
+  }
+  if (slot.roundId) return;
 
   if (crashPhase !== 'countdown') {
     toast('শুধু কাউন্টডাউনের সময় বেট করা যাবে');
