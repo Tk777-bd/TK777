@@ -397,14 +397,19 @@ async function route(req, env) {
     }
 
     if (p === "/api/slot-display-images" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'slot_display_image_%'").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'slot_display_image_%' OR key='slot_display_hidden'").all();
       const images = {};
+      let hiddenIds = [];
       for (const row of (rows.results || [])) {
+        if (row.key === 'slot_display_hidden') {
+          try { hiddenIds = JSON.parse(String(row.value || '[]')); } catch { hiddenIds = []; }
+          continue;
+        }
         const id = String(row.key).replace(/^slot_display_image_/, "");
         const url = String(row.value || "").trim();
         if (/^https:\/\//i.test(url)) images[id] = url;
       }
-      return json({ images });
+      return json({ images, hiddenIds: Array.isArray(hiddenIds) ? hiddenIds.filter(x => typeof x === 'string') : [] });
     }
 
     if (p === "/api/support-settings" && method === "GET") {
@@ -434,12 +439,8 @@ async function route(req, env) {
     }
 
     if (p === "/api/games" && method === "GET") {
-      // Keep the original free Aviator and add Aviator 2 as a separate crash game.
-      await env.DB.prepare(`
-        INSERT OR IGNORE INTO games
-        (id,name,category_id,image_url,game_type,sort_order)
-        VALUES('aviator-2','Aviator 2','hot','','aviator',2)
-      `).run();
+      // Hide the duplicate Aviator 2 entry while preserving its historical rounds.
+      await env.DB.prepare("UPDATE games SET active=0 WHERE id='aviator-2'").run();
       await env.DB.prepare(`
         UPDATE games SET sort_order=3
         WHERE id='super-ace' AND sort_order=2
