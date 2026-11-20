@@ -551,7 +551,7 @@ function aviator(g) {
             </section>
           `).join('')}
         </div>
-        <div class="aviator-footer-note">T777 • BDT OFFICIALS GAME</div>
+        <div class="aviator-footer-note">TK777 • BDT OFFICIALS GAME</div>
 
       </section>
     </main>
