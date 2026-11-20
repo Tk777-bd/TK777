@@ -525,9 +525,9 @@ function aviator(g) {
               <div class="bet-card-main">
                 <div class="bet-amount-side">
                   <div class="bet-amount-wrap">
-                    <span>−</span>
+                    <button type="button" onclick="adjustQuickBet(${i},-1)" aria-label="Decrease bet">−</button>
                     <input id="crashBet${i}" type="number" min="1" max="1000000" step="1" value="10" aria-label="Bet amount">
-                    <span>+</span>
+                    <button type="button" onclick="adjustQuickBet(${i},1)" aria-label="Increase bet">+</button>
                   </div>
                   <div class="quick-bets">
                     ${[1,2,5,10].map(v => `<button type="button" onclick="setQuickBet(${i},${v})">${v}</button>`).join('')}
@@ -540,7 +540,7 @@ function aviator(g) {
                 </div>
               </div>
               <div class="aviator-auto-row" id="autoOptions${i}">
-                <label><input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)"> Auto Bet</label>
+                <label><input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)"> Auto Cash Out</label>
                 <label class="auto-cash-label">Auto Cash Out
                   <input type="number" id="autoTarget${i}" min="1.01" max="1000" step=".01" value="2.00"><span>x</span>
                 </label>
@@ -574,6 +574,16 @@ function setQuickBet(index, amount) {
   input.dispatchEvent(new Event('change', {bubbles:true}));
   const btn = $('#startCrash'+index);
   if (btn) btn.innerHTML = 'Bet<br><b>'+Number(amount).toFixed(2)+' USD</b>';
+}
+
+function adjustQuickBet(index, direction) {
+  const input = $('#crashBet'+index);
+  if (!input) return;
+  const current = Math.max(1,Number(input.value)||1);
+  const next = Math.max(1,Math.min(1000000,current + direction));
+  input.value = String(next);
+  const btn = $('#startCrash'+index);
+  if (btn) btn.innerHTML = 'Bet<br><b>'+next.toFixed(2)+' USD</b>';
 }
 
 function setAviatorMode(index, mode) {
