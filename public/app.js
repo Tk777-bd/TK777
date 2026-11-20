@@ -22,7 +22,7 @@ const api=async(path,body=null)=>{
       status:r.status,
       body:raw
     });
-    throw Error(`API Error: HTTP ${r.status}; JSON নয়; Response: ${raw.slice(0,180).replace(/\s+/g,' ')}`);
+    throw Error(`API Error: HTTP ${r.status}; JSON নয়; Response: ${raw.slice(0,1500).replace(/\s+/g,' ')}`);
   }
 
   if(!r.ok)throw Error(d.error||'সমস্যা হয়েছে');
