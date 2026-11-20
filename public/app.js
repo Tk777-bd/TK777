@@ -74,18 +74,45 @@ function stopCrashMonitor() {
   crashPhase = 'countdown';
 }
 
+const TK777_AVATARS = ['😎','🧑🏻‍🚀','🐼','🐧','🐯'];
+function selectedAvatar() {
+  const n = Number(localStorage.getItem('tk777_profile_avatar') || 0);
+  return Number.isInteger(n) && n >= 0 && n < TK777_AVATARS.length ? n : 0;
+}
+function avatarImage(index, extraClass) {
+  const emoji = TK777_AVATARS[index] || TK777_AVATARS[0];
+  const colors = [['#ffe36a','#e69b22'],['#8bd9ff','#3475bd'],['#f7f7f7','#aab8c7'],['#a6f2e1','#299b89'],['#ffbf72','#d65c2b']];
+  const pair = colors[index] || colors[0];
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="'+pair[0]+'"/><stop offset="1" stop-color="'+pair[1]+'"/></linearGradient></defs><circle cx="50" cy="50" r="49" fill="url(#g)"/><circle cx="50" cy="50" r="45" fill="none" stroke="#ffffff" stroke-opacity=".65" stroke-width="3"/><text x="50" y="68" text-anchor="middle" font-size="62">'+emoji+'</text></svg>';
+  return '<img class="'+(extraClass || '')+'" alt="Profile avatar" src="data:image/svg+xml,'+encodeURIComponent(svg)+'">';
+}
+function toggleAvatarPicker() {
+  const panel = document.getElementById('avatarPicker');
+  if (panel) panel.hidden = !panel.hidden;
+}
+function chooseAvatar(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= TK777_AVATARS.length) return;
+  localStorage.setItem('tk777_profile_avatar',String(index));
+  const current = document.getElementById('topProfileAvatar');
+  if (current) current.outerHTML = avatarImage(index,'top-profile-avatar').replace('<img ','<img id="topProfileAvatar" ');
+  const member = document.getElementById('memberProfileAvatar');
+  if (member) member.outerHTML = avatarImage(index,'member-profile-avatar').replace('<img ','<img id="memberProfileAvatar" ');
+  const panel = document.getElementById('avatarPicker');
+  if (panel) panel.hidden = true;
+}
 function shell(content) {
-  $('#app').innerHTML = `
+  $('#app').innerHTML = \`
     <div class="shell">
       <header class="top">
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
-          <span class="pill">${me ? money(me.balance) : 'Guest'}</span>
-          <button onclick="showAuth()">${me ? 'Account' : 'Login'}</button>
+          <span class="pill">\${me ? money(me.balance) : 'Guest'}</span>
+          \${me ? '<button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
         </div>
+        \${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
       </header>
 
-      ${content}
+      \${content}
 
       <nav class="bottom">
         <button onclick="home()"><b>⌂</b>Home</button>
@@ -306,7 +333,7 @@ function page(name) {
       <div class="page">
         <div class="card profile-card">
           <h2>Member Center</h2>
-          <div class="avatar">${esc((me.username || 'U').slice(0,1).toUpperCase())}</div>
+          <div class="avatar">${avatarImage(selectedAvatar(),'member-profile-avatar').replace('<img ','<img id="memberProfileAvatar" ')}</div>
           <h3>${esc(me.username)}</h3>
           <p>${esc(me.email)}</p>
           <div class="balance-panel">
