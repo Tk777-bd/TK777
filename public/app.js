@@ -193,7 +193,7 @@ function memberCenter() {
         <button onclick="page('invite')"><i>♧</i><span>Invite Friends</span></button>
         <button onclick="page('mission')"><i>🎁</i><span>Mission</span></button>
         <button onclick="page('rebate')"><i>◉</i><span>Rebate</span></button>
-        <button onclick="page('messages')"><i>✉</i><span>Internal Message</span></button>
+        <button class="internal-message-menu" onclick="page('messages')"><i>✉</i><span>Internal Message</span><em id="internalMessageBadge" class="internal-message-badge" hidden>0</em></button>
         <button onclick="page('suggestion')"><i>☏</i><span>Suggestion</span></button>
         <button onclick="page('download')"><i>⇩</i><span>Download App</span></button>
         <button onclick="page('service')"><i>◷</i><span>Customer Service</span></button>
@@ -202,6 +202,7 @@ function memberCenter() {
     </div>
   `);
   loadAccountProfile();
+  loadUnreadMessages();
 }
 
 async function profitLossPage() {
@@ -725,6 +726,7 @@ function page(name) {
   if (name === 'history') return historyPage();
   if (name === 'account') return myAccountPage();
   if (name === 'profitloss') return profitLossPage();
+  if (name === 'messages') return internalMessagesPage();
 
   const pages = {
     deposit: ['Deposit Information','TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা করা যায় না।'],
@@ -746,6 +748,15 @@ function page(name) {
   };
   const item = pages[name] || ['TK777','এই পেজটি বর্তমানে উপলব্ধ নয়।'];
   shell(`
+async function loadUnreadMessages(){const badge=document.getElementById('internalMessageBadge');if(!badge||!me)return;try{const d=await api('/messages'),n=Number(d.unread||0);badge.textContent=n>99?'99+':String(n);badge.hidden=n===0;}catch(e){}}
+async function internalMessagesPage(){
+ if(!me)return showAuth();
+ shell('<div class="page member-subpage internal-messages-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Internal Message</h2></div><div id="internalMessageList" class="internal-message-list"><div class="card">মেসেজ লোড হচ্ছে...</div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+ const box=document.getElementById('internalMessageList');
+ try{const d=await api('/messages'),rows=d.messages||[];box.innerHTML=rows.map(m=>'<article class="internal-message-card '+(m.read_at?'is-read':'is-unread')+'"><div class="internal-message-heading"><b>'+esc(m.title)+'</b><small>'+esc(m.created_at||'')+'</small></div><p>'+esc(m.body)+'</p></article>').join('')||'<div class="card internal-message-empty">এখনো কোনো মেসেজ আসেনি।</div>';await api('/messages/read',{read:true});const badge=document.getElementById('internalMessageBadge');if(badge)badge.hidden=true;}
+ catch(e){box.innerHTML='<div class="card">'+esc(e.message)+'</div>';}
+}
+
     <div class="page member-subpage">
       <div class="member-subpage-heading"><button onclick="page('member')" aria-label="Back">‹</button><h2>${esc(item[0])}</h2></div>
       <div class="card"><p>${esc(item[1])}</p></div>
