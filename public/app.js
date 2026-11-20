@@ -382,14 +382,26 @@ function showAuth() {
         <button id="loginTab" class="active" onclick="authMode('login')">Login</button>
         <button id="registerTab" onclick="authMode('register')">Create Account</button>
       </div>
+      <style>
+        .password-field{position:relative;display:flex;align-items:center}
+        .password-field .field{width:100%;padding-right:48px}
+        .password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;padding:0;border:0;background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer}
+        .password-toggle svg{width:20px;height:20px}
+      </style>
       <form id="authform">
         <label>মোবাইল নম্বর</label>
         <input class="field" name="phone" type="tel" inputmode="numeric" required autocomplete="tel" placeholder="01XXXXXXXXX">
         <label>Password</label>
-        <input class="field" name="password" type="password" minlength="8" maxlength="128" required placeholder="কমপক্ষে ৮ অক্ষর">
+        <div class="password-field">
+          <input class="field" name="password" type="password" minlength="8" maxlength="128" required autocomplete="current-password" placeholder="কমপক্ষে ৮ অক্ষর">
+          <button class="password-toggle" type="button" data-toggle-password="password" aria-label="পাসওয়ার্ড দেখান" title="পাসওয়ার্ড দেখান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
         <div id="confirmPasswordWrap" class="hidden">
           <label>Confirm Password</label>
-          <input class="field" name="confirmPassword" type="password" minlength="8" maxlength="128" placeholder="পাসওয়ার্ড আবার লিখুন">
+          <div class="password-field">
+            <input class="field" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="পাসওয়ার্ড আবার লিখুন">
+            <button class="password-toggle" type="button" data-toggle-password="confirmPassword" aria-label="কনফার্ম পাসওয়ার্ড দেখান" title="পাসওয়ার্ড দেখান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
         </div>
         <button class="primary" id="authSubmit">Login</button>
       </form>
@@ -400,6 +412,7 @@ function showAuth() {
 let mode = 'login';
 function authMode(m) {
   mode = m;
+  const currentMode = m;
   const f = $('#authform');
   if (!f) return;
   $('#confirmPasswordWrap').classList.toggle('hidden',m !== 'register');
@@ -409,16 +422,27 @@ function authMode(m) {
   $('#registerTab').classList.toggle('active',m === 'register');
   $('#authSubmit').textContent = m === 'register' ? 'Create Account' : 'Login';
   $('#authHint').textContent = m === 'register' ? 'সঠিক ভাবে রেজিষ্ট্রেশন করুন' : 'সঠিক ভাবে লগইন করুন';
+  f.querySelectorAll('[data-toggle-password]').forEach(btn => {
+    btn.onclick = () => {
+      const input = f.querySelector('[name="' + btn.dataset.togglePassword + '"]');
+      if (!input) return;
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-label', show ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখান');
+      btn.title = show ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখান';
+    };
+  });
   f.onsubmit = async e => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(f));
-    if (mode === 'register' && data.password !== data.confirmPassword) {
+    const password = f.querySelector('[name="password"]').value;
+    const confirmPassword = f.querySelector('[name="confirmPassword"]').value;
+    if (currentMode === 'register' && password !== confirmPassword) {
       toast('পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না');
       return;
     }
-    delete data.confirmPassword;
+    const data = { phone: f.querySelector('[name="phone"]').value, password };
     try {
-      const r = await api('/'+mode,data);
+      const r = await api('/'+currentMode,data);
       token = r.token;
       localStorage.setItem('tk777_token',token);
       me = r.user;
