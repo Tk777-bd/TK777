@@ -819,3 +819,22 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
   from{translate:0 -7px;rotate:-1deg;}
   to{translate:0 7px;rotate:1deg;}
 }
+
+
+/* Aviator plane: center hover during flight, then a single fast exit on crash. */
+.aviator-stage .plane-wrap.plane-hover{
+  animation:tkPlaneHover 1.15s ease-in-out infinite;
+  transition:left .42s cubic-bezier(.18,.72,.25,1),top .42s cubic-bezier(.18,.72,.25,1);
+}
+@keyframes tkPlaneHover{
+  0%,100%{transform:translate(-50%,-50%) translateY(-8px)}
+  50%{transform:translate(-50%,-50%) translateY(9px)}
+}
+.aviator-stage .plane-wrap.plane-crashed{
+  animation:tkPlaneCrashExit .42s cubic-bezier(.2,.78,.25,1) forwards;
+  pointer-events:none;
+}
+@keyframes tkPlaneCrashExit{
+  0%{transform:translate(-50%,-50%);opacity:1}
+  100%{transform:translate(calc(50vw + 100%),-50%);opacity:0}
+}
