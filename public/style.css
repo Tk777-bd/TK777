@@ -833,10 +833,10 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
   0%,100%{transform:translate(-50%,-50%) translateY(-7px)}
   50%{transform:translate(-50%,-50%) translateY(8px)}
 }
-.aviator-stage .user-plane-propeller{
+.aviator-stage .user-plane-propeller-spin{
   transform-box:view-box;
-  transform-origin:438px 235px;
-  animation:tkPlanePropeller 1.6s linear infinite;
+  transform-origin:0 0;
+  animation:tkPlanePropeller 1.35s linear infinite;
 }
 @keyframes tkPlanePropeller{
   to{transform:rotate(360deg)}
