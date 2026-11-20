@@ -357,7 +357,7 @@ function gameCard(g) {
       ${g.image_url
         ? `<img src="${esc(g.image_url)}" alt="" onerror="this.style.display='none'">`
         : `<div class="placeholder">${g.game_type === 'aviator' ? '✈️' : g.game_type === 'superace' ? '🂡' : '🎮'}</div>`}
-      <strong>${esc(g.game_type === 'aviator' ? 'Aviator 2' : g.name)}</strong>
+      <strong>${esc(g.id === 'aviator' ? 'Aviator Free' : g.id === 'aviator-2' ? 'Aviator 2' : g.name)}</strong>
       <small>${g.game_type === 'aviator' ? 'CRASH GAME' : g.game_type === 'superace' ? 'CARD GAME' : 'ARCADE GAME'}</small>
     </button>`;
 }
@@ -686,6 +686,7 @@ function openGame(id) {
 ========================================== */
 
 function aviator(g) {
+  const aviatorTitle = g.id === 'aviator' ? 'Aviator Free' : 'Aviator 2';
   stopCrashMonitor();
 
   crashSlots = [
@@ -699,7 +700,7 @@ function aviator(g) {
     <main class="aviator-app">
       <header class="aviator-header">
         <button class="aviator-back" onclick="home()" aria-label="Back">‹</button>
-        <div class="aviator-wordmark">Aviator 2<span>TK777</span></div>
+        <div class="aviator-wordmark">${esc(aviatorTitle)}<span>TK777</span></div>
         <button class="aviator-menu" type="button" onclick="toast(&quot;Game menu&quot;)" aria-label="Game menu">☰</button>
         <div class="aviator-wallet"><small>VIRTUAL BALANCE</small><b id="gameBalance">${money(me.balance)}</b></div>
       </header>
@@ -722,7 +723,7 @@ function aviator(g) {
           <div class="stage-flash" id="stageFlash"></div>
 
           <div class="aviator-promo" id="aviatorPromo">
-            <div class="promo-partners"><b>UFC</b><i></i><strong>Aviator 2</strong></div>
+            <div class="promo-partners"><b>UFC</b><i></i><strong>${esc(aviatorTitle)}</strong></div>
             <div class="promo-official">OFFICIAL PARTNERS</div>
             <div class="promo-progress"><span></span></div>
             <div class="promo-spribe">
