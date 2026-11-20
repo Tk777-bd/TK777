@@ -298,15 +298,6 @@ function home() {
       <button onclick="page('member')"><b>♙</b><span>Account</span></button>
     </div>
 
-    <div class="section jili-demo-section">
-      <div class="section-head"><span>JILI OFFICIAL FREE DEMO</span><small>VIRTUAL CREDITS</small></div>
-      <a class="jili-demo-card" href="https://jiligames.com/PlusIntro/49?showGame=true" target="_blank" rel="noopener noreferrer">
-        <img src="https://storage.googleapis.com/tada-cdn-asia/All-In-One/production/img/jiliPlusPlayer/games/7ycivbeSFZ2FzMIi4UfVi4vfmALw2iwP3gEaCsmO.png" alt="JILI Super Ace">
-        <span class="jili-demo-copy"><strong>Super Ace · JILI</strong><small>Official demo · Play credits only</small><b>OPEN DEMO ↗</b></span>
-      </a>
-      <p class="jili-demo-note">ডেমো JILI-এর নিজস্ব ওয়েবসাইটে খুলবে। এটি TK777-এর Virtual Coin বা ব্যালেন্সের সঙ্গে যুক্ত নয়।</p>
-    </div>
-
     <div class="section">
       <div class="section-head">
         <span>GAME CATEGORIES</span>
