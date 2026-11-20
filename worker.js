@@ -1376,6 +1376,22 @@ async function route(req, env) {
       return json({ ok: true, balance: u.balance });
     }
 
+    if (p === "/api/admin/user-password-reset" && method === "POST") {
+      const adminUser = await admin();
+      if (!adminUser) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const userId = String(body.userId || "");
+      const newPassword = String(body.newPassword || "");
+      if (!userId || newPassword.length < 6 || newPassword.length > 128) return json({ error: "নতুন পাসওয়ার্ড কমপক্ষে ৬ এবং সর্বোচ্চ ১২৮ অক্ষরের হতে হবে" }, 400);
+      const target = await env.DB.prepare("SELECT id FROM users WHERE id=? AND role!='admin'").bind(userId).first();
+      if (!target) return json({ error: "ইউজার পাওয়া যায়নি অথবা এই অ্যাকাউন্ট রিসেট করা যাবে না" }, 404);
+      const salt = uid();
+      const passwordHash = await passHash(newPassword, salt);
+      const updated = await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND role!='admin'").bind(passwordHash,salt,userId).run();
+      if (!updated.meta?.changes) return json({ error: "পাসওয়ার্ড পরিবর্তন করা যায়নি" }, 500);
+      await env.DB.prepare("DELETE FROM sessions WHERE user_id=?").bind(userId).run();
+      return json({ ok: true, message: "পাসওয়ার্ড রিসেট হয়েছে; পুরোনো সব লগইন সেশন বন্ধ করা হয়েছে" });
+    }
     /* ADMIN CATEGORIES */
 
     if (p === "/api/admin/categories" && method === "GET") {
