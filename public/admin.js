@@ -106,6 +106,10 @@ async function games(){
  ];
  const settingData=await api('/admin/settings');
  const settingValues=Object.fromEntries((settingData.settings||[]).map(x=>[x.key,x.value]));
+ let gameNameOverrides={};try{gameNameOverrides=JSON.parse(settingValues.game_name_overrides||'{}');if(!gameNameOverrides||typeof gameNameOverrides!=='object')gameNameOverrides={};}catch{gameNameOverrides={};}
+ const gameNameRows=d.games.map(g=>'<div class="row" style="gap:8px;align-items:center;margin:8px 0"><input class="field game-name-edit" data-game-id="'+esc(g.id)+'" value="'+esc(g.name)+'" maxlength="80" style="flex:1;min-width:0"><button type="button" onclick="saveGameName(\''+esc(g.id)+'\')">Save Name</button></div>').join('');
+ const slotNameRows=slotPosterItems.map(([id,name])=>'<div class="row" style="gap:8px;align-items:center;margin:8px 0"><input class="field game-name-edit" data-game-id="'+id+'" value="'+esc(gameNameOverrides[id]||name)+'" maxlength="80" style="flex:1;min-width:0"><button type="button" onclick="saveGameName(\''+id+'\')">Save Name</button></div>').join('');
+ $('#view').insertAdjacentHTML('afterbegin','<div class="card"><h3>প্রতিটি গেমের নাম পরিবর্তন</h3><p class="muted">নতুন নাম Save করলে User Site-এও দেখা যাবে। গেমের ID ও পুরোনো হিস্ট্রি অপরিবর্তিত থাকবে।</p>'+gameNameRows+slotNameRows+'</div>');
  let hiddenSlotIds=[];try{hiddenSlotIds=JSON.parse(settingValues.slot_display_hidden||'[]');if(!Array.isArray(hiddenSlotIds))hiddenSlotIds=[];}catch{hiddenSlotIds=[];}
  $('#view').insertAdjacentHTML('afterbegin',`<div class="card"><h3>নতুন Slot গেমের ছবি (Image URL)</h3>
  <p class="muted">Super Ace-এর মতো প্রতিটি Slot গেমের জন্য সরাসরি HTTPS Image URL দিন। Save করলে ইউজার সাইটের গেম কার্ডে ছবিটি দেখা যাবে। খালি রাখলে নামসহ ডিফল্ট পোস্টার দেখাবে।</p>
@@ -141,6 +145,14 @@ async function games(){
  $('#game').onsubmit=async e=>{e.preventDefault();try{await api('/admin/games',Object.fromEntries(new FormData(e.target)));alert('গেমের তথ্য ও ছবির লিংক সেভ হয়েছে');games()}catch(err){alert(err.message)}};
 }
 function editGame(id){const s=$('#existingGame');if(s){s.value=id;s.dispatchEvent(new Event('change'));window.scrollTo({top:0,behavior:'smooth'});}}
+
+async function saveGameName(id){
+ const input=Array.from(document.querySelectorAll('.game-name-edit')).find(x=>x.dataset.gameId===id);
+ const name=(input?.value||'').trim();
+ if(!name)return alert('গেমের নাম লিখুন');
+ try{await api('/admin/game-name',{id,name});alert('গেমের নাম পরিবর্তন হয়েছে');games();}
+ catch(e){alert(e.message);}
+}
 
 async function delGame(id){if(confirm('এই গেমটি ইউজার সাইট থেকে মুছে ফেলবেন? পুরোনো হিস্ট্রি অক্ষত থাকবে।')){try{await api('/admin/games/'+id,null,'DELETE');games()}catch(e){alert(e.message)}}}
 
