@@ -11,6 +11,8 @@ let crashVisualValue = 1;
 let crashVisualSegment = null;
 let crashVisualUpdatedAt = 0;
 let crashVisualStartMs = null;
+let crashServerClockOffset = 0;
+let crashVisualCrashMultiplier = null;
 let aviatorCrowdSession = null;
 let aviatorCrowdPeak = 1832;
 
@@ -754,9 +756,14 @@ async function pollCrashState() {
   crashPollBusy = true;
 
   try {
+    const requestStartedAt = Date.now();
     const state = await api('/crash/state',{
       gameId:crashGameId
     });
+    const responseReceivedAt = Date.now();
+    if (Number.isFinite(Number(state.serverNow))) {
+      crashServerClockOffset = Number(state.serverNow) - (requestStartedAt + responseReceivedAt) / 2;
+    }
 
     if (!$('#aviatorStage')) return;
 
@@ -777,6 +784,7 @@ async function pollCrashState() {
       stopCrashVisualAnimation();
       crashVisualValue = 1;
       crashVisualStartMs = null;
+      crashVisualCrashMultiplier = null;
       const resetPlane = $('#planeWrap');
       const resetGraph = $('#flightChart');
       if (resetPlane) {
@@ -811,6 +819,9 @@ async function pollCrashState() {
       stage.classList.remove('countdown','crashed');
       stage.classList.add('running');
 
+      crashVisualCrashMultiplier = Number(state.crashMultiplier) > 1
+        ? Number(state.crashMultiplier)
+        : null;
       setCrashVisualTarget(multiplier,state.startMs);
       const flyingPlane = $('#planeWrap');
       if (flyingPlane) flyingPlane.classList.remove('plane-crashed');
@@ -934,8 +945,11 @@ function renderCrashVisual(now) {
   }
 
   // Match the server's exponential flight curve continuously between polls.
-  const elapsed = Math.max(0,Date.now()-crashVisualStartMs);
-  const value = Math.max(1,Math.exp(elapsed/12000));
+  const elapsed = Math.max(0,Date.now()+crashServerClockOffset-crashVisualStartMs);
+  const rawValue = Math.max(1,Math.exp(elapsed/12000));
+  const value = crashVisualCrashMultiplier
+    ? Math.min(rawValue,crashVisualCrashMultiplier)
+    : rawValue;
   crashVisualValue = value;
 
   const multi = $('#multi');
@@ -974,7 +988,7 @@ function updateFlightCurve(multiplier) {
   // The plane and the graph endpoint share the exact same coordinates.
   // The plane reaches its reference stopping point gradually, then both hold.
   const elapsed = crashPhase === 'active' && crashVisualStartMs !== null
-    ? Math.max(0,Date.now()-crashVisualStartMs)
+    ? Math.max(0,Date.now()+crashServerClockOffset-crashVisualStartMs)
     : 0;
   const progress = crashPhase === 'active'
     ? Math.max(0,Math.min(1,elapsed/4500))
