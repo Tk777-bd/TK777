@@ -702,7 +702,10 @@ function updateSlotButtons(i) {
 
   const canCancelBet = !!slot.roundId && crashPhase === 'countdown';
   start.disabled = slot.busy || (!canCancelBet && crashPhase !== 'countdown');
-  if (canCancelBet) {
+  if (slot.busy) {
+    start.textContent = 'BETTING...';
+    start.classList.remove('is-bet-cancel');
+  } else if (canCancelBet) {
     start.innerHTML = 'Cancel';
     start.classList.add('is-bet-cancel');
   } else {
@@ -1148,9 +1151,6 @@ async function startCrash(index) {
       throw Error('১ থেকে ১০,০০,০০০ এর মধ্যে পূর্ণসংখ্যার বেট দিন');
     }
 
-    slot.busy = true;
-    button.disabled = true;
-
     const targetInput = $('#autoTarget'+index);
     const target = Number(targetInput?.value || 2);
 
@@ -1159,6 +1159,9 @@ async function startCrash(index) {
     }
 
     slot.autoTarget = target;
+    slot.busy = true;
+    updateSlotButtons(index);
+    if (result) result.textContent = 'বেট সার্ভারে পাঠানো হচ্ছে...';
 
     const r = await api('/crash/start',{
       gameId:crashGameId,
