@@ -707,3 +707,8 @@ body{background:#063b39}
 @media(min-width:520px){
   .aviator-app{max-width:520px}
 }
+
+/* Toggle the single main action slot between Bet and Cash Out states */
+.aviator-cashout-button:disabled{display:none}
+.aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-bet-button{display:none}
+.aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-cashout-button{display:block}
