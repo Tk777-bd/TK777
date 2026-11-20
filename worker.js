@@ -147,8 +147,13 @@ const uid = () => crypto.randomUUID();
 const rand = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
 const enc = new TextEncoder();
 
+/* INTERNAL MESSAGES */
+async function ensureInternalMessageSchema(env){await env.DB.prepare("CREATE TABLE IF NOT EXISTS internal_messages (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,title TEXT NOT NULL,body TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'info',source_key TEXT UNIQUE,read_at TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();}
+async function createInternalMessage(env,userId,title,body,type="info",sourceKey=null){await ensureInternalMessageSchema(env);await env.DB.prepare("INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key) VALUES(?,?,?,?,?,?)").bind(uid(),userId,String(title||"বার্তা").slice(0,100),String(body||"").slice(0,500),String(type||"info").slice(0,30),sourceKey).run();}
+
 /* REFERRAL COINS */
 async function ensureReferralSchema(env) {
+  await ensureInternalMessageSchema(env);
   await env.DB.batch([
     env.DB.prepare("CREATE TABLE IF NOT EXISTS referral_codes (code TEXT PRIMARY KEY,user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS referrals (referred_user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,referrer_user_id TEXT NOT NULL REFERENCES users(id),reward_paid INTEGER NOT NULL DEFAULT 0,turnover INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
@@ -158,6 +163,7 @@ async function ensureReferralSchema(env) {
   try { await env.DB.prepare("ALTER TABLE referrals ADD COLUMN turnover INTEGER NOT NULL DEFAULT 0").run(); } catch (e) {}
   await env.DB.prepare("UPDATE settings SET value='2000' WHERE key='referral_threshold' AND value='200'").run();
   await env.DB.prepare("DROP TRIGGER IF EXISTS referral_reward_on_balance").run();
+  await env.DB.prepare("DROP TRIGGER IF EXISTS referral_reward_on_turnover").run();
   await env.DB.prepare(`
     CREATE TRIGGER IF NOT EXISTS referral_reward_on_turnover
     AFTER INSERT ON game_rounds
@@ -177,6 +183,13 @@ async function ensureReferralSchema(env) {
         u.balance,'Referral reward: referred player completed game turnover'
       FROM users u WHERE u.id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.user_id
         AND reward_paid=1 AND turnover >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER));
+      INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key)
+      SELECT lower(hex(randomblob(16))),r.referrer_user_id,'রেফারেল সফল হয়েছে',
+        'আপনার রেফার সম্পূর্ণ হয়েছে। '+CAST((SELECT value FROM settings WHERE key='referral_bonus') AS TEXT)+' টাকা বোনাস যোগ হয়েছে।','referral','referral-'||NEW.user_id
+      FROM referrals r WHERE r.referred_user_id=NEW.user_id AND r.reward_paid=1;
+      INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key)
+      SELECT lower(hex(randomblob(16))),NEW.user_id,'রেফারেল সম্পন্ন','আপনার রেফারেল কার্যক্রম সফলভাবে সম্পন্ন হয়েছে।','referral','referred-'||NEW.user_id
+      WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.user_id AND reward_paid=1);
       INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
       SELECT lower(hex(randomblob(16))),NEW.user_id,'referral_qualified',0,0,'Referral qualification: game turnover completed'
       WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.user_id AND reward_paid=1);
@@ -549,6 +562,28 @@ async function route(req, env) {
     const admin = () => requireAdmin(req, env);
 
 
+    if(p==="/api/messages"&&method==="GET"){
+      if(!user)return json({error:"লগইন করুন"},401);
+      await ensureInternalMessageSchema(env);
+      const tx=await env.DB.prepare("SELECT id,type,amount,note FROM transactions WHERE user_id=? AND type IN ('coin_bonus','referral_bonus','referral_milestone_bonus','admin_adjustment','admin_balance_set','bonus','new_user_bonus','mission_bonus','withdrawal_refund') ORDER BY created_at DESC LIMIT 100").bind(user.id).all();
+      for(const t of(tx.results||[])){
+        const n=Number(t.amount||0),reason=String(t.note||"");let title="অ্যাকাউন্ট আপডেট",body=reason||"আপনার অ্যাকাউন্টে পরিবর্তন হয়েছে।",type="info";
+        if(["referral_bonus","referral_milestone_bonus"].includes(t.type)){title="রেফারেল বোনাস";body=n+" টাকা বোনাস যোগ হয়েছে। "+reason;type="bonus";}
+        else if(["coin_bonus","bonus","new_user_bonus","mission_bonus"].includes(t.type)){title="বোনাস পেয়েছেন";body=n+" টাকা বোনাস যোগ হয়েছে। "+reason;type="bonus";}
+        else if(["admin_adjustment","admin_balance_set"].includes(t.type)){title="অ্যাডমিন ব্যালেন্স আপডেট";body=(n>=0?"+":"")+n+" টাকা ব্যালেন্স পরিবর্তন হয়েছে। কারণ: "+reason;type="balance";}
+        else if(t.type==="withdrawal_refund"){title="উইথড্র রিফান্ড";body=n+" টাকা ব্যালেন্সে ফেরত দেওয়া হয়েছে।";type="balance";}
+        await createInternalMessage(env,user.id,title,body,type,"transaction-"+t.id);
+      }
+      const rows=await env.DB.prepare("SELECT id,title,body,type,created_at,read_at FROM internal_messages WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(user.id).all();
+      const unread=await env.DB.prepare("SELECT COUNT(*) AS count FROM internal_messages WHERE user_id=? AND read_at IS NULL").bind(user.id).first();
+      return json({messages:rows.results||[],unread:Number(unread?.count||0)});
+    }
+    if(p==="/api/messages/read"&&method==="POST"){
+      if(!user)return json({error:"লগইন করুন"},401);
+      await ensureInternalMessageSchema(env);
+      await env.DB.prepare("UPDATE internal_messages SET read_at=CURRENT_TIMESTAMP WHERE user_id=? AND read_at IS NULL").bind(user.id).run();
+      return json({ok:true,unread:0});
+    }
     if (p === "/api/referral" && method === "GET") {
       if (!user) return json({ error: "লগইন করুন" }, 401);
       await ensureReferralSchema(env);
@@ -578,6 +613,7 @@ async function route(req, env) {
       const claimed=await env.DB.prepare("SELECT amount FROM referral_milestone_claims WHERE user_id=? AND milestone=?").bind(user.id,milestone).first();
       if(!claimed)return json({error:"এই বোনাস পাওয়ার জন্য আরও সফল রেফার প্রয়োজন"},400);
       const inserted=Number(result?.[0]?.meta?.changes||0)===1;
+      if(inserted) await createInternalMessage(env,user.id,"রেফারেল বোনাস পেয়েছেন",milestone+" জন সফল রেফারের জন্য "+Number(claimed.amount)+" টাকা বোনাস যোগ হয়েছে।","bonus","referral-milestone-"+milestone+"-"+user.id);
       return json({ok:true,claimed:inserted,amount:Number(claimed.amount),message:inserted?"বোনাস সফলভাবে যোগ হয়েছে":"এই বোনাস আগেই ক্লেইম করা হয়েছে"});
     }
     if (p === "/api/admin/referral-settings" && method === "GET") {
@@ -1729,11 +1765,10 @@ async function route(req, env) {
       const delta = nextBalance - Number(current.balance);
       const updated = await env.DB.prepare("UPDATE users SET balance=? WHERE id=? AND balance=?").bind(nextBalance, userId, current.balance).run();
       if (!updated.meta?.changes) return json({ error: "ব্যালেন্স অন্য অনুরোধে পরিবর্তিত হয়েছে। আবার চেষ্টা করুন।" }, 409);
-      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(
-        uid(), userId, "admin_balance_set", delta, nextBalance,
-        String(body.note || "Admin directly set coin balance").slice(0, 160)
-      ).run();
-      return json({ ok: true, balance: nextBalance, previousBalance: Number(current.balance) });
+      const note=String(body.note||"Admin directly set coin balance").slice(0,160),txId=uid();
+      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(txId,userId,"admin_balance_set",delta,nextBalance,note).run();
+      await createInternalMessage(env,userId,"অ্যাডমিন ব্যালেন্স আপডেট",(delta>=0?"+":"")+delta+" টাকা ব্যালেন্স পরিবর্তন হয়েছে। কারণ: "+note,"balance","transaction-"+txId);
+      return json({ok:true,balance:nextBalance,previousBalance:Number(current.balance)});
     }
 
     /* ADMIN BALANCE */
@@ -1770,20 +1805,12 @@ async function route(req, env) {
         SELECT balance FROM users WHERE id=?
       `).bind(userId).first();
 
+      const reason=String(note||"Admin credit adjustment").slice(0,160),txId=uid();
       await env.DB.prepare(`
-        INSERT INTO transactions
-        (id,user_id,type,amount,balance_after,note)
-        VALUES(?,?,?,?,?,?)
-      `).bind(
-        uid(),
-        userId,
-        "admin_adjustment",
-        n,
-        u.balance,
-        String(note || "Admin credit adjustment").slice(0, 160)
-      ).run();
-
-      return json({ ok: true, balance: u.balance });
+        INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)
+      `).bind(txId,userId,"admin_adjustment",n,u.balance,reason).run();
+      await createInternalMessage(env,userId,"অ্যাডমিন ব্যালেন্স আপডেট",(n>=0?"+":"")+n+" টাকা ব্যালেন্স পরিবর্তন হয়েছে। কারণ: "+reason,"balance","transaction-"+txId);
+      return json({ok:true,balance:u.balance});
     }
 
     if (p === "/api/admin/user-password-reset" && method === "POST") {
@@ -2007,13 +2034,15 @@ async function route(req, env) {
       if (!request) return json({ error: "Request পাওয়া যায়নি অথবা আগেই Review হয়েছে" }, 404);
       const updated = await env.DB.prepare("UPDATE demo_withdrawals SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status, user.id, id).run();
       if (!updated.meta?.changes) return json({ error: "Request ইতিমধ্যে Review হয়েছে" }, 409);
+      if(status==="approved")await createInternalMessage(env,request.user_id,"উইথড্র সফল হয়েছে",Number(request.amount)+" টাকা Withdraw Successful.","withdrawal","withdraw-approved-"+request.id);
       if (status === "rejected" && Number(request.coin_reserved) === 1) {
         const refunded = await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(request.amount, request.user_id).run();
         if (!refunded.meta?.changes) return json({ error: "কয়েন ফেরত দেওয়া যায়নি; Admin লগ পরীক্ষা করুন" }, 500);
-        const u = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
-        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(), request.user_id, "withdrawal_refund", request.amount, u.balance, "Coin refunded after withdrawal rejection").run();
+        const u = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first(),txId=uid();
+        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(txId,request.user_id,"withdrawal_refund",request.amount,u.balance,"Coin refunded after withdrawal rejection").run();
+        await createInternalMessage(env,request.user_id,"উইথড্র রিকোয়েস্ট বাতিল","আপনার "+Number(request.amount)+" টাকা Withdraw Request বাতিল হয়েছে। কয়েন ব্যালেন্সে ফেরত দেওয়া হয়েছে।","withdrawal","withdraw-rejected-"+request.id);
       }
-      return json({ ok: true, status });
+      return json({ok:true,status});
     }
 
     if (p === "/api/admin/coin-requests" && method === "GET") {
@@ -2034,14 +2063,16 @@ async function route(req, env) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
       const cr = await env.DB.prepare("SELECT * FROM coin_requests WHERE id=? AND status='pending'").bind(String(body.id || "")).first();
       if (!cr) return json({ error: "Request পাওয়া যায়নি অথবা আগেই Review হয়েছে" }, 404);
-      if (status === "approved") {
+      if(status==="approved"){
+        const txId=uid();
         await env.DB.batch([
-          env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(cr.amount, cr.user_id),
-          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,id,'coin_bonus',?,balance,'Admin approved coin request' FROM users WHERE id=?").bind(uid(), cr.amount, cr.user_id)
+          env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(cr.amount,cr.user_id),
+          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,id,'coin_bonus',?,balance,'Admin approved coin request' FROM users WHERE id=?").bind(txId,cr.amount,cr.user_id)
         ]);
+        await createInternalMessage(env,cr.user_id,"অ্যাডমিন বোনাস দিয়েছেন",Number(cr.amount)+" টাকা বোনাস যোগ হয়েছে। কারণ: অ্যাডমিন আপনার Coin Request অনুমোদন করেছেন।","bonus","transaction-"+txId);
       }
-      await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status, user.id, cr.id).run();
-      return json({ ok: true });
+      await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,cr.id).run();
+      return json({ok:true});
     }
 
     /* ADMIN SETTINGS */
