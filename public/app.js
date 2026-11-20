@@ -561,7 +561,7 @@ function showWithdrawDemoIds(kind){
 async function withdrawPage(){
  if(!me)return showAuth();selectedWithdrawMethod='';
  shell(`<div class="page member-subpage"><div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>${esc(withdrawText('pageTitle'))}</h2></div>
- <div class="card coin-request-card"><p class="muted">${esc(withdrawText('safetyNote'))}</p><h3>${esc(withdrawText('methodTitle'))}</h3><div class="demo-payment-methods">
+ <div class="card coin-request-card"><p class="muted">${esc(withdrawText('safetyNote'))}</p><label for="withdrawWalletNumber" style="display:block;font-size:19px;font-weight:800;margin:16px 0 8px">আপনার বিকাশ / নগদ / রকেট ওয়ালেট নম্বর</label><input id="withdrawWalletNumber" class="field" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="যে নম্বরে Request দিতে চান" style="font-size:20px;min-height:58px;padding:14px"><h3>${esc(withdrawText('methodTitle'))}</h3><div class="demo-payment-methods">
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash');showWithdrawDemoIds('bkash')">${esc(withdrawText('methodBkash'))} <small>${esc(withdrawText('demoBadge'))}</small></button>
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad');showWithdrawDemoIds('nagad')">${esc(withdrawText('methodNagad'))} <small>${esc(withdrawText('demoBadge'))}</small></button>
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket');showWithdrawDemoIds('rocket')">${esc(withdrawText('methodRocket'))} <small>${esc(withdrawText('demoBadge'))}</small></button></div>
@@ -583,10 +583,12 @@ async function withdrawRecordPage(){
 async function submitWithdrawRequest(){
  const msg=document.getElementById('withdrawRequestMsg');if(!msg)return;
  const amount=Number(document.getElementById('withdrawCoinAmount')?.value);
+ const walletNumber=String(document.getElementById('withdrawWalletNumber')?.value||'').trim();
  if(!selectedWithdrawMethod){msg.textContent=withdrawText('chooseMethodError');return;}
+ if(!/^[0-9+\- ]{8,20}$/.test(walletNumber)){msg.textContent='সঠিক ওয়ালেট নম্বর লিখুন।';return;}
  if(!Number.isSafeInteger(amount)||amount<1){msg.textContent=withdrawText('amountError');return;}
  if(amount>Number(me.balance||0)){msg.textContent=withdrawText('balanceError');return;}
- try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount});msg.textContent=withdrawText('successMessage');await loadWithdrawRequests();await refreshBalance();}
+ try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount,walletNumber});msg.textContent=withdrawText('successMessage');await loadWithdrawRequests();await refreshBalance();}
  catch(e){msg.textContent=e.message;}
 }
 
