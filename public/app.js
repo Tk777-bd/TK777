@@ -9,8 +9,8 @@ let crashPollBusy = false;
 let crashPhase = 'countdown';
 
 let crashSlots = [
-  { roundId: null, busy: false, status: 'ready' },
-  { roundId: null, busy: false, status: 'ready' }
+  { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 },
+  { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 }
 ];
 
 const api = async (path, body = null) => {
@@ -403,8 +403,8 @@ function aviator(g) {
   stopCrashMonitor();
 
   crashSlots = [
-    { roundId: null, busy: false, status: 'ready' },
-    { roundId: null, busy: false, status: 'ready' }
+    { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 },
+    { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 }
   ];
 
   crashGameId = g.id;
@@ -419,10 +419,47 @@ function aviator(g) {
 
     <div class="game-screen">
       <div class="aviator-stage countdown" id="aviatorStage">
+        <div class="aviator-sky"></div>
+        <div class="aviator-stars"></div>
         <div class="flight-grid"></div>
-        <div class="plane" id="plane">✈</div>
+
+        <svg class="flight-chart" id="flightChart" viewBox="0 0 1000 440" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#26e6a2" stop-opacity=".30"/>
+              <stop offset="100%" stop-color="#26e6a2" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="flightGlow">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <path id="flightArea" class="flight-area" d="M35 405 C150 402 210 382 300 350 S470 278 570 220 S790 90 970 18 L970 440 L35 440 Z"/>
+          <path id="flightPath" class="flight-path" d="M35 405 C150 402 210 382 300 350 S470 278 570 220 S790 90 970 18"/>
+          <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="7"/>
+        </svg>
+
+        <div class="plane-wrap" id="planeWrap">
+          <svg class="plane" id="plane" viewBox="0 0 120 70" aria-label="Airplane">
+            <defs>
+              <linearGradient id="planeRed" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff7777"/>
+                <stop offset=".5" stop-color="#ed2634"/>
+                <stop offset="1" stop-color="#970014"/>
+              </linearGradient>
+            </defs>
+            <path d="M5 36 L47 29 L75 5 Q80 1 84 5 L78 29 L111 34 Q118 35 118 39 Q118 42 111 43 L78 46 L85 62 Q86 66 81 66 L75 65 L48 47 L7 43 Q1 42 1 39 Q1 37 5 36Z" fill="url(#planeRed)" stroke="#ffd6d6" stroke-width="1.5"/>
+            <path d="M47 31 L75 34 L78 43 L48 44Z" fill="#fff" opacity=".8"/>
+            <path d="M13 38 L48 34" stroke="#fff" stroke-width="2" opacity=".7"/>
+          </svg>
+        </div>
+
         <div class="multiplier" id="multi">1.00x</div>
         <div class="crash-status" id="crashStatus">STARTING...</div>
+        <div class="round-label">TK777 • LIVE FLIGHT</div>
       </div>
 
       <div class="card">
@@ -453,11 +490,22 @@ function aviator(g) {
               type="number" min="1" max="1000000"
               step="1" value="10">
 
+            <div class="auto-row">
+              <label class="auto-check">
+                <input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)">
+                AUTO CASH OUT
+              </label>
+              <label class="auto-target">
+                AT
+                <input id="autoTarget${i}" type="number" min="1.01" max="1000" step=".01" value="2.00">
+                x
+              </label>
+            </div>
+
             <div class="bet-actions">
-              <button class="primary" id="startCrash${i}"
-                onclick="startCrash(${i})">BET</button>
-              <button class="cashout" id="cashoutBtn${i}"
-                disabled onclick="cashout(${i})">CASH OUT</button>
+              <button class="primary" id="startCrash${i}" onclick="startCrash(${i})">BET</button>
+              <button class="cashout" id="cashoutBtn${i}" disabled onclick="cashout(${i})">CASH OUT</button>
+              <button class="cancel-auto" id="cancelAuto${i}" onclick="cancelAuto(${i})" disabled>CANCEL AUTO</button>
             </div>
 
             <div id="result${i}" class="notice">
@@ -511,16 +559,25 @@ function updateSlotButtons(i) {
   const slot = crashSlots[i];
   const start = $('#startCrash' + i);
   const cash = $('#cashoutBtn' + i);
+  const cancel = $('#cancelAuto' + i);
+  const autoToggle = $('#autoToggle' + i);
+  const targetInput = $('#autoTarget' + i);
 
   if (!start || !cash) return;
 
-  // শুধু কাউন্টডাউনের সময় BET করা যাবে।
+  if (autoToggle) autoToggle.checked = !!slot.auto;
+
+  if (targetInput && document.activeElement !== targetInput) {
+    targetInput.value = Number(slot.autoTarget || 2).toFixed(2);
+  }
+
+  if (cancel) cancel.disabled = !slot.auto;
+
   start.disabled =
     !!slot.roundId ||
     slot.busy ||
     crashPhase !== 'countdown';
 
-  // শুধু প্লেন ওড়ার সময় CASH OUT করা যাবে।
   cash.disabled =
     !slot.roundId ||
     slot.busy ||
@@ -566,6 +623,8 @@ async function pollCrashState() {
 
       if (multi) multi.textContent = '1.00x';
 
+      updateFlightCurve(1);
+
       if (plane) {
         plane.style.transform = 'translate(0px, 0px) rotate(0deg)';
       }
@@ -587,15 +646,27 @@ async function pollCrashState() {
       stage.classList.remove('countdown', 'crashed');
       stage.classList.add('running');
 
-      if (multi) multi.textContent = multiplier.toFixed(2) + 'x';
-
-      if (plane) {
-        const distance = Math.max(0, multiplier - 1);
-        plane.style.transform =
-          `translate(${Math.min(190, distance * 25)}px, ${-Math.min(120, distance * 18)}px) rotate(-15deg)`;
+      if (multi) {
+        multi.textContent = multiplier.toFixed(2) + 'x';
       }
 
       if (status) status.textContent = 'FLYING';
+
+      updateFlightCurve(multiplier);
+
+      for (let i = 0; i < crashSlots.length; i++) {
+        const slot = crashSlots[i];
+
+        if (
+          slot.roundId &&
+          slot.status === 'active' &&
+          slot.auto &&
+          !slot.busy &&
+          multiplier >= Number(slot.autoTarget || 2)
+        ) {
+          cashout(i);
+        }
+      }
 
     } else {
       stage.classList.remove('running', 'countdown');
@@ -606,12 +677,14 @@ async function pollCrashState() {
       }
 
       if (status) status.textContent = 'CRASHED';
+
+      const wrap = $('#planeWrap');
+      if (wrap) wrap.classList.add('plane-crashed');
     }
 
     updateCrashHistory(state.previous || []);
     updateAllSlotButtons();
 
-    // প্রতিটি খেলোয়াড়ের নিজের বেটের অবস্থা আলাদাভাবে পরীক্ষা।
     for (let i = 0; i < crashSlots.length; i++) {
       const slot = crashSlots[i];
 
@@ -639,10 +712,11 @@ async function pollCrashState() {
             );
 
             const result = $('#result' + i);
+
             if (result) {
               result.textContent = t.betStatus === 'cashed_out'
                 ? `Cash Out: ${t.multiplier}x · পেআউট ${t.payout} ক্রেডিট`
-                : `ক্র্যাশ হয়েছে · পেআউট ০`;
+                : 'ক্র্যাশ হয়েছে · পেআউট ০';
             }
 
             updateSlotButtons(i);
@@ -662,10 +736,84 @@ async function pollCrashState() {
   }
 }
 
+/* ---------------- FLIGHT GRAPH + AUTO CASH OUT ---------------- */
+
+function updateFlightCurve(multiplier) {
+  const path = $('#flightPath');
+  const area = $('#flightArea');
+  const dot = $('#flightDot');
+  const wrap = $('#planeWrap');
+
+  if (!path || !dot || !wrap) return;
+
+  const length = path.getTotalLength();
+
+  const progress = Math.max(
+    0,
+    Math.min(1, Math.log(Math.max(1, multiplier)) / Math.log(30))
+  );
+
+  const point = path.getPointAtLength(length * progress);
+
+  dot.setAttribute('cx', point.x);
+  dot.setAttribute('cy', point.y);
+
+  wrap.style.left = (point.x / 10) + '%';
+  wrap.style.top = (point.y / 4.4) + '%';
+
+  path.style.strokeDasharray = length;
+  path.style.strokeDashoffset = length - length * progress;
+
+  if (area) {
+    area.style.opacity = progress > 0 ? '1' : '.45';
+  }
+
+  wrap.classList.remove('plane-crashed');
+}
+
+function toggleAuto(index, enabled) {
+  const slot = crashSlots[index];
+  const input = $('#autoTarget' + index);
+
+  if (!slot) return;
+
+  const target = Number(input?.value || 2);
+
+  if (!Number.isFinite(target) || target < 1.01 || target > 1000) {
+    toast('AUTO multiplier 1.01x থেকে 1000x এর মধ্যে দিন');
+
+    const toggle = $('#autoToggle' + index);
+    if (toggle) toggle.checked = false;
+
+    slot.auto = false;
+    return;
+  }
+
+  slot.autoTarget = target;
+  slot.auto = !!enabled;
+
+  updateSlotButtons(index);
+}
+
+function cancelAuto(index) {
+  const slot = crashSlots[index];
+
+  if (!slot) return;
+
+  slot.auto = false;
+
+  const toggle = $('#autoToggle' + index);
+  if (toggle) toggle.checked = false;
+
+  updateSlotButtons(index);
+  toast('Auto Cash Out বাতিল করা হয়েছে');
+}
+
 /* ---------------- PLACE BET ---------------- */
 
 async function startCrash(index) {
   const slot = crashSlots[index];
+
   if (!slot || slot.roundId || slot.busy) return;
 
   if (crashPhase !== 'countdown') {
@@ -687,6 +835,15 @@ async function startCrash(index) {
 
     slot.busy = true;
     button.disabled = true;
+
+    const targetInput = $('#autoTarget' + index);
+    const target = Number(targetInput?.value || 2);
+
+    if (!Number.isFinite(target) || target < 1.01 || target > 1000) {
+      throw Error('AUTO multiplier 1.01x থেকে 1000x এর মধ্যে দিন');
+    }
+
+    slot.autoTarget = target;
 
     const r = await api('/crash/start', {
       gameId: crashGameId,
@@ -728,6 +885,7 @@ async function cashout(index) {
   }
 
   const roundId = slot.roundId;
+
   slot.busy = true;
   updateSlotButtons(index);
 
@@ -738,12 +896,14 @@ async function cashout(index) {
 
     if (r.balance !== undefined) {
       me.balance = r.balance;
+
       const bal = $('#gameBalance');
       if (bal) bal.textContent = money(me.balance);
     }
 
     slot.roundId = null;
     slot.status = r.status;
+    slot.auto = false;
 
     updateSlotStatus(
       index,
@@ -822,7 +982,7 @@ async function playAce(gameId) {
     const suits = ['♠', '♥', '♦', '♣'];
 
     $('#cards').innerHTML = Array.from({ length: 20 }, () =>
-      `<div class="playing-card">${suits[Math.floor(Math.random() * 4)]}</div>`
+      `<div class="playing-card">${suits[Math.floor(Math.random() * suits.length)]}</div>`
     ).join('');
 
     $('#result').textContent =
