@@ -677,7 +677,7 @@ async function depositPage(){
     <div class="demo-number-panel">
       <div class="demo-number-label">${esc(t('numberLabel'))}</div>
       <div class="demo-number-row"><strong id="demoDisplayNumber">${esc(supportSettings.demo_display_number || '01790365006')}</strong><button type="button" onclick="copyDemoNumber(this)">${esc(t('copyButton'))}</button></div>
-      <small>${esc(t('numberNotice'))}</small><small>DEMO ONLY — কোনো আসল টাকা পাঠাবেন না; এখানে কোনো কয়েন জমা হয় না।</small>
+      <small>${esc(t('numberNotice'))}</small>
     </div>
     ${depositExtraCategories()}
     <div class="card coin-request-card demo-deposit-card">
