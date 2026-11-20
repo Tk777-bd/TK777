@@ -804,3 +804,18 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
   from{width:100%;}
   to{width:0%;}
 }
+
+
+/* User-designed aircraft: slightly larger and gently bobbing while in flight */
+.aviator-stage .plane-wrap .user-plane{
+  display:block;width:clamp(105px,29vw,170px);height:auto;overflow:visible;
+  filter:drop-shadow(0 2px 5px #f0203655);
+}
+.aviator-stage.running .plane-wrap .user-plane{
+  animation:tkUserPlaneBob 0.82s ease-in-out infinite alternate;
+  transform-origin:center;
+}
+@keyframes tkUserPlaneBob{
+  from{translate:0 -7px;rotate:-1deg;}
+  to{translate:0 7px;rotate:1deg;}
+}
