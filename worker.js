@@ -733,10 +733,13 @@ async function route(req, env) {
       await env.DB.prepare("ALTER TABLE users ADD COLUMN withdraw_password_locked_until INTEGER NOT NULL DEFAULT 0").run().catch(() => {});
       const body=await req.json(),password=String(body.password||"");
       if(!/^\d{6}$/.test(password))return json({error:"ঠিক ৬ সংখ্যার পাসওয়ার্ড দিন"},400);
+      const existing=await env.DB.prepare("SELECT withdraw_password_hash FROM users WHERE id=?").bind(user.id).first();
+      if(existing?.withdraw_password_hash)return json({error:"উইথড্র পাসওয়ার্ড আগে থেকেই সেট করা আছে।"},409);
       const salt=uid(),passwordHash=await passHash(password,salt);
-      const saved=await env.DB.prepare("UPDATE users SET withdraw_password_hash=?,withdraw_password_salt=? WHERE id=? AND (withdraw_password_hash IS NULL OR withdraw_password_hash='')").bind(passwordHash,salt,user.id).run();
-      if(!saved.meta?.changes)return json({error:"উইথড্র পাসওয়ার্ড আগে থেকেই সেট করা আছে।"},409);
-      return json({ok:true});
+      await env.DB.prepare("UPDATE users SET withdraw_password_hash=?,withdraw_password_salt=? WHERE id=? AND (withdraw_password_hash IS NULL OR withdraw_password_hash='')").bind(passwordHash,salt,user.id).run();
+      const savedCheck=await env.DB.prepare("SELECT withdraw_password_hash FROM users WHERE id=?").bind(user.id).first();
+      if(!savedCheck?.withdraw_password_hash)return json({error:"পাসওয়ার্ড সেভ হয়নি। আবার চেষ্টা করুন।"},500);
+      return json({ok:true,passwordSet:true});
     }
 
     if (p === "/api/logout" && method === "POST") {
