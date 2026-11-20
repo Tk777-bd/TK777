@@ -361,6 +361,20 @@ async function route(req, env) {
     const admin = () => requireAdmin(req, env);
 
 
+    if (p === "/api/demo-deposits" && method === "GET" && user) {
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+      const rows=await env.DB.prepare("SELECT id,method,amount,demo_reference,status,created_at FROM demo_deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      return json({requests:rows.results||[]});
+    }
+    if (p === "/api/demo-deposits" && method === "POST") {
+      if(!user)return json({error:"লগইন করুন"},401);
+      const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);const ref=String(body.demo_reference||'');
+      if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||![100,200,500,1000].includes(amount)||!/^DEMO-[A-Z0-9-]{6,30}$/.test(ref))return json({error:"সঠিক Demo তথ্য দিন"},400);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+      await env.DB.prepare("INSERT INTO demo_deposits(id,user_id,method,amount,demo_reference) VALUES(?,?,?,?,?)").bind(uid(),user.id,methodName,amount,ref).run();
+      return json({ok:true});
+    }
+
     if (p === "/api/coin-requests" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
       const rows=await env.DB.prepare("SELECT id,amount,status,created_at FROM coin_requests WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
@@ -1413,6 +1427,19 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
+
+    if (p === "/api/admin/demo-deposits" && method === "GET") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+      const rows=await env.DB.prepare("SELECT d.id,d.method,d.amount,d.demo_reference,d.status,d.created_at,u.username,u.email FROM demo_deposits d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
+      return json({requests:rows.results||[]});
+    }
+    if (p.startsWith("/api/admin/demo-deposits/") && method === "DELETE") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      const id=decodeURIComponent(p.split("/").pop());
+      await env.DB.prepare("DELETE FROM demo_deposits WHERE id=?").bind(id).run();
+      return json({ok:true});
+    }
 
     if (p === "/api/admin/coin-requests" && method === "GET") {
       if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
