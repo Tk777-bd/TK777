@@ -687,25 +687,25 @@ async function depositPage(){
     <div class="demo-number-panel">
       <div class="demo-number-label">${esc(t('numberLabel'))}</div>
       <div class="demo-number-row"><strong id="demoDisplayNumber">${esc(supportSettings.demo_display_number || '01790365006')}</strong><button type="button" onclick="copyDemoNumber(this)">${esc(t('copyButton'))}</button></div>
-      <small>${esc(t('numberNotice'))}</small>
+      <small>${esc(t('numberNotice'))}</small><small>DEMO ONLY — কোনো আসল টাকা পাঠাবেন না; এখানে কোনো কয়েন জমা হয় না।</small>
     </div>
     ${depositExtraCategories()}
     <div class="card coin-request-card demo-deposit-card">
       <h3>${esc(t('paymentTitle'))}</h3>
       <div class="demo-payment-methods">
-        <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">${demoPaymentImages.bkash ? '<img src="'+esc(demoPaymentImages.bkash)+'" alt="bKash" style="width:100%;height:34px;object-fit:contain">' : 'bKash'} <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">${demoPaymentImages.nagad ? '<img src="'+esc(demoPaymentImages.nagad)+'" alt="Nagad" style="width:100%;height:34px;object-fit:contain">' : 'Nagad'} <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : 'Rocket'} <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">${demoPaymentImages.bkash ? '<img src="'+esc(demoPaymentImages.bkash)+'" alt="bKash" style="width:100%;height:34px;object-fit:contain">' : esc(t('methodBkash'))} <small>${esc(t('demoBadge'))}</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">${demoPaymentImages.nagad ? '<img src="'+esc(demoPaymentImages.nagad)+'" alt="Nagad" style="width:100%;height:34px;object-fit:contain">' : esc(t('methodNagad'))} <small>${esc(t('demoBadge'))}</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : esc(t('methodRocket'))} <small>${esc(t('demoBadge'))}</small></button>
       </div>
       <input type="hidden" id="demoPaymentMethod" value="">
       <label for="demoAmount">${esc(t('amountLabel'))}</label>
       <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="${esc(t('amountPlaceholder'))}" oninput="syncDemoAmountInput()">
       <div class="demo-amount-buttons">
-        <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">100</button>
-        <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">200</button>
-        <button type="button" class="demo-amount-button" data-amount="300" onclick="selectDemoAmount(300)">300</button>
-        <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">500</button>
-        <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">1000</button>
+        <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">${esc(t('currencyPrefix'))}${esc(t('preset100'))}</button>
+        <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">${esc(t('currencyPrefix'))}${esc(t('preset200'))}</button>
+        <button type="button" class="demo-amount-button" data-amount="300" onclick="selectDemoAmount(300)">${esc(t('currencyPrefix'))}${esc(t('preset300'))}</button>
+        <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">${esc(t('currencyPrefix'))}${esc(t('preset500'))}</button>
+        <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">${esc(t('currencyPrefix'))}${esc(t('preset1000'))}</button>
       </div>
       <label for="demoReference">${esc(t('referenceLabel'))}</label>
       <input id="demoReference" class="field" type="text" maxlength="80" autocomplete="off" placeholder="${esc(t('referencePlaceholder'))}">
@@ -720,7 +720,7 @@ async function depositPage(){
 }
 function copyDemoNumber(button){
   const number=document.getElementById('demoDisplayNumber')?.textContent.trim()||'01790365006';
-  const done=()=>{if(button){button.textContent='Copied';setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast('Demo নম্বর কপি হয়েছে');};
+  const done=()=>{if(button){button.textContent=depositText('copiedButton');setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast(depositText('copySuccess'));};
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(number).then(done).catch(()=>fallbackCopyDemoNumber(number,done));
   }else fallbackCopyDemoNumber(number,done);
