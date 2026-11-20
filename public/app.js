@@ -1,6 +1,4 @@
 
-const $ = s => document.querySelector(s);
-
 let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let crashTimer = null;
@@ -9,16 +7,18 @@ let crashPollBusy = false;
 let crashPhase = 'countdown';
 
 let crashSlots = [
-  { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 },
-  { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 }
+  { roundId:null,busy:false,status:'ready',auto:false,autoTarget:2 },
+  { roundId:null,busy:false,status:'ready',auto:false,autoTarget:2 }
 ];
+
+const $ = s => document.querySelector(s);
 
 const api = async (path, body = null) => {
   const r = await fetch('/api' + path, {
     method: body ? 'POST' : 'GET',
     headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: 'Bearer ' + token } : {})
+      'Content-Type':'application/json',
+      ...(token ? {Authorization:'Bearer '+token} : {})
     },
     body: body ? JSON.stringify(body) : undefined
   });
@@ -41,11 +41,11 @@ const money = n =>
 
 function esc(s = '') {
   return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
   }[c]));
 }
 
@@ -63,11 +63,13 @@ function shell(content) {
       <header class="top">
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
-          <span class="pill">● ${me ? money(me.balance) : 'Guest'}</span>
+          <span class="pill">${me ? money(me.balance) : 'Guest'}</span>
           <button onclick="showAuth()">${me ? 'Account' : 'Login'}</button>
         </div>
       </header>
+
       ${content}
+
       <nav class="bottom">
         <button onclick="home()"><b>⌂</b>Home</button>
         <button onclick="page('promotion')"><b>🎁</b>Promotion</button>
@@ -104,6 +106,8 @@ async function init() {
   home();
 }
 
+/* HOME */
+
 function home() {
   stopCrashMonitor();
 
@@ -131,11 +135,11 @@ function home() {
         <small>ALL CATEGORIES ›</small>
       </div>
       <div class="cats">
-        ${categories.map((c, i) => `
+        ${categories.map((c,i) => `
           <button class="cat" onclick="filterGames('${esc(c.id)}')">
             ${c.image_url
               ? `<img src="${esc(c.image_url)}" alt="" onerror="this.style.display='none'">`
-              : `<div class="placeholder">${['🔥','♥','🎰','♛','⚽','🏆','♠','🐟','🎟','🎯','👑','🎁'][i % 12]}</div>`}
+              : `<span>${['🔥','♥','🎰','♛','⚽','🏆','♠','🐟','🎟','🎯','👑','🎁'][i%12]}</span>`}
             <b>${esc(c.name)}</b>
           </button>
         `).join('')}
@@ -169,8 +173,8 @@ function favoriteIds() {
 
 function toggleFavorite(id, el) {
   let ids = favoriteIds();
-  ids = ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
-  localStorage.setItem('tk777_favorites', JSON.stringify(ids));
+  ids = ids.includes(id) ? ids.filter(x => x !== id) : [...ids,id];
+  localStorage.setItem('tk777_favorites',JSON.stringify(ids));
   if (el) el.textContent = ids.includes(id) ? '♥' : '♡';
 }
 
@@ -211,6 +215,8 @@ function filterGames(id) {
   `);
 }
 
+/* LOGIN AND REGISTER */
+
 function showAuth() {
   stopCrashMonitor();
 
@@ -222,6 +228,7 @@ function showAuth() {
           <button id="loginTab" class="active" onclick="authMode('login')">Login</button>
           <button id="registerTab" onclick="authMode('register')">Create Account</button>
         </div>
+
         <form id="authform">
           <div id="usernameWrap" class="hidden">
             <label>Username</label>
@@ -233,6 +240,7 @@ function showAuth() {
           <input class="field" name="password" type="password" minlength="8" required placeholder="কমপক্ষে ৮ অক্ষর">
           <button class="primary" id="authSubmit">Login</button>
         </form>
+
         <p class="muted">নতুন অ্যাকাউন্টের প্রাথমিক ব্যালেন্স: <b>০ ক্রেডিট</b></p>
       </div>
     </div>
@@ -248,9 +256,9 @@ function authMode(m) {
   const f = $('#authform');
   if (!f) return;
 
-  $('#usernameWrap').classList.toggle('hidden', m !== 'register');
-  $('#loginTab').classList.toggle('active', m === 'login');
-  $('#registerTab').classList.toggle('active', m === 'register');
+  $('#usernameWrap').classList.toggle('hidden',m !== 'register');
+  $('#loginTab').classList.toggle('active',m === 'login');
+  $('#registerTab').classList.toggle('active',m === 'register');
   $('#authSubmit').textContent = m === 'register' ? 'Create Account' : 'Login';
 
   f.onsubmit = async e => {
@@ -258,9 +266,9 @@ function authMode(m) {
     const data = Object.fromEntries(new FormData(f));
 
     try {
-      const r = await api('/' + mode, data);
+      const r = await api('/'+mode,data);
       token = r.token;
-      localStorage.setItem('tk777_token', token);
+      localStorage.setItem('tk777_token',token);
       me = r.user;
       home();
     } catch (err) {
@@ -268,6 +276,8 @@ function authMode(m) {
     }
   };
 }
+
+/* MEMBER AND PAGES */
 
 function page(name) {
   stopCrashMonitor();
@@ -279,7 +289,7 @@ function page(name) {
       <div class="page">
         <div class="card profile-card">
           <h2>Member Center</h2>
-          <div class="avatar">${esc((me.username || 'U').slice(0, 1).toUpperCase())}</div>
+          <div class="avatar">${esc((me.username || 'U').slice(0,1).toUpperCase())}</div>
           <h3>${esc(me.username)}</h3>
           <p>${esc(me.email)}</p>
           <div class="balance-panel">
@@ -291,8 +301,10 @@ function page(name) {
         </div>
       </div>
     `);
+
   } else if (name === 'history') {
     historyPage();
+
   } else {
     shell(`
       <div class="page">
@@ -301,7 +313,7 @@ function page(name) {
           <p>
             ${name === 'invite'
               ? 'এই ডেমোতে রেফারেল বোনাস চালু নেই।'
-              : 'এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট বা উত্তোলন নেই। অ্যাডমিন অনুমোদিত ফ্রি ক্রেডিট পরিবর্তন হিস্টোরিতে দেখা যাবে।'}
+              : 'এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট বা উত্তোলন নেই।'}
           </p>
         </div>
       </div>
@@ -354,12 +366,14 @@ async function historyPage() {
 }
 
 function logout() {
-  api('/logout', {}).catch(() => {});
+  api('/logout',{}).catch(() => {});
   token = '';
   me = null;
   localStorage.removeItem('tk777_token');
   home();
 }
+
+/* GAME ROUTING */
 
 function openGame(id) {
   const g = games.find(x => x.id === id);
@@ -397,27 +411,30 @@ function openGame(id) {
   else if (g.game_type === 'superace') superAce(g);
 }
 
-/* ---------------- CRASH GAME SCREEN ---------------- */
+/* ==========================================
+   TK777 FLIGHT GAME SCREEN
+========================================== */
 
 function aviator(g) {
   stopCrashMonitor();
 
   crashSlots = [
-    { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 },
-    { roundId: null, busy: false, status: 'ready', auto: false, autoTarget: 2 }
+    {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2},
+    {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2}
   ];
 
   crashGameId = g.id;
   crashPhase = 'countdown';
 
   shell(`
-    <div class="top game-top">
-      <button class="secondary" onclick="home()">‹ Back</button>
-      <b>${esc(g.name)}</b>
+    <div class="game-top top">
+      <button class="secondary" onclick="home()">‹ BACK</button>
+      <b>TK777 FLIGHT</b>
       <span id="gameBalance">${money(me.balance)}</span>
     </div>
 
     <div class="game-screen">
+
       <div class="aviator-stage countdown" id="aviatorStage">
 
         <div class="aviator-sky"></div>
@@ -427,7 +444,6 @@ function aviator(g) {
         <div class="aviator-clouds cloud-front"></div>
         <div class="aviator-horizon"></div>
         <div class="flight-grid"></div>
-
         <div class="stage-vignette"></div>
         <div class="stage-flash" id="stageFlash"></div>
 
@@ -435,18 +451,19 @@ function aviator(g) {
         <div class="crash-status" id="crashStatus">WAITING FOR NEXT ROUND</div>
 
         <svg class="flight-chart" id="flightChart"
-          viewBox="0 0 1000 440" preserveAspectRatio="none"
+          viewBox="0 0 1000 440"
+          preserveAspectRatio="none"
           aria-hidden="true">
 
           <defs>
             <linearGradient id="flightLine" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0%" stop-color="#ffca65"/>
-              <stop offset="55%" stop-color="#ff8a32"/>
-              <stop offset="100%" stop-color="#ff3e35"/>
+              <stop offset="0%" stop-color="#ffd36a"/>
+              <stop offset="45%" stop-color="#ff9a42"/>
+              <stop offset="100%" stop-color="#ff3c40"/>
             </linearGradient>
 
             <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ff8538" stop-opacity=".28"/>
+              <stop offset="0%" stop-color="#ff8538" stop-opacity=".35"/>
               <stop offset="100%" stop-color="#ff4b37" stop-opacity="0"/>
             </linearGradient>
 
@@ -472,23 +489,24 @@ function aviator(g) {
 
         <div class="plane-wrap" id="planeWrap">
           <svg class="plane" id="plane" viewBox="0 0 190 112"
-            xmlns="http://www.w3.org/2000/svg" aria-label="TK777 airplane">
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="TK777 airplane">
 
             <defs>
               <linearGradient id="bodyRed" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ff8580"/>
+                <stop offset="0" stop-color="#ff9990"/>
                 <stop offset=".35" stop-color="#f52d38"/>
-                <stop offset="1" stop-color="#9e0718"/>
+                <stop offset="1" stop-color="#99091c"/>
               </linearGradient>
 
               <linearGradient id="wingRed" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#ffb0a0"/>
+                <stop offset="0" stop-color="#ffc1ae"/>
                 <stop offset=".45" stop-color="#f33b43"/>
-                <stop offset="1" stop-color="#9d071b"/>
+                <stop offset="1" stop-color="#97091b"/>
               </linearGradient>
 
               <linearGradient id="glassBlue" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#d8f6ff"/>
+                <stop offset="0" stop-color="#e3f9ff"/>
                 <stop offset=".55" stop-color="#56a6ce"/>
                 <stop offset="1" stop-color="#163b64"/>
               </linearGradient>
@@ -558,14 +576,14 @@ function aviator(g) {
       </div>
 
       <div class="crash-panels">
-        ${[0, 1].map(i => `
+        ${[0,1].map(i => `
           <div class="card betbox crash-bet-panel">
             <div class="crash-panel-head">
-              <b>BET ${i + 1}</b>
+              <b>BET ${i+1}</b>
               <span id="slotStatus${i}">READY</span>
             </div>
 
-            <label>Bet Amount</label>
+            <label>BET AMOUNT</label>
             <input class="field" id="crashBet${i}"
               type="number" min="1" max="1000000"
               step="1" value="10">
@@ -608,7 +626,9 @@ function aviator(g) {
   startCrashMonitor(g.id);
 }
 
-/* ---------------- GLOBAL FLIGHT MONITOR ---------------- */
+/* ==========================================
+   CRASH ROUND MONITOR
+========================================== */
 
 function startCrashMonitor(gameId) {
   stopCrashMonitor();
@@ -618,7 +638,7 @@ function startCrashMonitor(gameId) {
 
   crashTimer = setInterval(() => {
     pollCrashState();
-  }, 400);
+  },400);
 }
 
 function updateCrashHistory(previous) {
@@ -638,18 +658,18 @@ function updateCrashHistory(previous) {
   }).join('');
 }
 
-function updateSlotStatus(i, text) {
-  const el = $('#slotStatus' + i);
+function updateSlotStatus(i,text) {
+  const el = $('#slotStatus'+i);
   if (el) el.textContent = text;
 }
 
 function updateSlotButtons(i) {
   const slot = crashSlots[i];
-  const start = $('#startCrash' + i);
-  const cash = $('#cashoutBtn' + i);
-  const cancel = $('#cancelAuto' + i);
-  const autoToggle = $('#autoToggle' + i);
-  const targetInput = $('#autoTarget' + i);
+  const start = $('#startCrash'+i);
+  const cash = $('#cashoutBtn'+i);
+  const cancel = $('#cancelAuto'+i);
+  const autoToggle = $('#autoToggle'+i);
+  const targetInput = $('#autoTarget'+i);
 
   if (!start || !cash) return;
 
@@ -674,7 +694,7 @@ function updateSlotButtons(i) {
 }
 
 function updateAllSlotButtons() {
-  for (let i = 0; i < crashSlots.length; i++) {
+  for (let i=0;i<crashSlots.length;i++) {
     updateSlotButtons(i);
   }
 }
@@ -686,8 +706,8 @@ async function pollCrashState() {
   crashPollBusy = true;
 
   try {
-    const state = await api('/crash/state', {
-      gameId: crashGameId
+    const state = await api('/crash/state',{
+      gameId:crashGameId
     });
 
     if (!$('#aviatorStage')) return;
@@ -700,12 +720,9 @@ async function pollCrashState() {
     crashPhase = state.status;
 
     if (state.status === 'countdown') {
-      const seconds = Math.max(
-        0,
-        Number(state.countdownMs || 0) / 1000
-      );
+      const seconds = Math.max(0,Number(state.countdownMs || 0)/1000);
 
-      stage.classList.remove('running', 'crashed');
+      stage.classList.remove('running','crashed');
       stage.classList.add('countdown');
 
       if (multi) multi.textContent = '1.00x';
@@ -716,28 +733,29 @@ async function pollCrashState() {
         status.textContent = `STARTING IN ${Math.ceil(seconds)}s`;
       }
 
-      crashSlots.forEach((slot, i) => {
+      crashSlots.forEach((slot,i) => {
         if (!slot.roundId && !slot.busy && slot.status !== 'ready') {
           slot.status = 'ready';
-          updateSlotStatus(i, 'READY');
-          const result = $('#result' + i);
+          updateSlotStatus(i,'READY');
+
+          const result = $('#result'+i);
           if (result) result.textContent = 'নতুন রাউন্ডে বেট করতে পারবেন';
         }
       });
 
     } else if (state.status === 'active') {
-      stage.classList.remove('countdown', 'crashed');
+      stage.classList.remove('countdown','crashed');
       stage.classList.add('running');
 
       if (multi) {
-        multi.textContent = multiplier.toFixed(2) + 'x';
+        multi.textContent = multiplier.toFixed(2)+'x';
       }
 
       if (status) status.textContent = 'FLYING';
 
       updateFlightCurve(multiplier);
 
-      for (let i = 0; i < crashSlots.length; i++) {
+      for (let i=0;i<crashSlots.length;i++) {
         const slot = crashSlots[i];
 
         if (
@@ -752,14 +770,14 @@ async function pollCrashState() {
       }
 
     } else {
-      stage.classList.remove('running', 'countdown');
+      stage.classList.remove('running','countdown');
       stage.classList.add('crashed');
 
       if (multi) {
-        multi.textContent = Number(state.multiplier).toFixed(2) + 'x';
+        multi.textContent = multiplier.toFixed(2)+'x';
       }
 
-      if (status) status.textContent = 'FLEW AWAY!';
+      if (status) status.textContent = 'CRASHED AT '+multiplier.toFixed(2)+'x';
 
       const wrap = $('#planeWrap');
       if (wrap) wrap.classList.add('plane-crashed');
@@ -771,15 +789,15 @@ async function pollCrashState() {
     updateCrashHistory(state.previous || []);
     updateAllSlotButtons();
 
-    for (let i = 0; i < crashSlots.length; i++) {
+    for (let i=0;i<crashSlots.length;i++) {
       const slot = crashSlots[i];
 
       if (!slot.roundId || slot.busy) continue;
 
       if (slot.status === 'active') {
         try {
-          const t = await api('/crash/tick', {
-            roundId: slot.roundId
+          const t = await api('/crash/tick',{
+            roundId:slot.roundId
           });
 
           if (t.balance !== undefined && me) {
@@ -797,7 +815,7 @@ async function pollCrashState() {
               t.betStatus === 'cashed_out' ? 'CASHED OUT' : 'CRASHED'
             );
 
-            const result = $('#result' + i);
+            const result = $('#result'+i);
 
             if (result) {
               result.textContent = t.betStatus === 'cashed_out'
@@ -808,13 +826,13 @@ async function pollCrashState() {
             updateSlotButtons(i);
           }
         } catch (e) {
-          console.error('Crash bet status error', e);
+          console.error('Crash bet status error',e);
         }
       }
     }
 
   } catch (e) {
-    console.error('Crash state error', e);
+    console.error('Crash state error',e);
     const status = $('#crashStatus');
     if (status) status.textContent = 'RECONNECTING...';
   } finally {
@@ -822,7 +840,9 @@ async function pollCrashState() {
   }
 }
 
-/* ---------------- FLIGHT GRAPH ---------------- */
+/* ==========================================
+   FLIGHT GRAPH AND PLANE MOVEMENT
+========================================== */
 
 function updateFlightCurve(multiplier) {
   const path = $('#flightPath');
@@ -837,27 +857,27 @@ function updateFlightCurve(multiplier) {
 
   const progress = Math.max(
     0,
-    Math.min(1, Math.log(Math.max(1, multiplier)) / Math.log(30))
+    Math.min(1,Math.log(Math.max(1,multiplier))/Math.log(30))
   );
 
-  const point = path.getPointAtLength(length * progress);
+  const point = path.getPointAtLength(length*progress);
 
-  dot.setAttribute('cx', point.x);
-  dot.setAttribute('cy', point.y);
+  dot.setAttribute('cx',point.x);
+  dot.setAttribute('cy',point.y);
 
-  wrap.style.left = (point.x / 10) + '%';
-  wrap.style.top = (point.y / 4.4) + '%';
+  wrap.style.left = (point.x/10)+'%';
+  wrap.style.top = (point.y/4.4)+'%';
 
   path.style.strokeDasharray = length;
-  path.style.strokeDashoffset = length - length * progress;
+  path.style.strokeDashoffset = length-length*progress;
 
   if (area) {
     area.style.opacity = progress > 0 ? '1' : '.12';
   }
 
   if (trail) {
-    trail.style.left = (point.x / 10) + '%';
-    trail.style.top = (point.y / 4.4) + '%';
+    trail.style.left = (point.x/10)+'%';
+    trail.style.top = (point.y/4.4)+'%';
     trail.style.opacity = progress > 0 ? '1' : '0';
   }
 
@@ -867,11 +887,13 @@ function updateFlightCurve(multiplier) {
   if (flash) flash.classList.remove('show');
 }
 
-/* ---------------- AUTO CASH OUT ---------------- */
+/* ==========================================
+   AUTO CASH OUT
+========================================== */
 
-function toggleAuto(index, enabled) {
+function toggleAuto(index,enabled) {
   const slot = crashSlots[index];
-  const input = $('#autoTarget' + index);
+  const input = $('#autoTarget'+index);
 
   if (!slot) return;
 
@@ -880,7 +902,7 @@ function toggleAuto(index, enabled) {
   if (!Number.isFinite(target) || target < 1.01 || target > 1000) {
     toast('AUTO multiplier 1.01x থেকে 1000x এর মধ্যে দিন');
 
-    const toggle = $('#autoToggle' + index);
+    const toggle = $('#autoToggle'+index);
     if (toggle) toggle.checked = false;
 
     slot.auto = false;
@@ -895,19 +917,20 @@ function toggleAuto(index, enabled) {
 
 function cancelAuto(index) {
   const slot = crashSlots[index];
-
   if (!slot) return;
 
   slot.auto = false;
 
-  const toggle = $('#autoToggle' + index);
+  const toggle = $('#autoToggle'+index);
   if (toggle) toggle.checked = false;
 
   updateSlotButtons(index);
   toast('Auto Cash Out বাতিল করা হয়েছে');
 }
 
-/* ---------------- PLACE BET ---------------- */
+/* ==========================================
+   PLACE BET
+========================================== */
 
 async function startCrash(index) {
   const slot = crashSlots[index];
@@ -920,9 +943,9 @@ async function startCrash(index) {
     return;
   }
 
-  const betInput = $('#crashBet' + index);
-  const button = $('#startCrash' + index);
-  const result = $('#result' + index);
+  const betInput = $('#crashBet'+index);
+  const button = $('#startCrash'+index);
+  const result = $('#result'+index);
 
   try {
     const bet = Number(betInput.value);
@@ -934,7 +957,7 @@ async function startCrash(index) {
     slot.busy = true;
     button.disabled = true;
 
-    const targetInput = $('#autoTarget' + index);
+    const targetInput = $('#autoTarget'+index);
     const target = Number(targetInput?.value || 2);
 
     if (!Number.isFinite(target) || target < 1.01 || target > 1000) {
@@ -943,9 +966,9 @@ async function startCrash(index) {
 
     slot.autoTarget = target;
 
-    const r = await api('/crash/start', {
-      gameId: crashGameId,
-      betAmount: bet
+    const r = await api('/crash/start',{
+      gameId:crashGameId,
+      betAmount:bet
     });
 
     slot.roundId = r.roundId;
@@ -955,7 +978,7 @@ async function startCrash(index) {
     const bal = $('#gameBalance');
     if (bal) bal.textContent = money(me.balance);
 
-    updateSlotStatus(index, 'BET ACTIVE');
+    updateSlotStatus(index,'BET ACTIVE');
 
     if (result) {
       result.textContent = 'বেট সফল! প্লেন উড়লে Cash Out করতে পারবেন।';
@@ -970,7 +993,9 @@ async function startCrash(index) {
   }
 }
 
-/* ---------------- CASH OUT ---------------- */
+/* ==========================================
+   CASH OUT
+========================================== */
 
 async function cashout(index) {
   const slot = crashSlots[index];
@@ -988,7 +1013,7 @@ async function cashout(index) {
   updateSlotButtons(index);
 
   try {
-    const r = await api('/crash/cashout', {
+    const r = await api('/crash/cashout',{
       roundId
     });
 
@@ -1008,7 +1033,7 @@ async function cashout(index) {
       r.status === 'cashed_out' ? 'CASHED OUT' : 'CRASHED'
     );
 
-    const result = $('#result' + index);
+    const result = $('#result'+index);
 
     if (result) {
       result.textContent = r.status === 'cashed_out'
@@ -1024,14 +1049,16 @@ async function cashout(index) {
   }
 }
 
-/* ---------------- SUPER ACE ---------------- */
+/* ==========================================
+   SUPER ACE
+========================================== */
 
 function superAce(g) {
   stopCrashMonitor();
 
   shell(`
-    <div class="top game-top">
-      <button class="secondary" onclick="home()">‹ Back</button>
+    <div class="game-top top">
+      <button class="secondary" onclick="home()">‹ BACK</button>
       <b>${esc(g.name)}</b>
       <span id="gameBalance">${money(me.balance)}</span>
     </div>
@@ -1041,8 +1068,8 @@ function superAce(g) {
         <div class="ace-head">SUPER ACE</div>
         <p class="ace-sub">FREE CARD GAME</p>
         <div class="cards-grid" id="cards">
-          ${Array.from({ length: 20 }, (_, i) =>
-            `<div class="playing-card">${['♠', '♥', '♦', '♣'][i % 4]}</div>`
+          ${Array.from({length:20},(_,i) =>
+            `<div class="playing-card">${['♠','♥','♦','♣'][i%4]}</div>`
           ).join('')}
         </div>
       </div>
@@ -1070,17 +1097,17 @@ async function playAce(gameId) {
       throw Error('১ বা তার বেশি পূর্ণসংখ্যার বেট দিন');
     }
 
-    const r = await api('/play', {
+    const r = await api('/play',{
       gameId,
-      betAmount: bet
+      betAmount:bet
     });
 
     me.balance = r.balance;
 
-    const suits = ['♠', '♥', '♦', '♣'];
+    const suits = ['♠','♥','♦','♣'];
 
-    $('#cards').innerHTML = Array.from({ length: 20 }, () =>
-      `<div class="playing-card">${suits[Math.floor(Math.random() * suits.length)]}</div>`
+    $('#cards').innerHTML = Array.from({length:20},() =>
+      `<div class="playing-card">${suits[Math.floor(Math.random()*suits.length)]}</div>`
     ).join('');
 
     $('#result').textContent =
@@ -1095,4 +1122,5 @@ async function playAce(gameId) {
   }
 }
 
+/* START APPLICATION */
 init();
