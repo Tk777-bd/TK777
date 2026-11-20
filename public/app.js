@@ -705,6 +705,12 @@ async function pollCrashState() {
       stopCrashVisualAnimation();
       crashVisualValue = 1;
       crashVisualStartMs = null;
+      const resetPlane = $('#planeWrap');
+      if (resetPlane) {
+        resetPlane.classList.remove('plane-hover','plane-crashed');
+        resetPlane.style.left = '10%';
+        resetPlane.style.top = '70%';
+      }
       if (multi) multi.textContent = '1.00x';
 
       updateFlightCurve(1);
@@ -732,6 +738,13 @@ async function pollCrashState() {
       stage.classList.add('running');
 
       setCrashVisualTarget(multiplier,state.startMs);
+      const flyingPlane = $('#planeWrap');
+      if (flyingPlane) {
+        flyingPlane.classList.remove('plane-crashed');
+        flyingPlane.style.left = '50%';
+        flyingPlane.style.top = '50%';
+        flyingPlane.classList.add('plane-hover');
+      }
 
       if (status) status.textContent = 'FLYING';
 
@@ -763,7 +776,10 @@ async function pollCrashState() {
       if (status) status.textContent = 'CRASHED AT '+multiplier.toFixed(2)+'x';
 
       const wrap = $('#planeWrap');
-      if (wrap) wrap.classList.add('plane-crashed');
+      if (wrap) {
+        wrap.classList.remove('plane-hover');
+        wrap.classList.add('plane-crashed');
+      }
 
       const flash = $('#stageFlash');
       if (flash) flash.classList.add('show');
@@ -896,8 +912,8 @@ function updateFlightCurve(multiplier) {
   dot.setAttribute('cx',point.x);
   dot.setAttribute('cy',point.y);
 
-  wrap.style.left = (point.x/10)+'%';
-  wrap.style.top = (point.y/4.4)+'%';
+  // Plane position is controlled by the round phase: center-hover while flying,
+  // then a one-shot exit to the right when the round crashes.
 
   path.style.strokeDasharray = length;
   path.style.strokeDashoffset = length-length*progress;
