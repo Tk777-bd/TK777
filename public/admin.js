@@ -197,10 +197,10 @@ async function withdrawRequests(){
 }
 function renderWithdrawRequests(rows){
  const box=$('#withdrawAdminList');if(!box)return;
- box.innerHTML=rows.map(x=>'<div class="card"><b>'+esc(x.username||x.email||'User')+'</b><p>'+esc(x.method)+' · '+Number(x.amount)+' Virtual Coin</p><p>Balance: '+Number(x.balance||0)+' Coin</p><p>Status: '+esc(x.status)+' · '+esc(x.created_at)+'</p>'+(x.status==='pending'?'<button class="primary" onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'approved\')">Accept</button> <button onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'rejected\')">Reject</button>':'')+'</div>').join('')||'কোনো Withdrawal Request নেই';
+ box.innerHTML=rows.map(x=>'<div class="card"><b>'+esc(x.username||x.email||'User')+'</b><p>'+esc(x.method)+' · '+Number(x.amount)+' Virtual Coin</p><p>Balance: '+Number(x.balance||0)+' Coin</p><p>Status: '+esc(x.status)+' · '+esc(x.created_at)+'</p>'+(x.status==='pending'?'<button class="primary" onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'approved\')">Approve</button> <button onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'rejected\')">বাতিল করে কয়েন ফেরত</button>':'')+'</div>').join('')||'কোনো Withdrawal Request নেই';
 }
 async function reviewWithdrawRequest(id,status){
- const action=status==='approved'?'Accept':'Reject';
+ const action=status==='approved'?'Approve':'বাতিল করে কয়েন ফেরত';
  if(!confirm('এই Demo Withdrawal Request '+action+' করবেন?'))return;
  try{await api('/admin/withdraw-requests/review',{id,status});await withdrawRequests();}
  catch(e){alert(e.message);}
