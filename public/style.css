@@ -1065,3 +1065,24 @@ body{background:#063b39}
   font-size:19px;
 }
 .cats .cat b{font-size:11px}
+
+
+/* Extra-compact horizontal category chips */
+.cats .cat{
+  flex:0 0 clamp(84px,20vw,108px);
+  min-height:44px;
+  gap:4px;
+  padding:5px 6px;
+  border-radius:9px;
+}
+.cats .cat img,
+.cats .cat .placeholder{
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+  font-size:16px;
+}
+.cats .cat b{
+  font-size:10px;
+  line-height:1.1;
+}
