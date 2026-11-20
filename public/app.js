@@ -397,8 +397,7 @@ const displaySlotGames = [
   {id:'slot-display-fortune-tiger',name:'Fortune Tiger',mark:'🐯',tone:'fortune'},
   {id:'slot-display-fortune-ox',name:'Fortune Ox',mark:'🐂',tone:'azteca'},
   {id:'slot-display-fortune-rabbit',name:'Fortune Rabbit',mark:'🐇',tone:'magic'},
-  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},  {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},
-  {id:'slot-display-wild-bandito',name:'Wild Bandito',mark:'🤠',tone:'flyx'},
+  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},  {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},  {id:'slot-display-wild-bandito',name:'Wild Bandito',mark:'🤠',tone:'flyx'},
   {id:'slot-display-ways-of-the-qilin',name:'Ways of the Qilin',mark:'🐉',tone:'anubis'}
 ];
 
@@ -606,7 +605,7 @@ async function depositPage(){
 .demo-number-panel small{display:block;font-size:11px;color:#ffe6b3;line-height:1.5}</style>
     <div class="demo-number-panel">
       <div class="demo-number-label">DEMO NUMBER · COPY ONLY</div>
-      <div class="demo-number-row"><strong>01790365006</strong><button type="button" onclick="copyDemoNumber(this)">Copy</button></div>
+      <div class="demo-number-row"><strong id="demoDisplayNumber">${esc(supportSettings.demo_display_number || '01790365006')}</strong><button type="button" onclick="copyDemoNumber(this)">Copy</button></div>
       <small>এটি শুধু কাল্পনিক Demo নম্বর। কোনো টাকা পাঠাবেন না।</small>
     </div>
     <div class="card coin-request-card demo-deposit-card">
@@ -639,7 +638,7 @@ async function depositPage(){
 }
 
 function copyDemoNumber(button){
-  const number='01790365006';
+  const number=document.getElementById('demoDisplayNumber')?.textContent.trim()||'01790365006';
   const done=()=>{if(button){button.textContent='Copied';setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast('Demo নম্বর কপি হয়েছে');};
   if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(number).then(done).catch(()=>fallbackCopyDemoNumber(number,done));
@@ -797,8 +796,7 @@ function miniGameStage(gameId) {
     'live-blackjack':'<div class="live-table-scene"><div class="live-dealer"><span>👨🏻‍💼</span><b>DEALER ALEX</b></div><div class="mg-cards"><span>?</span><span>?</span><span>?</span></div><small>SIMULATED LIVE BLACKJACK</small></div>',
     'live-baccarat':'<div class="live-table-scene"><div class="live-dealer"><span>👩🏻‍💼</span><b>DEALER LUNA</b></div><div class="mg-baccarat"><div><small>PLAYER</small><span>?</span><span>?</span></div><div><small>BANKER</small><span>?</span><span>?</span></div></div><small>SIMULATED LIVE BACCARAT</small></div>'
   };
-  return '<div class="mini-stage mini-stage-'+gameId+'" id="miniStage">'+(stages[gameId]||'<div class="mg-fallback">✨</div>')+'</div>';
-}
+  return '<div class="mini-stage mini-stage-'+gameId+'" id="miniStage">'+(stages[gameId]||'<div class="mg-fallback">✨</div>')+'</div>';}
 function miniGame(g) {
   stopCrashMonitor();
   const info = MINI_GAME_INFO[g.id];
@@ -1197,7 +1195,6 @@ async function pollCrashState() {
     }
 
     if (!$('#aviatorStage')) return;
-
     const multiplier = Number(state.multiplier || 1);
     const multi = $('#multi');
     const status = $('#crashStatus');
@@ -1597,7 +1594,6 @@ async function startCrash(index) {
     if (!Number.isFinite(target) || target < 1.01 || target > 1000) {
       throw Error('AUTO multiplier 1.01x থেকে 1000x এর মধ্যে দিন');
     }
-
     slot.autoTarget = target;
     slot.busy = true;
     updateSlotButtons(index);    const r = await api('/crash/start',{
