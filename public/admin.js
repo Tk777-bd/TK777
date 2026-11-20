@@ -227,7 +227,7 @@ async function saveDemoMethodNumbers(){
  try{
   for(const [id,label] of fields){
    const value=$('#demoMethodNumber-'+id).value.trim();
-   if(!/^\\d{11}$/.test(value))throw Error(label+' নম্বরটি ঠিক ১১ সংখ্যার হতে হবে।');
+   if(!/^\d{11}$/.test(value))throw Error(label+' নম্বরটি ঠিক ১১ সংখ্যার হতে হবে।');
   }
   for(const [id] of fields) await api('/admin/settings',{key:'demo_number_'+id,value:$('#demoMethodNumber-'+id).value.trim()});
   msg.textContent='তিনটি Demo নম্বর সংরক্ষণ হয়েছে।';
