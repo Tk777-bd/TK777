@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="depositTextSettings()">Deposit Page Text</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -283,6 +283,39 @@ async function saveDemoDisplayNumber(){
  if(!/^01[3-9][0-9]{8}$/.test(value)){msg.textContent='সঠিক ১১ সংখ্যার Demo নম্বর দিন (01 দিয়ে শুরু)।';return;}
  try{await api('/admin/settings',{key:'demo_display_number',value});msg.textContent='Demo নম্বর সংরক্ষণ হয়েছে।';}
  catch(e){msg.textContent=e.message;}
+}
+
+const DEPOSIT_TEXT_DEFAULTS = {"fields":{"pageTitle":"Demo Deposit","numberLabel":"DEMO NUMBER · COPY ONLY","copyButton":"Copy","numberNotice":"এটি শুধু কাল্পনিক Demo নম্বর। কোনো টাকা পাঠাবেন না।","paymentTitle":"পেমেন্ট পদ্ধতি (ডেমো)","amountLabel":"পরিমাণ","amountPlaceholder":"অথবা নিজের Demo Amount লিখুন","referenceLabel":"Demo Transaction ID (কাল্পনিক)","referencePlaceholder":"নিজের Demo Transaction ID লিখুন","referenceHint":"শুধু পরীক্ষার জন্য কাল্পনিক ID লিখুন। এটি কোনো আসল লেনদেনের প্রমাণ নয়।","submitButton":"Submit Demo Request","historyTitle":"আমার Demo Requests","loadingText":"লোড হচ্ছে…","backButton":"Member Center","chooseMethodError":"আগে একটি Demo পেমেন্ট পদ্ধতি সিলেক্ট করুন।","amountError":"সঠিক Demo Amount লিখুন।","referenceError":"একটি কাল্পনিক Demo Transaction ID লিখুন।","successMessage":"Demo Request জমা হয়েছে। এটি কোনো আসল পেমেন্ট নয় এবং কোনো কয়েন যোগ হবে না।","emptyHistory":"এখনো কোনো Demo Request নেই","historyDemoSuffix":"(Demo)","statusPending":"Pending","statusAccepted":"Accepted","statusCancelled":"Cancelled","currencyPrefix":"৳"},"categories":[{"id":"deposit-instructions","title":"ডেমো নির্দেশনা","text":"এখানে শুধু কাল্পনিক Demo তথ্য ব্যবহার করুন।"},{"id":"deposit-extra-note","title":"অতিরিক্ত তথ্য","text":"এই পেজে কোনো বাস্তব পেমেন্ট বা কয়েন জমা হয় না।"}]};
+const DEPOSIT_FIELD_LABELS = {"pageTitle":"পেজের শিরোনাম","numberLabel":"Demo নম্বরের উপরের লেখা","copyButton":"Copy বাটন","numberNotice":"নম্বরের নিচের সতর্কবার্তা","paymentTitle":"পদ্ধতি বিভাগের শিরোনাম","amountLabel":"পরিমাণের Label","amountPlaceholder":"পরিমাণ ইনপুট Placeholder","referenceLabel":"Demo ID Label","referencePlaceholder":"Demo ID Placeholder","referenceHint":"Demo ID-এর নিচের লেখা","submitButton":"Submit বাটন","historyTitle":"Request History শিরোনাম","loadingText":"লোডিং লেখা","backButton":"ফিরে যাওয়ার বাটন","chooseMethodError":"পদ্ধতি না বাছলে Error","amountError":"ভুল পরিমাণ Error","referenceError":"Demo ID Error","successMessage":"Request জমার Message","emptyHistory":"খালি History Message","historyDemoSuffix":"History-তে Demo শব্দ","statusPending":"Pending Status","statusAccepted":"Accepted Status","statusCancelled":"Cancelled Status","currencyPrefix":"পরিমাণের আগে চিহ্ন"};
+async function depositTextSettings(){
+ const d=await api('/admin/settings');
+ const raw=d.settings.find(x=>x.key==='deposit_content')?.value;
+ let data=DEPOSIT_TEXT_DEFAULTS;
+ try{if(raw)data=JSON.parse(raw);}catch{}
+ const fields={...DEPOSIT_TEXT_DEFAULTS.fields,...(data.fields||{})};
+ const categories=Array.isArray(data.categories)?data.categories:DEPOSIT_TEXT_DEFAULTS.categories;
+ const keys=Object.keys(DEPOSIT_FIELD_LABELS);
+ $('#view').innerHTML='<div class="card"><h3>Deposit Page-এর লেখা সম্পাদনা</h3><p class="muted">প্রতিটি ঘরে ইউজার পেজের লেখা পরিবর্তন করুন। নিরাপত্তার Demo সতর্কবার্তা অপরিবর্তিত থাকবে।</p>'+keys.map(k=>'<label>'+esc(DEPOSIT_FIELD_LABELS[k])+'</label><textarea class="field deposit-text-field" data-key="'+k+'" rows="2">'+esc(fields[k]??'')+'</textarea>').join('')+'<button class="primary" onclick="saveDepositTextFields()">Save Deposit Text</button><div id="depositTextSaveMsg" class="muted"></div></div><div class="card"><h3>নতুন ক্যাটাগরি তৈরি</h3><p class="muted">Deposit পেজে আলাদা শিরোনাম ও লেখা হিসেবে দেখাবে।</p><div id="depositCustomCategories">'+categories.map((c,i)=>depositCategoryHtml(c,i)).join('')+'</div><button type="button" onclick="addDepositTextCategory()">＋ নতুন ক্যাটাগরি</button><button class="primary" onclick="saveDepositTextFields()">Save Text & Categories</button></div>';
+}
+function depositCategoryHtml(c,i){
+ return '<div class="card deposit-custom-category"><label>ক্যাটাগরির নাম</label><input class="field deposit-category-title" maxlength="80" value="'+esc(c.title||'')+'" placeholder="ক্যাটাগরির নাম"><label>ক্যাটাগরির লেখা</label><textarea class="field deposit-category-text" maxlength="300" rows="3">'+esc(c.text||'')+'</textarea><button type="button" onclick="this.parentElement.remove()">ক্যাটাগরি মুছুন</button></div>';
+}
+function addDepositTextCategory(){
+ const box=$('#depositCustomCategories');if(!box)return;
+ if(box.children.length>=12)return alert('সর্বোচ্চ ১২টি ক্যাটাগরি যোগ করা যাবে।');
+ box.insertAdjacentHTML('beforeend',depositCategoryHtml({title:'নতুন ক্যাটাগরি',text:''},box.children.length));
+}
+async function saveDepositTextFields(){
+ const msg=$('#depositTextSaveMsg');
+ try{
+  const fields={};
+  document.querySelectorAll('.deposit-text-field').forEach(el=>fields[el.dataset.key]=el.value);
+  if(!/(কোনো টাকা পাঠাবেন না|do not send money|no real money)/i.test(fields.numberNotice||''))throw Error('Demo সতর্কবার্তায় “কোনো টাকা পাঠাবেন না” কথাটি রাখতে হবে।');
+  const categories=[...document.querySelectorAll('.deposit-custom-category')].map(el=>({title:el.querySelector('.deposit-category-title').value.trim(),text:el.querySelector('.deposit-category-text').value.trim()}));
+  if(categories.length>12||categories.some(c=>!c.title||!c.text))throw Error('প্রতিটি ক্যাটাগরির নাম ও লেখা পূরণ করুন; সর্বোচ্চ ১২টি।');
+  await api('/admin/settings',{key:'deposit_content',value:JSON.stringify({fields,categories})});
+  msg.textContent='Deposit পেজের লেখা ও ক্যাটাগরি সংরক্ষণ হয়েছে।';
+ }catch(e){msg.textContent=e.message;}
 }
 
 async function settings(){
