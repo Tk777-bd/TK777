@@ -361,7 +361,7 @@ function gameCard(g) {
       ${g.image_url
         ? `<img src="${esc(g.image_url)}" alt="" onerror="this.style.display='none'">`
         : `<div class="placeholder">${g.game_type === 'aviator' ? '✈️' : g.game_type === 'superace' ? '🂡' : '🎮'}</div>`}
-      <strong>${esc(g.id === 'aviator' ? 'Aviator Free' : g.id === 'aviator-2' ? 'Aviator 2' : g.name)}</strong>
+      <strong>${esc(g.name)}</strong>
       <small>${g.game_type === 'aviator' ? 'CRASH GAME' : g.game_type === 'superace' ? 'CARD GAME' : 'ARCADE GAME'}</small>
     </button>`;
 }
@@ -788,7 +788,7 @@ async function playMiniGame(gameId) {
 ========================================== */
 
 function aviator(g) {
-  const aviatorTitle = g.id === 'aviator' ? 'Aviator Free' : 'Aviator 2';
+  const aviatorTitle = g.name || 'Aviator';
   stopCrashMonitor();
 
   crashSlots = [
