@@ -1248,3 +1248,23 @@ body{background:#063b39}
 .display-slot-game .slot-admin-image{display:block;width:100%;height:clamp(58px,18vw,82px);min-height:0;aspect-ratio:auto;object-fit:cover;background:#082f32}
 .display-slot-game>strong{display:block;padding:6px 2px;min-height:30px;font-size:11px;line-height:1.2;color:#fff;overflow-wrap:anywhere}
 .display-slot-game>small{display:block;padding:0 2px 7px;color:#55d5bf;font-size:8px;font-weight:800;letter-spacing:0}
+
+
+/* Free virtual-coin mini games */
+.mini-game-page{max-width:620px;margin:0 auto;padding:14px}
+.mini-game-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.mini-game-top b{font-size:18px}
+.mini-game-board{text-align:center;padding:22px 16px;display:flex;flex-direction:column;gap:12px}
+.mini-game-icon{font-size:64px;line-height:1.2;filter:drop-shadow(0 5px 10px #0003)}
+.mini-game-board h2{margin:0;font-size:24px}
+.mini-game-board p{margin:0}
+.mini-result{font-size:22px;font-weight:800;min-height:32px;color:var(--gold,#f3c65b)}
+.mini-detail{font-size:13px;opacity:.85;min-height:34px}
+.mini-choices{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:6px 0}
+.mini-choice{border:1px solid #b88a37;background:#222;color:#fff;border-radius:10px;padding:11px 15px;font-weight:800;min-width:62px}
+.mini-choice.selected{background:#d6a83d;color:#17120a;border-color:#ffe18a;box-shadow:0 0 0 2px #f5d37a55}
+.mini-auto-art{font-size:48px;padding:8px}
+.mini-game-board label{font-size:12px;font-weight:800;text-align:left}
+.mini-play-button{width:100%;font-weight:900;letter-spacing:.08em}
+.mini-animate{animation:miniPulse .45s ease}
+@keyframes miniPulse{50%{transform:scale(1.12) rotate(6deg)}}
