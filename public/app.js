@@ -612,19 +612,22 @@ function startCrashMonitor(gameId) {
 
 function updateCrashHistory(previous) {
   const el = $('#crashHistory');
-  if (!el) return;
-
+  const ticker = $('#crashHistoryTicker');
   if (!previous || !previous.length) {
-    el.innerHTML = '<span class="muted">এখনো কোনো Crash History নেই</span>';
+    if (el) el.innerHTML = '<span class="muted">এখনো কোনো Crash History নেই</span>';
+    if (ticker) ticker.innerHTML = '<i>No previous rounds yet</i>';
     return;
   }
 
-  el.innerHTML = previous.map(x => {
+  const chips = previous.map(x => {
     const n = Number(x.crash_multiplier);
     const cls = n >= 2 ? 'history-high' : 'history-low';
-
-    return `<span class="crash-chip ${cls}">${n.toFixed(2)}x</span>`;
-  }).join('');
+    return {n,cls,html:`<span class="crash-chip ${cls}">${n.toFixed(2)}x</span>`};
+  });
+  if (el) el.innerHTML = chips.map(x => x.html).join('');
+  if (ticker) ticker.innerHTML = chips.slice(0,12).map(x =>
+    `<span class="${x.cls}">${x.n.toFixed(2)}x</span>`
+  ).join('');
 }
 
 function updateSlotStatus(i,text) {
