@@ -76,7 +76,7 @@ async function games(){
  <textarea class="field" id="htmlsource" name="html_content" placeholder="ফ্রি-প্লে HTML গেমের সোর্স (অথবা HTML ফাইল আপলোড করুন)"></textarea>
  <input class="field" name="sort_order" id="gameSort" type="number" placeholder="Sort order">
  <button class="primary">Save Game</button></form></div>
- <div class="card"><h3>আগের গেমগুলো</h3>${d.games.map(g=>`<div class="row" style="justify-content:space-between;margin:8px 0"><span>${esc(g.name)} · ${esc(g.game_type)}</span><span><button type="button" onclick="editGame('${esc(g.id)}')">Edit</button> <button type="button" onclick="delGame('${esc(g.id)}')">Disable</button></span></div>`).join('')}</div>`;
+  <div class="card"><h3>আগের গেমগুলো — Delete Control</h3><p class="muted">Delete করলে গেমটি ইউজার সাইট থেকে লুকানো হবে; পুরোনো রাউন্ড/হিস্ট্রি অক্ষত থাকবে।</p>${d.games.map(g=>`<div class="row" style="justify-content:space-between;margin:8px 0"><span>${esc(g.name)} · ${esc(g.game_type)} · ${g.active ? 'চালু' : 'মুছে রাখা'}</span><span>${g.active ? `<button type="button" onclick="editGame('${esc(g.id)}')">Edit</button> <button type="button" onclick="delGame('${esc(g.id)}')">Delete</button>` : 'Deleted'}</span></div>`).join('')}</div>`;
 
  const slotPosterItems=[
   ['slot-display-super-elements','Super Elements'],['slot-display-azteca-legacy','Azteca Legacy'],['slot-display-flyx','FlyX'],
@@ -106,10 +106,18 @@ async function games(){
  ];
  const settingData=await api('/admin/settings');
  const settingValues=Object.fromEntries((settingData.settings||[]).map(x=>[x.key,x.value]));
+ let hiddenSlotIds=[];try{hiddenSlotIds=JSON.parse(settingValues.slot_display_hidden||'[]');if(!Array.isArray(hiddenSlotIds))hiddenSlotIds=[];}catch{hiddenSlotIds=[];}
  $('#view').insertAdjacentHTML('afterbegin',`<div class="card"><h3>নতুন Slot গেমের ছবি (Image URL)</h3>
  <p class="muted">Super Ace-এর মতো প্রতিটি Slot গেমের জন্য সরাসরি HTTPS Image URL দিন। Save করলে ইউজার সাইটের গেম কার্ডে ছবিটি দেখা যাবে। খালি রাখলে নামসহ ডিফল্ট পোস্টার দেখাবে।</p>
- ${slotPosterItems.map(([id,name])=>'<div style="margin:12px 0"><label>'+esc(name)+' — Image URL</label><input class="field slot-display-image-url" data-slot-id="'+id+'" type="url" maxlength="1000" placeholder="https://example.com/'+id+'.jpg" value="'+esc(settingValues['slot_display_image_'+id]||'')+'"><img class="slot-display-image-preview" data-preview-id="'+id+'" src="'+esc(settingValues['slot_display_image_'+id]||'')+'" alt="'+esc(name)+' preview" style="max-width:110px;max-height:145px;object-fit:cover;border-radius:8px;'+(settingValues['slot_display_image_'+id]?'':'display:none')+'"></div>').join('')}
+ ${slotPosterItems.map(([id,name])=>'<div style="margin:12px 0;padding:8px;border-bottom:1px solid #ffffff22"><label>'+esc(name)+' — Image URL</label><input class="field slot-display-image-url" data-slot-id="'+id+'" type="url" maxlength="1000" placeholder="https://example.com/'+id+'.jpg" value="'+esc(settingValues['slot_display_image_'+id]||'')+'"><img class="slot-display-image-preview" data-preview-id="'+id+'" src="'+esc(settingValues['slot_display_image_'+id]||'')+'" alt="'+esc(name)+' preview" style="max-width:110px;max-height:145px;object-fit:cover;border-radius:8px;'+(settingValues['slot_display_image_'+id]?'':'display:none')+'"><button type="button" class="slot-display-toggle" data-slot-id="'+id+'">'+(hiddenSlotIds.includes(id)?'Restore to site':'Delete from site')+'</button></div>').join('')}}
  <button type="button" class="primary" id="saveSlotDisplayImages">Save Slot Images</button><div id="slotImageSaveMsg" class="muted"></div></div>`);
+ document.querySelectorAll('.slot-display-toggle').forEach(button=>button.addEventListener('click',async()=>{
+   const id=button.dataset.slotId;
+   const next=hiddenSlotIds.includes(id)?hiddenSlotIds.filter(x=>x!==id):[...hiddenSlotIds,id];
+   if(!confirm(next.includes(id)?'এই গেমটি ইউজার সাইট থেকে মুছে ফেলবেন?':'এই গেমটি আবার ইউজার সাইটে দেখাবেন?'))return;
+   try{await api('/admin/settings',{key:'slot_display_hidden',value:JSON.stringify(next)});games();}
+   catch(err){alert(err.message);}
+ }));
  document.querySelectorAll('.slot-display-image-url').forEach(input=>input.addEventListener('input',()=>{
    const img=document.querySelector('[data-preview-id="'+input.dataset.slotId+'"]');
    img.src=input.value;img.style.display=input.value?'block':'none';
@@ -134,7 +142,7 @@ async function games(){
 }
 function editGame(id){const s=$('#existingGame');if(s){s.value=id;s.dispatchEvent(new Event('change'));window.scrollTo({top:0,behavior:'smooth'});}}
 
-async function delGame(id){if(confirm('Disable game?')){await api('/admin/games/'+id,null,'DELETE');games()}}
+async function delGame(id){if(confirm('এই গেমটি ইউজার সাইট থেকে মুছে ফেলবেন? পুরোনো হিস্ট্রি অক্ষত থাকবে।')){try{await api('/admin/games/'+id,null,'DELETE');games()}catch(e){alert(e.message)}}}
 
 async function banners(){
  const d=await api('/admin/settings');
