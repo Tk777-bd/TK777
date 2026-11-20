@@ -888,7 +888,7 @@ function updateFlightCurve(multiplier) {
 
   const progress = Math.max(
     0,
-    Math.min(1,Math.log(Math.max(1,multiplier))/Math.log(30))
+    Math.min(1,Math.log(Math.max(1,multiplier))/Math.log(25))
   );
 
   const point = path.getPointAtLength(length*progress);
