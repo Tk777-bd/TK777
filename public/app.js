@@ -927,10 +927,11 @@ function updateFlightCurve(multiplier) {
   const stage = wrap.closest('.aviator-stage');
   const planeSvg = wrap.querySelector('svg');
   if (stage && planeSvg) {
-    const stageRect = stage.getBoundingClientRect();
+    const stageWidth = stage.clientWidth;
+    const stageHeight = stage.clientHeight;
     const planeRect = planeSvg.getBoundingClientRect();
-    const tipX = (x/1000)*stageRect.width;
-    const tipY = (y/440)*stageRect.height;
+    const tipX = (x/1000)*stageWidth;
+    const tipY = (y/440)*stageHeight;
     // Account for SVG's default xMidYMid meet letterboxing. The aircraft
     // artwork is narrower than its CSS viewport on mobile; using the raw
     // viewport width creates a visible gap at the tail.
@@ -944,8 +945,8 @@ function updateFlightCurve(multiplier) {
     const rearOffsetY = artworkTop+(251-95)*svgScale-planeRect.height/2;
     const wrapperCenterX = tipX - rearOffsetX;
     const wrapperCenterY = tipY - rearOffsetY;
-    wrap.style.left = (wrapperCenterX/stageRect.width*100)+'%';
-    wrap.style.top = (wrapperCenterY/stageRect.height*100)+'%';
+    wrap.style.left = (wrapperCenterX/stageWidth*100)+'%';
+    wrap.style.top = (wrapperCenterY/stageHeight*100)+'%';
   }
   wrap.classList.remove('plane-hover','plane-approach');
 
