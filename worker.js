@@ -557,59 +557,47 @@ async function route(req, env) {
       const { gameId, betAmount } = await req.json();
       const bet = Number(betAmount);
 
-      if (
-        !Number.isSafeInteger(bet) ||
-        bet < 1 ||
-        bet > 1000000
-      ) {
+      if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) {
         return json({
           error: "বেট ১ থেকে ১০,০০,০০০ ফ্রি ক্রেডিটের মধ্যে দিন"
         }, 400);
       }
 
-      const game = await env.DB.prepare(`
-        SELECT id,name FROM games
-        WHERE id=? AND active=1 AND game_type='aviator'
+      // One indexed read replaces crashState() and its extra history/session reads.
+      const session = await env.DB.prepare(`
+        SELECT cs.*,g.name AS game_name
+        FROM crash_sessions cs
+        JOIN games g ON g.id=cs.game_id
+        WHERE cs.game_id=? AND cs.status='active'
+          AND g.active=1 AND g.game_type='aviator'
+        ORDER BY cs.created_at DESC
+        LIMIT 1
       `).bind(gameId).first();
 
-      if (!game) {
-        return json({ error: "Crash গেম পাওয়া যায়নি" }, 404);
+      if (!session) {
+        return json({ error: "Crash গেম বা রাউন্ড পাওয়া যায়নি" }, 404);
       }
 
-      const state = await crashState(env, gameId);
-
-      if (state.status !== "countdown") {
-        return json({
-          error: "শুধু ৫ সেকেন্ডের কাউন্টডাউনের সময় বেট করা যাবে"
-        }, 409);
-      }
-
-      const session = await env.DB.prepare(`
-        SELECT *
-        FROM crash_sessions
-        WHERE id=? AND status='active'
-      `).bind(state.sessionId).first();
-
-      if (!session || Date.now() >= Number(session.start_ms)) {
+      const now = Date.now();
+      if (now >= Number(session.start_ms)) {
         return json({
           error: "বেট করার সময় শেষ, পরের রাউন্ডে চেষ্টা করুন"
         }, 409);
       }
 
       const current = Math.exp(
-        Math.max(0, Date.now() - Number(session.start_ms)) / 12000
+        Math.max(0, now - Number(session.start_ms)) / 12000
       );
 
       if (current >= Number(session.crash_multiplier)) {
-        await finishCrashSession(env, session);
         return json({
           error: "রাউন্ড শেষ হয়ে গেছে, পরের রাউন্ডে চেষ্টা করুন"
         }, 409);
       }
 
+      // Preserve the conditional atomic balance debit.
       const debit = await env.DB.prepare(`
-        UPDATE users
-        SET balance=balance-?
+        UPDATE users SET balance=balance-?
         WHERE id=? AND balance>=?
       `).bind(bet, user.id, bet).run();
 
@@ -628,60 +616,40 @@ async function route(req, env) {
           WHERE EXISTS (
             SELECT 1 FROM crash_sessions
             WHERE id=? AND status='active'
-              AND start_ms>?
-              AND crash_multiplier>?
+              AND start_ms>? AND crash_multiplier>?
           )
         `).bind(
-          roundId,
-          user.id,
-          gameId,
-          bet,
-          session.crash_multiplier,
-          session.start_ms,
-          session.id,
-          session.id,
-          Date.now(),
-          current
+          roundId,user.id,gameId,bet,session.crash_multiplier,
+          session.start_ms,session.id,session.id,Date.now(),current
         ).run();
 
         if (!ins.meta.changes) {
           throw new Error("বেট করার সময় শেষ, আবার চেষ্টা করুন");
         }
 
-        const bal = await env.DB.prepare(`
-          SELECT balance FROM users WHERE id=?
-        `).bind(user.id).first();
+        const bal = await env.DB.prepare(
+          "SELECT balance FROM users WHERE id=?"
+        ).bind(user.id).first();
 
         await env.DB.prepare(`
           INSERT INTO transactions
           (id,user_id,type,amount,balance_after,note)
           VALUES(?,?,?,?,?,?)
         `).bind(
-          uid(),
-          user.id,
-          "game",
-          -bet,
-          bal.balance,
-          game.name + " বেট"
+          uid(),user.id,"game",-bet,bal.balance,session.game_name+" বেট"
         ).run();
 
+        return json({
+          roundId,
+          sessionId: session.id,
+          balance: bal.balance
+        });
       } catch (e) {
-        await env.DB.prepare(`
-          UPDATE users SET balance=balance+? WHERE id=?
-        `).bind(bet, user.id).run();
-
+        await env.DB.prepare(
+          "UPDATE users SET balance=balance+? WHERE id=?"
+        ).bind(bet,user.id).run();
         throw e;
       }
-
-      const bal = await env.DB.prepare(`
-        SELECT balance FROM users WHERE id=?
-      `).bind(user.id).first();
-
-      return json({
-        roundId,
-        sessionId: session.id,
-        balance: bal.balance
-      });
     }
 
     /* CRASH: CANCEL BET DURING COUNTDOWN */
