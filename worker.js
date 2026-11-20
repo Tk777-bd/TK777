@@ -621,7 +621,7 @@ async function route(req, env) {
 
     if (p === "/api/support-settings" && method === "GET") {
       const rows = await env.DB.prepare(
-        "SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','payment_image_bkash','payment_image_nagad','payment_image_rocket','display_number','number_bkash','number_nagad','number_rocket','withdraw_ids_bkash','withdraw_ids_nagad','withdraw_ids_rocket','deposit_content','withdraw_content')"
+        "SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','payment_image_bkash','payment_image_nagad','payment_image_rocket','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','display_number','number_bkash','number_nagad','number_rocket','withdraw_ids_bkash','withdraw_ids_nagad','withdraw_ids_rocket','deposit_content','withdraw_content')"
       ).all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key, r.value]));
       const image = String(values.support_telegram_image_url || "");
@@ -645,6 +645,11 @@ async function route(req, env) {
           bkash: validImage("payment_image_bkash"),
           nagad: validImage("payment_image_nagad"),
           rocket: validImage("payment_image_rocket")
+        },
+        demo_payment_images: {
+          bkash: validImage("demo_payment_image_bkash"),
+          nagad: validImage("demo_payment_image_nagad"),
+          rocket: validImage("demo_payment_image_rocket")
         },
         withdraw_ids: {
           bkash: parseRefIds(values.withdraw_ids_bkash, "BKASH-01"),
