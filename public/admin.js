@@ -196,8 +196,9 @@ async function demoDepositRequests(){
 }
 function renderDemoDepositRequests(rows){
  const box=$('#demoDepositAdminList');if(!box)return;
- box.innerHTML=rows.map(x=>`<div class="card"><b>${esc(x.username||x.email||'User')}</b><p>${esc(x.method)} · ৳${Number(x.amount)} (Demo)</p><p>Reference: ${esc(x.demo_reference)}</p><p>Status: ${esc(x.status)} · ${esc(x.created_at)}</p><button onclick="deleteDemoDeposit('${esc(x.id)}')">Delete Demo Record</button></div>`).join('')||'কোনো Demo Request নেই';
+ box.innerHTML=rows.map(x=>`<div class="card"><b>${esc(x.username||x.email||'User')}</b><p>${esc(x.method)} · ৳${Number(x.amount)} (Demo)</p><p>Reference: ${esc(x.demo_reference)}</p><p>Status: ${esc(x.status==='accepted'?'Accepted':x.status==='cancelled'?'Cancelled':'Pending')} · ${esc(x.created_at)}</p>${x.status==='pending'?'<button class="primary" onclick="reviewDemoDeposit(\''+esc(x.id)+'\',\'accepted\')">Accept</button> <button onclick="reviewDemoDeposit(\''+esc(x.id)+'\',\'cancelled\')">Cancel</button> ':''}<button onclick="deleteDemoDeposit('${esc(x.id)}')">Delete Demo Record</button></div>`).join('')||'কোনো Demo Request নেই';
 }
+async function reviewDemoDeposit(id,status){const label=status==='accepted'?'Accept':'Cancel';if(!confirm('এই Demo Request '+label+' করবেন?'))return;try{await api('/admin/demo-deposits/review',{id,status});await demoDepositRequests();}catch(e){alert(e.message);}}
 async function deleteDemoDeposit(id){if(!confirm('এই Demo Record মুছে ফেলবেন?'))return;try{await api('/admin/demo-deposits/'+encodeURIComponent(id),null,'DELETE');await demoDepositRequests();}catch(e){alert(e.message);}}
 
 async function coinRequests(){
