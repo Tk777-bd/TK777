@@ -547,7 +547,9 @@ async function route(req, env) {
       const code=await makeReferralCode(env,user.id);
       const stats=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN reward_paid=1 THEN 1 ELSE 0 END) AS qualified FROM referrals WHERE referrer_user_id=?").bind(user.id).first();
       const rewards=await env.DB.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND type='referral_bonus'").bind(user.id).first();
-      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),threshold:200,bonus:108});
+      const config=await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('referral_threshold','referral_bonus')").all();
+      const values=Object.fromEntries((config.results||[]).map(x=>[x.key,Number(x.value)]));
+      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),threshold:values.referral_threshold||200,bonus:values.referral_bonus||108});
     }
     if (p === "/api/admin/referral-settings" && method === "GET") {
       if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
