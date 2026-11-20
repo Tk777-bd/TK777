@@ -261,4 +261,21 @@ async function loginUser(id,env) {
   const user=await env.DB.prepare("SELECT id,username,email,role,balance FROM users WHERE id=?").bind(id).first();
   return json({token,user});
 }
-export default {fetch:route};
+export default {
+  async fetch(req, env, ctx) {
+    try {
+      return await route(req, env);
+    } catch (err) {
+      console.error("TK777 Worker exception", {
+        message: err?.message,
+        stack: err?.stack,
+        path: new URL(req.url).pathname
+      });
+
+      return json({
+        error: "Worker exception",
+        details: String(err?.message || err)
+      }, 500);
+    }
+  }
+};
