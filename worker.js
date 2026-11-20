@@ -184,10 +184,6 @@ async function ensureReferralSchema(env) {
       FROM users u WHERE u.id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.user_id
         AND reward_paid=1 AND turnover >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER));
       INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key)
-      SELECT lower(hex(randomblob(16))),r.referrer_user_id,'রেফারেল সফল হয়েছে',
-        'আপনার রেফার সম্পূর্ণ হয়েছে। '+CAST((SELECT value FROM settings WHERE key='referral_bonus') AS TEXT)+' টাকা বোনাস যোগ হয়েছে।','referral','referral-'||NEW.user_id
-      FROM referrals r WHERE r.referred_user_id=NEW.user_id AND r.reward_paid=1;
-      INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key)
       SELECT lower(hex(randomblob(16))),NEW.user_id,'রেফারেল সম্পন্ন','আপনার রেফারেল কার্যক্রম সফলভাবে সম্পন্ন হয়েছে।','referral','referred-'||NEW.user_id
       WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.user_id AND reward_paid=1);
       INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
