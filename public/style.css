@@ -931,18 +931,19 @@ body{background:#063b39}
 }
 
 
-/* Slim translucent aqua cashout strip above the multiplier history. */
+/* Thin frosted-glass cashout strip overlaying the very top of the history ticker. */
 .aviator-cashout-popup{
-  position:fixed;z-index:9999;top:calc(env(safe-area-inset-top, 0px) + 108px);
+  position:fixed;z-index:9999;top:calc(env(safe-area-inset-top, 0px) + 43px);
   left:50%;transform:translateX(-50%);
-  width:max-content;max-width:calc(100vw - 28px);
-  padding:5px 12px;border:1px solid #70f5d2a8;
-  border-radius:7px;background:rgba(25,205,166,.28);
-  color:#f4fffc;text-align:center;white-space:nowrap;
-  font-size:clamp(12px,3.1vw,14px);font-weight:700;line-height:1.25;
-  text-shadow:0 1px 3px #003b32aa;
-  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  width:max-content;max-width:calc(100vw - 36px);
+  padding:2px 9px;border:1px solid rgba(255,255,255,.68);
+  border-radius:5px;background:rgba(255,255,255,.38);
+  color:#fff;text-align:center;white-space:nowrap;
+  font-size:clamp(11px,2.8vw,13px);font-weight:700;line-height:1.15;
+  text-shadow:0 1px 2px rgba(0,0,0,.65);
+  box-shadow:0 1px 8px rgba(255,255,255,.14),inset 0 1px 2px rgba(255,255,255,.55);
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
   opacity:1;transition:opacity .25s ease,transform .25s ease;
   pointer-events:none;
 }
-.aviator-cashout-popup.is-hiding{opacity:0;transform:translate(-50%,-6px)}
+.aviator-cashout-popup.is-hiding{opacity:0;transform:translate(-50%,-5px)}
