@@ -1,6 +1,7 @@
 
 let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
+let homeBanners = [], homeBannerTimer = null;
 let crashTimer = null;
 let crashGameId = null;
 let crashPollBusy = false;
@@ -143,6 +144,7 @@ async function init() {
   try {
     categories = (await api('/categories')).categories;
     games = (await api('/games')).games;
+    homeBanners = (await api('/home-banners')).banners || [];
   } catch (e) {
     toast(e.message);
   }
@@ -150,22 +152,38 @@ async function init() {
   home();
 }
 
+
+function renderHomeBanners() {
+  if (!homeBanners.length) return '<div class="hero"><div class="hero-copy"><span class="hero-tag">WELCOME TO</span><h2>TK777</h2><p>PLAY • EXPLORE • ENJOY</p><small>Free-play arcade experience</small></div><div class="hero-mark">777</div></div>';
+  return '<div class="home-banner-wrap"><div class="home-banner-track" id="homeBannerTrack">' + homeBanners.map((url,i) => '<div class="home-banner-slide"><img src="' + esc(url) + '" alt="TK777 Banner ' + (i+1) + '"></div>').join('') + '</div>' + (homeBanners.length > 1 ? '<div class="home-banner-dots">' + homeBanners.map((_,i) => '<button class="' + (i===0?'active':'') + '" onclick="goHomeBanner(' + i + ')" aria-label="Banner ' + (i+1) + '"></button>').join('') + '</div>' : '') + '</div>';
+}
+function setupHomeBanners() {
+  const track = document.getElementById('homeBannerTrack');
+  if (!track || homeBanners.length < 2) return;
+  let index = 0;
+  const dots = document.querySelectorAll('.home-banner-dots button');
+  window.goHomeBanner = function(n) {
+    index = (n + homeBanners.length) % homeBanners.length;
+    track.scrollTo({left:track.clientWidth * index,behavior:'smooth'});
+    dots.forEach((d,i) => d.classList.toggle('active',i===index));
+  };
+  let sx = 0;
+  track.addEventListener('touchstart',e => {sx=e.touches[0].clientX;},{passive:true});
+  track.addEventListener('touchend',e => {const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>35)window.goHomeBanner(index+(dx<0?1:-1));},{passive:true});
+  homeBannerTimer = setInterval(() => window.goHomeBanner(index+1),5000);
+}
+
 /* HOME */
 
 function home() {
   stopCrashMonitor();
+  if (homeBannerTimer) clearInterval(homeBannerTimer);
+  homeBannerTimer = null;
 
   shell(`
-    <div class="hero">
-      <div class="hero-copy">
-        <span class="hero-tag">WELCOME TO</span>
-        <h2>TK777</h2>
-        <p>PLAY • EXPLORE • ENJOY</p>
-        <small>Free-play arcade experience</small>
-      </div>
-      <div class="hero-mark">777</div>
-    </div>
+    ${renderHomeBanners()}
 
+    <div class="home-money-actions"><button onclick="page('deposit')">＋ Deposit</button><button onclick="page('withdraw')">↗ Withdraw</button></div>
     <div class="quick">
       <button onclick="page('member')"><b>◉</b><span>Balance</span></button>
       <button onclick="page('history')"><b>▤</b><span>History</span></button>
@@ -204,6 +222,7 @@ function home() {
       </div>
     </div>
   `);
+  setupHomeBanners();
 }
 
 function favoriteIds() {
