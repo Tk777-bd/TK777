@@ -1643,7 +1643,7 @@ async function route(req, env) {
       const { key, value } = await req.json();
 
       if (key === 'demo_display_number' && !/^01[3-9][0-9]{8}$/.test(String(value || ''))) {
-        return json({ error: "সঠিক ১১ সংখ্যার Demo নম্বর দিন" }, 400);
+        return json({ error: "সঠিক ১১ সংখ্যার নম্বর দিন" }, 400);
       }
       if (key === 'withdraw_content') {
         try {
@@ -1652,8 +1652,8 @@ async function route(req, env) {
           for(const v of Object.values(parsed.fields)) if(typeof v!=='string'||v.length>300) throw new Error();
           const required=["pageTitle","safetyNote","methodTitle","methodBkash","methodNagad","methodRocket","demoBadge","demoIdsHint","demoIdsLabel","noDemoIds","amountLabel","amountPlaceholder","balanceLabel","coinSuffix","submitButton","historyTitle","loadingText","emptyHistory","recordTitle","emptyRecord","backButton","chooseMethodError","amountError","balanceError","successMessage","statusPending","statusApproved","statusRejected","historyCoinSuffix"];
           if(required.some(k=>typeof parsed.fields[k]!=='string')) throw new Error();
-          if(!/(কোনো ওয়ালেট নম্বর|কোনো টাকা পাঠানো|no real money|no wallet)/i.test(String(parsed.fields.safetyNote||''))) throw new Error();
-        } catch { return json({error:'Withdrawal Demo text data সঠিক নয়; নিরাপত্তার Demo সতর্কবার্তা রাখতে হবে।'},400); }
+          if(!/(|real money|no wallet)/i.test(String(parsed.fields.safetyNote||''))) throw new Error();
+        } catch { return json({error:'Withdrawal text data সঠিক নয়; নিরাপত্তার সতর্কবার্তা রাখতে হবে।'},400); }
       }
       if (key === 'deposit_content') {
         try {
@@ -1664,15 +1664,15 @@ async function route(req, env) {
           const required=['pageTitle','numberLabel','copyButton','numberNotice','paymentTitle','amountLabel','amountPlaceholder','referenceLabel','referencePlaceholder','referenceHint','submitButton','historyTitle','loadingText','backButton','chooseMethodError','amountError','referenceError','successMessage','emptyHistory','historyDemoSuffix','statusPending','statusAccepted','statusCancelled','currencyPrefix','methodBkash','methodNagad','methodRocket','demoBadge','copiedButton','copySuccess','preset100','preset200','preset300','preset500','preset1000'];
           if(required.some(k=>typeof parsed.fields[k]!=='string')) throw new Error();
           const fixed=String(parsed.fields.numberNotice||'').toLowerCase();
-          if(!/(কোনো টাকা পাঠাবেন না|do not send money|no real money)/i.test(fixed)) throw new Error();
+          if(!/(|send money|real money)/i.test(fixed)) throw new Error();
         } catch { return json({error:'Deposit Demo text data সঠিক নয়; Demo সতর্কবার্তা অপরিবর্তিত রাখুন।'},400); }
       }
-      if (['withdraw_demo_ids_bkash','withdraw_demo_ids_nagad'].includes(key)) {
+      if (['withdraw_ids_bkash','withdraw_ids_nagad'].includes(key)) {
         try { const ids=JSON.parse(String(value||'[]')); if(!Array.isArray(ids)||ids.length>10||ids.some(x=>!/^DEMO-[A-Z0-9-]{1,24}$/.test(String(x)))||new Set(ids).size!==ids.length) throw new Error(); }
         catch { return json({error:'শুধু DEMO- দিয়ে শুরু কাল্পনিক কোড দিন (সর্বোচ্চ ১০টি)'},400); }
       }
-      if (['demo_number_bkash','demo_number_nagad','demo_number_rocket'].includes(key) && !/^\d{11}$/.test(String(value || ''))) {
-        return json({ error: "Demo নম্বর অবশ্যই ১১ সংখ্যার হতে হবে" }, 400);
+      if (['number_bkash','dnumber_nagad','number_rocket'].includes(key) && !/^\d{11}$/.test(String(value || ''))) {
+        return json({ error: " নম্বর অবশ্যই ১১ সংখ্যার হতে হবে" }, 400);
       }
 
       if (!key || String(key).length > 80) {
