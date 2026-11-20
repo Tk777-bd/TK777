@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -87,6 +87,18 @@ async function games(){
 function editGame(id){const s=$('#existingGame');if(s){s.value=id;s.dispatchEvent(new Event('change'));window.scrollTo({top:0,behavior:'smooth'});}}
 
 async function delGame(id){if(confirm('Disable game?')){await api('/admin/games/'+id,null,'DELETE');games()}}
+
+async function banners(){
+ const d=await api('/admin/settings');
+ const values=Object.fromEntries(d.settings.map(x=>[x.key,x.value]));
+ $('#view').innerHTML='<div class="card"><h3>Home Banners (সর্বোচ্চ ৫টি)</h3><p class="muted">প্রতিটি ঘরে HTTPS Image URL দিন। খালি রাখলে সেই ব্যানার মুছে যাবে।</p>'+[1,2,3,4,5].map(i=>'<div class="banner-admin-row"><label>Banner '+i+' Image URL</label><input class="field" id="homeBanner'+i+'" type="url" maxlength="1000" placeholder="https://example.com/banner.jpg" value="'+esc(values['home_banner_'+i]||'')+'"><img id="homeBannerPreview'+i+'" class="banner-admin-preview" src="'+esc(values['home_banner_'+i]||'')+'" '+(values['home_banner_'+i]?'':'hidden')+'></div>').join('')+'<button class="primary" onclick="saveHomeBanners()">Save Banners</button><div id="bannerSaveMsg" class="muted"></div></div>';
+ [1,2,3,4,5].forEach(i=>{const input=$('#homeBanner'+i),img=$('#homeBannerPreview'+i);input.addEventListener('input',()=>{img.src=input.value;img.hidden=!input.value;});});
+}
+async function saveHomeBanners(){
+ const msg=$('#bannerSaveMsg');msg.textContent='Saving…';
+ try{for(let i=1;i<=5;i++){const value=$('#homeBanner'+i).value.trim();if(value&&!/^https:\/\//i.test(value))throw Error('Banner '+i+': HTTPS Image URL দিন');await api('/admin/settings',{key:'home_banner_'+i,value});}msg.textContent='ব্যানার সংরক্ষণ হয়েছে।';}catch(e){msg.textContent=e.message;}
+}
+
 async function settings(){const d=await api('/admin/settings');$('#view').innerHTML=`<div class="card"><h3>Site Settings</h3>${d.settings.map(s=>`<div><label>${esc(s.key)}</label><input class="field" id="set-${esc(s.key)}" value="${esc(s.value)}"><button onclick="saveSetting('${esc(s.key)}')">Save</button></div>`).join('')}<p class="muted">Settings values are stored in D1.</p></div>`}
 async function saveSetting(key){await api('/admin/settings',{key,value:$('#set-'+key).value});alert('Saved')}
 function logout(){localStorage.removeItem('tk777_admin_token');token='';login()}
