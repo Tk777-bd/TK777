@@ -147,6 +147,45 @@ const uid = () => crypto.randomUUID();
 const rand = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
 const enc = new TextEncoder();
 
+/* REFERRAL COINS */
+async function ensureReferralSchema(env) {
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS referral_codes (code TEXT PRIMARY KEY,user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS referrals (referred_user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,referrer_user_id TEXT NOT NULL REFERENCES users(id),reward_paid INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
+    env.DB.prepare("INSERT OR IGNORE INTO settings(key,value) VALUES('referral_threshold','200'),('referral_bonus','108')")
+  ]);
+  await env.DB.prepare(`
+    CREATE TRIGGER IF NOT EXISTS referral_reward_on_balance
+    AFTER UPDATE OF balance ON users
+    WHEN NEW.balance >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER)
+      AND OLD.balance < CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER)
+      AND EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.id AND reward_paid=0)
+    BEGIN
+      UPDATE referrals SET reward_paid=1 WHERE referred_user_id=NEW.id AND reward_paid=0;
+      UPDATE users SET balance=balance + CAST((SELECT value FROM settings WHERE key='referral_bonus') AS INTEGER)
+        WHERE id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.id);
+      INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
+        SELECT lower(hex(randomblob(16))),u.id,'referral_bonus',
+          CAST((SELECT value FROM settings WHERE key='referral_bonus') AS INTEGER),u.balance,
+          'Referral reward: referred player reached coin threshold'
+        FROM users u WHERE u.id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.id);
+      INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
+        SELECT lower(hex(randomblob(16))),NEW.id,'referral_qualified',0,NEW.balance,'Referral qualification reached'
+        WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.id AND reward_paid=1);
+    END
+  `).run();
+}
+async function makeReferralCode(env,userId) {
+  const existing=await env.DB.prepare("SELECT code FROM referral_codes WHERE user_id=?").bind(userId).first();
+  if(existing)return existing.code;
+  for(let i=0;i<5;i++){
+    const code="TK"+uid().replace(/-/g,"").slice(0,8).toUpperCase();
+    try{await env.DB.prepare("INSERT INTO referral_codes(code,user_id) VALUES(?,?)").bind(code,userId).run();return code;}catch(e){}
+  }
+  throw new Error("Referral code তৈরি করা যায়নি");
+}
+
+
 const b64 = b =>
   btoa(String.fromCharCode(...new Uint8Array(b)))
     .replaceAll("+", "-")
@@ -416,7 +455,16 @@ async function route(req, env) {
     if (password !== confirmPassword) return json({ error: "পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না" }, 400);
     const id = uid(), salt = uid(), ph = await passHash(password, salt);
     try {
+      await ensureReferralSchema(env);
+      const referralCode = String(body.referralCode || "").trim().toUpperCase();
+      let referrer = null;
+      if (referralCode) {
+        referrer = await env.DB.prepare("SELECT user_id FROM referral_codes WHERE code=?").bind(referralCode).first();
+        if (!referrer) return json({ error: "Referral Link সঠিক নয়" }, 400);
+      }
       await env.DB.prepare("INSERT INTO users (id,username,email,password_hash,password_salt,balance) VALUES(?,?,?,?,?,0)").bind(id, phone, phone, ph, salt).run();
+      await makeReferralCode(env,id);
+      if(referrer && referrer.user_id!==id) await env.DB.prepare("INSERT OR IGNORE INTO referrals(referred_user_id,referrer_user_id) VALUES(?,?)").bind(id,referrer.user_id).run();
       return await loginUser(id, env);
     } catch (e) {
       return json({ error: "এই মোবাইল নম্বর দিয়ে অ্যাকাউন্ট আগে থেকেই খোলা হয়েছে" }, 409);
@@ -491,6 +539,34 @@ async function route(req, env) {
   if (p.startsWith("/api/")) {
     const user = await currentUser(req, env);
     const admin = () => requireAdmin(req, env);
+
+
+    if (p === "/api/referral" && method === "GET") {
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      await ensureReferralSchema(env);
+      const code=await makeReferralCode(env,user.id);
+      const stats=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN reward_paid=1 THEN 1 ELSE 0 END) AS qualified FROM referrals WHERE referrer_user_id=?").bind(user.id).first();
+      const rewards=await env.DB.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND type='referral_bonus'").bind(user.id).first();
+      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),threshold:200,bonus:108});
+    }
+    if (p === "/api/admin/referral-settings" && method === "GET") {
+      if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
+      await ensureReferralSchema(env);
+      const rows=await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('referral_threshold','referral_bonus')").all();
+      const values=Object.fromEntries((rows.results||[]).map(x=>[x.key,Number(x.value)]));
+      return json({threshold:values.referral_threshold||200,bonus:values.referral_bonus||108});
+    }
+    if (p === "/api/admin/referral-settings" && method === "POST") {
+      if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
+      await ensureReferralSchema(env);
+      const body=await req.json(),threshold=Number(body.threshold),bonus=Number(body.bonus);
+      if(!Number.isSafeInteger(threshold)||threshold<1||threshold>1000000||!Number.isSafeInteger(bonus)||bonus<1||bonus>1000000)return json({error:"সঠিক পূর্ণসংখ্যার Coin পরিমাণ দিন"},400);
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO settings(key,value) VALUES('referral_threshold',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(threshold)),
+        env.DB.prepare("INSERT INTO settings(key,value) VALUES('referral_bonus',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(bonus))
+      ]);
+      return json({ok:true,threshold,bonus});
+    }
 
     if (p === "/api/demo-deposits" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
