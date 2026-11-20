@@ -393,13 +393,13 @@ function showAuth() {
         <input class="field" name="phone" type="tel" inputmode="numeric" required autocomplete="tel" placeholder="01XXXXXXXXX">
         <label>Password</label>
         <div class="password-field">
-          <input class="field" name="password" type="password" minlength="8" maxlength="128" required autocomplete="current-password" placeholder="কমপক্ষে ৮ অক্ষর">
+          <input class="field" name="password" type="password" minlength="6" maxlength="128" required autocomplete="current-password" placeholder="কমপক্ষে ৬ অক্ষর">
           <button class="password-toggle" type="button" data-toggle-password="password" aria-label="পাসওয়ার্ড দেখান" title="পাসওয়ার্ড দেখান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
         <div id="confirmPasswordWrap" class="hidden">
           <label>Confirm Password</label>
           <div class="password-field">
-            <input class="field" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="পাসওয়ার্ড আবার লিখুন">
+            <input class="field" name="confirmPassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" placeholder="পাসওয়ার্ড আবার লিখুন">
             <button class="password-toggle" type="button" data-toggle-password="confirmPassword" aria-label="কনফার্ম পাসওয়ার্ড দেখান" title="পাসওয়ার্ড দেখান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
@@ -439,14 +439,13 @@ function authMode(m) {
     const password = passwordInput.value;
     const confirmPassword = confirmInput.value;
     // Ignore accidental leading/trailing whitespace and equivalent Unicode forms.
-    const normalizedPassword = password.normalize('NFKC').trim();
-    const normalizedConfirm = confirmPassword.normalize('NFKC').trim();
-    if (currentMode === 'register' && normalizedPassword !== normalizedConfirm) {
+    if (currentMode === 'register' && password !== confirmPassword) {
       toast('পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না');
       confirmInput.focus();
       return;
     }
-    const data = { phone: f.querySelector('input[name="phone"]').value, password: normalizedPassword };
+    const data = { phone: f.querySelector('input[name="phone"]').value, password };
+    if (currentMode === 'register') data.confirmPassword = confirmPassword;
     try {
       const r = await api('/'+currentMode,data);
       token = r.token;
