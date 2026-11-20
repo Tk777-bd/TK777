@@ -591,12 +591,7 @@ body{background:#063b39}
   background:radial-gradient(ellipse at 50% 52%,transparent 0 25%,#0008 90%);
 }
 .aviator-sky,.aviator-stars,.aviator-clouds{display:none}
-.aviator-funbar{
-  position:absolute;z-index:8;top:0;left:0;right:0;height:17px;
-  display:grid;place-items:center;background:linear-gradient(#f5b000,#c27d00);
-  color:#171006;font-size:8px;font-weight:900;letter-spacing:.7px;
-  border-radius:7px 7px 0 0;
-}
+
 .aviator-promo{
   position:absolute;z-index:4;left:50%;top:53%;transform:translate(-50%,-50%);
   width:min(76%,270px);height:65%;min-height:130px;max-height:190px;
