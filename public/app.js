@@ -10,6 +10,7 @@ let crashVisualFrame = null;
 let crashVisualValue = 1;
 let crashVisualSegment = null;
 let crashVisualUpdatedAt = 0;
+let crashVisualStartMs = null;
 
 let crashSlots = [
   { roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null },
@@ -60,6 +61,7 @@ function stopCrashMonitor() {
   crashVisualSegment = null;
   crashVisualValue = 1;
   crashVisualUpdatedAt = 0;
+  crashVisualStartMs = null;
   if (crashTimer) clearInterval(crashTimer);
   crashTimer = null;
   crashGameId = null;
@@ -730,6 +732,7 @@ async function pollCrashState() {
 
       stopCrashVisualAnimation();
       crashVisualValue = 1;
+      crashVisualStartMs = null;
       if (multi) multi.textContent = '1.00x';
 
       updateFlightCurve(1);
@@ -756,7 +759,7 @@ async function pollCrashState() {
       stage.classList.remove('countdown','crashed');
       stage.classList.add('running');
 
-      setCrashVisualTarget(multiplier);
+      setCrashVisualTarget(multiplier,state.startMs);
 
       if (status) status.textContent = 'FLYING';
 
@@ -779,9 +782,11 @@ async function pollCrashState() {
       stage.classList.add('crashed');
 
       stopCrashVisualAnimation();
+      crashVisualStartMs = null;
       crashVisualValue = multiplier;
       if (multi) multi.textContent = multiplier.toFixed(2)+'x';
       updateFlightCurve(multiplier);
+      updateCashoutAmounts(multiplier);
 
       if (status) status.textContent = 'CRASHED AT '+multiplier.toFixed(2)+'x';
 
@@ -853,41 +858,44 @@ function stopCrashVisualAnimation() {
   crashVisualSegment = null;
 }
 
-function setCrashVisualTarget(target) {
-  const now = performance.now();
-  const startValue = crashVisualValue || 1;
-  const duration = crashVisualUpdatedAt
-    ? Math.max(180,Math.min(520,now-crashVisualUpdatedAt))
-    : 400;
-  crashVisualUpdatedAt = now;
-  crashVisualSegment = {from:startValue,to:Math.max(startValue,Number(target)||1),start:now,duration};
-
+function setCrashVisualTarget(target,startMs) {
+  if (Number.isFinite(Number(startMs))) crashVisualStartMs = Number(startMs);
+  if (crashVisualStartMs === null) {
+    crashVisualStartMs = Date.now()-Math.log(Math.max(1,Number(target)||1))*12000;
+  }
   if (crashVisualFrame === null) {
     crashVisualFrame = requestAnimationFrame(renderCrashVisual);
   }
 }
 
 function renderCrashVisual(now) {
-  const segment = crashVisualSegment;
-  if (!segment || !$('#aviatorStage')) {
+  if (!$('#aviatorStage') || crashVisualStartMs === null) {
     crashVisualFrame = null;
     return;
   }
 
-  const progress = Math.min(1,Math.max(0,(now-segment.start)/segment.duration));
-  const value = segment.from + (segment.to-segment.from)*progress;
+  // Match the server's exponential flight curve continuously between polls.
+  const elapsed = Math.max(0,Date.now()-crashVisualStartMs);
+  const value = Math.max(1,Math.exp(elapsed/12000));
   crashVisualValue = value;
 
   const multi = $('#multi');
   if (multi) multi.textContent = value.toFixed(2)+'x';
   updateFlightCurve(value);
+  updateCashoutAmounts(value);
 
-  if (progress < 1) {
-    crashVisualFrame = requestAnimationFrame(renderCrashVisual);
-  } else {
-    crashVisualValue = segment.to;
-    crashVisualSegment = null;
-    crashVisualFrame = null;
+  crashVisualFrame = requestAnimationFrame(renderCrashVisual);
+}
+
+function updateCashoutAmounts(multiplier) {
+  for (let i=0;i<crashSlots.length;i++) {
+    const slot = crashSlots[i];
+    const button = $('#cashoutBtn'+i);
+    const input = $('#crashBet'+i);
+    if (!button || !slot.roundId || slot.status !== 'active') continue;
+    const bet = Math.max(0,Number(input?.value || slot.betAmount || 0));
+    const payout = Math.floor(bet*multiplier);
+    button.innerHTML = 'Cash Out<br><b>'+payout.toFixed(2)+' COINS</b>';
   }
 }
 
@@ -1084,6 +1092,9 @@ async function cashout(index) {
       if (bal) bal.textContent = money(me.balance);
     }
 
+    const betAmount = Number(slot.betAmount || $('#crashBet'+index)?.value || 0);
+    const payoutAmount = Number(r.payout || 0);
+    const profitAmount = payoutAmount - betAmount;
     slot.roundId = null;
     slot.status = r.status;
     slot.auto = false;
@@ -1097,7 +1108,7 @@ async function cashout(index) {
 
     if (result) {
       result.textContent = r.status === 'cashed_out'
-        ? `Cash Out সফল: ${Number(r.multiplier).toFixed(2)}x · পেআউট ${r.payout} ক্রেডিট · ব্যালেন্স ${money(r.balance)}`
+        ? `Cash Out সফল: ${Number(r.multiplier).toFixed(2)}x · পেআউট ${payoutAmount.toFixed(2)} কয়েন · লাভ ${profitAmount.toFixed(2)} কয়েন · ব্যালেন্স ${money(r.balance)}`
         : 'Cash Out-এর আগেই ক্র্যাশ হয়েছে। পেআউট ০।';
     }
 
