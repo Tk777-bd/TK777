@@ -1028,11 +1028,11 @@ body{background:#063b39}
 .cats .cat img{width:28px;height:28px;flex:0 0 28px;border-radius:6px}
 .cats .cat .placeholder{width:28px;height:28px;flex:0 0 28px}
 .cats .cat b{white-space:nowrap;font-size:13px}
-.games{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
-.game{border-radius:16px}
-.game img,.game .placeholder{height:clamp(145px,38vw,205px)}
-.game strong{font-size:15px;padding:10px 5px}
-.game small{display:block;padding:0 4px 12px;color:#55d5bf;font-size:11px;font-weight:800;letter-spacing:.5px}
+.games{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px}
+.game{border-radius:10px}
+.game img,.game .placeholder{height:clamp(58px,18vw,82px)}
+.game strong{font-size:11px;padding:6px 2px;line-height:1.2}
+.game small{display:block;padding:0 2px 7px;color:#55d5bf;font-size:8px;font-weight:800;letter-spacing:0}
 
 
 /* Compact circular user profile avatar */
