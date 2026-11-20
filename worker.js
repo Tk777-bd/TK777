@@ -273,70 +273,38 @@ async function route(req, env) {
 
   if (p === "/api/register" && method === "POST") {
     const body = await req.json();
-    const username = String(body.username || "").trim();
     let phone = String(body.phone || "").trim();
     const password = String(body.password || "");
-
+    const confirmPassword = String(body.confirmPassword || "");
     const bnDigits = "০১২৩৪৫৬৭৮৯";
     phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
-    phone = phone.replace(/[\s()-]/g, "");
+    phone = phone.replace(/[\\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
-
-    if (
-      username.length < 2 ||
-      username.length > 40 ||
-      !/^01[3-9]\d{8}$/.test(phone) ||
-      password.length < 8 ||
-      password.length > 128
-    ) {
-      return json({
-        error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর এবং ৮–১২৮ অক্ষরের পাসওয়ার্ড দিন"
-      }, 400);
-    }
-
-    const id = uid();
-    const salt = uid();
-    const ph = await passHash(password, salt);
-
+    if (!/^01[3-9]\\d{8}$/.test(phone)) return json({ error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন" }, 400);
+    if (password.length < 8 || password.length > 128) return json({ error: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে" }, 400);
+    if (password !== confirmPassword) return json({ error: "পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না" }, 400);
+    const id = uid(), salt = uid(), ph = await passHash(password, salt);
     try {
-      await env.DB.prepare("INSERT INTO users (id,username,email,password_hash,password_salt,balance) VALUES(?,?,?,?,?,0)")
-        .bind(id, username, phone, ph, salt).run();
+      await env.DB.prepare("INSERT INTO users (id,username,email,password_hash,password_salt,balance) VALUES(?,?,?,?,?,0)").bind(id, phone, phone, ph, salt).run();
       return await loginUser(id, env);
-    } catch (e) {
-      return json({
-        error: "এই মোবাইল নম্বর বা ইউজারনেম আগে ব্যবহার হয়েছে"
-      }, 409);
-    }
+    } catch (e) { return json({ error: "এই মোবাইল নম্বর দিয়ে অ্যাকাউন্ট আগে থেকেই খোলা হয়েছে" }, 409); }
   }
-
-  /* LOGIN: new mobile accounts and legacy email accounts */
 
   if (p === "/api/login" && method === "POST") {
     const body = await req.json();
+    let phone = String(body.phone || "").trim();
     const password = body.password;
-    let identity = String(body.phone || body.email || "").trim().toLowerCase();
-
-    if (!identity.includes("@")) {
-      const bnDigits = "০১২৩৪৫৬৭৮৯";
-      identity = identity.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
-      identity = identity.replace(/[\s()-]/g, "");
-      if (identity.startsWith("+880")) identity = "0" + identity.slice(4);
-      else if (identity.startsWith("880")) identity = "0" + identity.slice(3);
-    }
-
-    const u = await env.DB.prepare("SELECT * FROM users WHERE email=?")
-      .bind(identity).first();
-
-    if (
-      !u ||
-      typeof password !== "string" ||
-      password.length > 128 ||
-      await passHash(password, u.password_salt) !== u.password_hash
-    ) {
+    const bnDigits = "০১২৩৪৫৬৭৮৯";
+    phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
+    phone = phone.replace(/[\\s()-]/g, "");
+    if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
+    else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
+    if (!/^01[3-9]\\d{8}$/.test(phone)) return json({ error: "সঠিক মোবাইল নম্বর দিন" }, 400);
+    const u = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(phone).first();
+    if (!u || typeof password !== "string" || password.length > 128 || await passHash(password, u.password_salt) !== u.password_hash) {
       return json({ error: "লগইন তথ্য সঠিক নয়" }, 401);
     }
-
     return await loginUser(u.id, env);
   }
 
