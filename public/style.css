@@ -554,6 +554,7 @@ body{background:#063b39}
 .ticker-values .history-blue,.history-more-grid .history-blue{color:#4daee8}
 .ticker-values .history-purple,.history-more-grid .history-purple{color:#a855e8}
 .ticker-values .history-pink,.history-more-grid .history-pink{color:#d51aa8}
+.ticker-values .history-orange,.history-more-grid .history-orange{color:#ff982e}
 .ticker-values .history-red,.history-more-grid .history-red{color:#f02036}
 .history-more-button{
   flex:0 0 22px;width:22px;height:22px;padding:0;border:0;border-radius:50%;
