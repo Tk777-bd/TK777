@@ -708,18 +708,25 @@ async function route(req, env) {
     }
     if (p === "/api/security/profile" && user && method === "GET") {
       for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
-      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();return json({profile:profile||{}});
+      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();
+      const contactsSaved=!!(profile?.whatsapp_number&&profile?.facebook_url&&profile?.gmail);
+      if(contactsSaved)profile.gmail_masked="***"+String(profile.gmail).slice(-3);
+      delete profile.gmail;
+      return json({profile:profile||{},contactsSaved});
     }
     if (p === "/api/security/profile" && user && method === "POST") {
       for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
       const b=await req.json(),n=String(b.displayName||"").trim().slice(0,60),w=String(b.whatsapp||"").trim(),f=String(b.facebook||"").trim(),g=String(b.gmail||"").trim();
+      const old=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();
       if(n&&n.length<2)return json({error:"নাম কমপক্ষে ২ অক্ষরের হতে হবে"},400);
       if(w&&(w.length<8||w.length>20))return json({error:"সঠিক WhatsApp নম্বর দিন"},400);
       if(f&&(!(f.startsWith("https://facebook.com/")||f.startsWith("https://www.facebook.com/")||f.startsWith("https://fb.com/"))||f.length>250))return json({error:"সঠিক Facebook https লিংক দিন"},400);
       if(g&&(!g.toLowerCase().endsWith("@gmail.com")||!g.includes("@")||g.length>254))return json({error:"সঠিক Gmail ঠিকানা দিন"},400);
-      const old=await env.DB.prepare("SELECT display_name FROM users WHERE id=?").bind(user.id).first();if(n&&old?.display_name&&n!==old.display_name)return json({error:"নাম একবার সেভ হলে নিজে পরিবর্তন করা যাবে না"},409);
-      await env.DB.prepare("UPDATE users SET display_name=CASE WHEN display_name IS NULL OR display_name='' THEN ? ELSE display_name END,whatsapp_number=?,facebook_url=?,gmail=? WHERE id=?").bind(n,w,f,g,user.id).run();
-      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();return json({ok:true,nameSaved:!!profile?.display_name,profile});
+      if(n&&old?.display_name&&n!==old.display_name)return json({error:"নাম একবার সেভ হলে নিজে পরিবর্তন করা যাবে না"},409);
+      if(w||f||g){if(old?.whatsapp_number||old?.facebook_url||old?.gmail)return json({error:"যোগাযোগের তথ্য একবার সেভ হলে আর পরিবর্তন করা যাবে না"},409);if(!w||!f||!g)return json({error:"WhatsApp, Facebook লিংক ও Gmail—তিনটিই পূরণ করুন"},400);await env.DB.prepare("UPDATE users SET whatsapp_number=?,facebook_url=?,gmail=? WHERE id=?").bind(w,f,g,user.id).run();}
+      if(n&&!old?.display_name)await env.DB.prepare("UPDATE users SET display_name=? WHERE id=?").bind(n,user.id).run();
+      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url FROM users WHERE id=?").bind(user.id).first();const fullGmail=old?.gmail||g;profile.gmail_masked=fullGmail?"***"+String(fullGmail).slice(-3):"";
+      return json({ok:true,profile});
     }
     if (p === "/api/security/password" && user && method === "POST") {
       const b=await req.json(),old=String(b.oldPassword||""),next=String(b.newPassword||"");if(!old||next.length<6||next.length>128)return json({error:"পুরোনো পাসওয়ার্ড ও ৬–১২৮ অক্ষরের নতুন পাসওয়ার্ড দিন"},400);
