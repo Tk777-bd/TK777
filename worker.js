@@ -1,4 +1,3 @@
-
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -6,34 +5,136 @@ const cors = {
 };
 
 const parseDepositContent = raw => {
-  const defaults = {"fields":{"pageTitle":" Deposit","numberLabel":" NUMBER · COPY ONLY","copyButton":"Copy","numberNotice":"এটি শুধু সেন্ড মানি নম্বর। কোনো ক্যাশ আউট করবেন না।","paymentTitle":"পেমেন্ট পদ্ধতি (wallet)","amountLabel":"পরিমাণ","amountPlaceholder":" Amount লিখুন","referenceLabel":" Transaction ID ","referencePlaceholder":" Transaction ID লিখুন","referenceHint":" ID লিখুন। এটি আসল ডকুমেন্ট।","submitButton":"Submit Request","historyTitle":"আমার Requests","loadingText":"লোড হচ্ছে…","backButton":"Member Center","chooseMethodError":"আগে একটি পেমেন্ট পদ্ধতি সিলেক্ট করুন।","amountError":"সঠিক Amount লিখুন।","referenceError":"Transaction ID লিখুন।","successMessage":" ডিপজিট Request জমা হয়েছে। ২ মিনিটের।মধ্যে টাকা জমা হবে।","emptyHistory":"এখনো কোনো Request নেই","historySuffix":"(টাকা)","statusPending":"Pending","statusAccepted":"Accepted","statusCancelled":"Cancelled","currencyPrefix":"৳","methodBkash":"bKash","methodNagad":"Nagad","methodRocket":"Rocket","Badge":"BD","copiedButton":"Copied","copySuccess":"নম্বর কপি হয়েছে","preset100":"100","preset200":"200","preset300":"300","preset500":"500","preset1000":"1000"},"categories":[]};
+  const defaults = {
+    fields: {
+      pageTitle: "Deposit",
+      numberLabel: "NUMBER · COPY ONLY",
+      copyButton: "Copy",
+      numberNotice: "এটি শুধু সেন্ড মানি নম্বর। কোনো ক্যাশ আউট করবেন না।",
+      paymentTitle: "পেমেন্ট পদ্ধতি (Wallet)",
+      amountLabel: "পরিমাণ",
+      amountPlaceholder: "Amount লিখুন",
+      referenceLabel: "Transaction ID",
+      referencePlaceholder: "Transaction ID লিখুন",
+      referenceHint: "সঠিক Transaction ID লিখুন। এটি আসল ডকুমেন্ট।",
+      submitButton: "Submit Request",
+      historyTitle: "আমার Requests",
+      loadingText: "লোড হচ্ছে…",
+      backButton: "Member Center",
+      chooseMethodError: "আগে একটি পেমেন্ট পদ্ধতি সিলেক্ট করুন।",
+      amountError: "সঠিক Amount লিখুন।",
+      referenceError: "Transaction ID লিখুন।",
+      successMessage: "ডিপজিট Request জমা হয়েছে। ২ মিনিটের মধ্যে টাকা জমা হবে।",
+      emptyHistory: "এখনো কোনো Request নেই",
+      historySuffix: "(টাকা)",
+      statusPending: "Pending",
+      statusAccepted: "Accepted",
+      statusCancelled: "Cancelled",
+      currencyPrefix: "৳",
+      methodBkash: "bKash",
+      methodNagad: "Nagad",
+      methodRocket: "Rocket",
+      Badge: "BD",
+      copiedButton: "Copied",
+      copySuccess: "নম্বর কপি হয়েছে",
+      preset100: "100",
+      preset200: "200",
+      preset300: "300",
+      preset500: "500",
+      preset1000: "1000"
+    },
+    categories: []
+  };
+
   try {
     const parsed = JSON.parse(String(raw || "{}"));
     const fields = {};
     for (const [key, fallback] of Object.entries(defaults.fields)) {
       const value = parsed?.fields?.[key];
-      fields[key] = typeof value === "string" ? value.slice(0,300) : fallback;
+      fields[key] = typeof value === "string" ? value.slice(0, 300) : fallback;
     }
-    const categories = Array.isArray(parsed?.categories) ? parsed.categories.filter(c => !(String(c?.title||"").trim()===" নির্দেশনা" && String(c?.text||"").trim()==="এখানে সঠিক তথ্য ব্যাবহার করুন।") && !(String(c?.title||"").trim()==="অতিরিক্ত তথ্য" && String(c?.text||"").trim()==="টাকা জমা করুন উইনিং হন।")).slice(0,12).map((c,i)=>({
-      id: "custom-" + i,
-      title: String(c?.title || "").slice(0,80),
-      text: String(c?.text || "").slice(0,300)
-    })) : defaults.categories;
-    return {fields,categories};
-  } catch { return defaults; }
+
+    const categories = Array.isArray(parsed?.categories)
+      ? parsed.categories
+          .filter(c =>
+            !(String(c?.title || "").trim() === "নির্দেশনা" && String(c?.text || "").trim() === "এখানে সঠিক তথ্য ব্যাবহার করুন।") &&
+            !(String(c?.title || "").trim() === "অতিরিক্ত তথ্য" && String(c?.text || "").trim() === "টাকা জমা করুন উইনিং হন।")
+          )
+          .slice(0, 12)
+          .map((c, i) => ({
+            id: "custom-" + i,
+            title: String(c?.title || "").slice(0, 80),
+            text: String(c?.text || "").slice(0, 300)
+          }))
+      : defaults.categories;
+
+    return { fields, categories };
+  } catch {
+    return defaults;
+  }
 };
 
 const parseWithdrawContent = raw => {
- const defaults={"fields":{"pageTitle":"Withdrawal","safetyNote":"শুধু উইথড্র Request। বিকাশ/নগদ/রকেট বাটনগুলো কেবল পদ্ধতি ওয়ালেট নম্বর, টাকা উত্তোলন করুন।","methodTitle":"পদ্ধতি নির্বাচন করুন","methodBkash":"bKash","methodNagad":"Nagad","methodRocket":"Rocket","Badge":"Bkash","IdsHint":"টাকা দেখাবে ।","IdsLabel":"শুধু পরিচিতি:","noIds":"এই পদ্ধতিতে কোনো পরিচিতি যোগ করা হয়নি।","amountLabel":"টাকার পরিমাণ","amountPlaceholder":"কত টাকা উইথড্র করতে চান","balanceLabel":"বর্তমান ব্যালেন্স:","coinSuffix":"Coin","submitButton":"Submit Withdrawal","historyTitle":"আমার Withdrawal Requests","loadingText":"লোড হচ্ছে…","emptyHistory":"এখনো কোনো Request নেই","recordTitle":"Withdrawal Record","emptyRecord":"কোনো Withdrawal Record নেই","backButton":"Member Center","chooseMethodError":"বিকাশ, নগদ অথবা রকেট নির্বাচন করুন।","amountError":"সঠিক ব্যালেন্স পরিমাণ লিখুন।","balanceError":"আপনার ব্যালেন্সে পর্যাপ্ত টাকা নেই।","successMessage":"Request জমা হয়েছে। নির্ধারিত Virtual Coin সঙ্গে সঙ্গে ব্যালেন্স থেকে কেটে Pending থাকবে; Admin বাতিল করলে কয়েন ফেরত আসবে। কোনো টাকা পাঠানো হবে না।","statusPending":"Pending","statusApproved":"Approved","statusRejected":"Rejected","historyCoinSuffix":"Virtual Coin"}};
- try{const parsed=JSON.parse(String(raw||"{}"));const fields={};for(const [key,fallback] of Object.entries(defaults.fields)){const value=parsed?.fields?.[key];fields[key]=typeof value==="string"?value.slice(0,300):fallback;}return {fields};}catch{return defaults;}
+  const defaults = {
+    fields: {
+      pageTitle: "Withdrawal",
+      safetyNote: "শুধু উইথড্র Request। বিকাশ/নগদ/রকেট বাটনগুলো কেবল পদ্ধতি ওয়ালেট নম্বর, টাকা উত্তোলন করুন।",
+      methodTitle: "পদ্ধতি নির্বাচন করুন",
+      methodBkash: "bKash",
+      methodNagad: "Nagad",
+      methodRocket: "Rocket",
+      Badge: "bKash",
+      IdsHint: "টাকা দেখাবে।",
+      IdsLabel: "শুধু পরিচিতি:",
+      noIds: "এই পদ্ধতিতে কোনো পরিচিতি যোগ করা হয়নি।",
+      amountLabel: "টাকার পরিমাণ",
+      amountPlaceholder: "কত টাকা উইথড্র করতে চান",
+      balanceLabel: "বর্তমান ব্যালেন্স:",
+      coinSuffix: "Coin",
+      submitButton: "Submit Withdrawal",
+      historyTitle: "আমার Withdrawal Requests",
+      loadingText: "লোড হচ্ছে…",
+      emptyHistory: "এখনো কোনো Request নেই",
+      recordTitle: "Withdrawal Record",
+      emptyRecord: "কোনো Withdrawal Record নেই",
+      backButton: "Member Center",
+      chooseMethodError: "বিকাশ, নগদ অথবা রকেট নির্বাচন করুন।",
+      amountError: "সঠিক ব্যালেন্স পরিমাণ লিখুন।",
+      balanceError: "আপনার ব্যালেন্সে পর্যাপ্ত টাকা নেই।",
+      successMessage: "Request জমা হয়েছে। নির্ধারিত কয়েন সঙ্গে সঙ্গে ব্যালেন্স থেকে কেটে Pending থাকবে; Admin বাতিল করলে কয়েন ফেরত আসবে।",
+      statusPending: "Pending",
+      statusApproved: "Approved",
+      statusRejected: "Rejected",
+      historyCoinSuffix: "Coin"
+    }
+  };
+
+  try {
+    const parsed = JSON.parse(String(raw || "{}"));
+    const fields = {};
+    for (const [key, fallback] of Object.entries(defaults.fields)) {
+      const value = parsed?.fields?.[key];
+      fields[key] = typeof value === "string" ? value.slice(0, 300) : fallback;
+    }
+    return { fields };
+  } catch {
+    return defaults;
+  }
 };
-const parseDemoIds = (raw, fallback) => {
+
+const parseRefIds = (raw, fallback) => {
   try {
     const values = JSON.parse(String(raw || "[]"));
     if (!Array.isArray(values)) return [fallback];
-    const clean = [...new Set(values.map(x => String(x).toUpperCase()).filter(x => /^DEMO-[A-Z0-9-]{1,24}$/.test(x)))].slice(0,10);
+    const clean = [...new Set(
+      values
+        .map(x => String(x).trim().toUpperCase())
+        .filter(x => /^[A-Z0-9_-]{2,32}$/.test(x))
+    )].slice(0, 10);
     return clean.length ? clean : [fallback];
-  } catch { return [fallback]; }
+  } catch {
+    return [fallback];
+  }
 };
 
 const json = (data, status = 200) =>
@@ -307,7 +408,6 @@ async function route(req, env) {
     let phone = String(body.phone || "").trim();
     const password = String(body.password || "");
     const confirmPassword = String(body.confirmPassword || "");
-    const bnDigits = "০১২৩৪৫৬৭৮৯";
     phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
@@ -318,14 +418,15 @@ async function route(req, env) {
     try {
       await env.DB.prepare("INSERT INTO users (id,username,email,password_hash,password_salt,balance) VALUES(?,?,?,?,?,0)").bind(id, phone, phone, ph, salt).run();
       return await loginUser(id, env);
-    } catch (e) { return json({ error: "এই মোবাইল নম্বর দিয়ে অ্যাকাউন্ট আগে থেকেই খোলা হয়েছে" }, 409); }
+    } catch (e) {
+      return json({ error: "এই মোবাইল নম্বর দিয়ে অ্যাকাউন্ট আগে থেকেই খোলা হয়েছে" }, 409);
+    }
   }
 
   if (p === "/api/login" && method === "POST") {
     const body = await req.json();
     let phone = String(body.phone || "").trim();
     const password = body.password;
-    const bnDigits = "০১২৩৪৫৬৭৮৯";
     phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
@@ -391,64 +492,81 @@ async function route(req, env) {
     const user = await currentUser(req, env);
     const admin = () => requireAdmin(req, env);
 
-
     if (p === "/api/demo-deposits" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
-      const rows=await env.DB.prepare("SELECT id,method,amount,demo_reference,status,created_at FROM demo_deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
-      return json({requests:rows.results||[]});
-    }
-    if (p === "/api/demo-deposits" && method === "POST") {
-      if(!user)return json({error:"লগইন করুন"},401);
-      const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);const ref=String(body.demo_reference||'');
-      if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||!Number.isSafeInteger(amount)||amount<1||amount>1000000||!/^[A-Za-z0-9_-]{3,80}$/.test(ref))return json({error:"সঠিক Demo তথ্য দিন"},400);
-      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
-      await env.DB.prepare("INSERT INTO demo_deposits(id,user_id,method,amount,demo_reference) VALUES(?,?,?,?,?)").bind(uid(),user.id,methodName,amount,ref).run();
-      return json({ok:true});
+      const rows = await env.DB.prepare("SELECT id,method,amount,demo_reference,status,created_at FROM demo_deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      return json({ requests: rows.results || [] });
     }
 
+    if (p === "/api/demo-deposits" && method === "POST") {
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      const body = await req.json();
+      const methodName = String(body.method || "");
+      const amount = Number(body.amount);
+      const ref = String(body.demo_reference || "");
+      if (!["bKash", "Nagad", "Rocket"].includes(methodName) || !Number.isSafeInteger(amount) || amount < 1 || amount > 1000000 || !/^[A-Za-z0-9_-]{3,80}$/.test(ref)) {
+        return json({ error: "সঠিক ডিপজিট তথ্য দিন" }, 400);
+      }
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+      await env.DB.prepare("INSERT INTO demo_deposits(id,user_id,method,amount,demo_reference) VALUES(?,?,?,?,?)").bind(uid(), user.id, methodName, amount, ref).run();
+      return json({ ok: true });
+    }
 
     if (p === "/api/withdraw-requests" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
-      const rows=await env.DB.prepare("SELECT id,method,amount,status,created_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
-      return json({requests:rows.results||[]});
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
+      } catch (e) {}
+      const rows = await env.DB.prepare("SELECT id,method,amount,status,created_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      return json({ requests: rows.results || [] });
     }
+
     if (p === "/api/withdraw-requests" && method === "POST") {
-      if(!user)return json({error:"লগইন করুন"},401);
-      const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);
-      if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||!Number.isSafeInteger(amount)||amount<1||amount>10000000)return json({error:"সঠিক Demo Withdrawal তথ্য দিন"},400);
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      const body = await req.json();
+      const methodName = String(body.method || "");
+      const amount = Number(body.amount);
+      if (!["bKash", "Nagad", "Rocket"].includes(methodName) || !Number.isSafeInteger(amount) || amount < 1 || amount > 10000000) {
+        return json({ error: "সঠিক Withdrawal তথ্য দিন" }, 400);
+      }
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
-      const requestId=uid();
-      const reserved=await env.DB.batch([
-        env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=? AND NOT EXISTS (SELECT 1 FROM demo_withdrawals WHERE user_id=? AND status='pending')").bind(amount,user.id,amount,user.id),
-        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status,coin_reserved) SELECT ?,?,?,?,'pending',1 WHERE changes()=1").bind(requestId,user.id,methodName,amount),
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
+      } catch (e) {}
+      const requestId = uid();
+      const reserved = await env.DB.batch([
+        env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=? AND NOT EXISTS (SELECT 1 FROM demo_withdrawals WHERE user_id=? AND status='pending')").bind(amount, user.id, amount, user.id),
+        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status,coin_reserved) SELECT ?,?,?,?,'pending',1 WHERE changes()=1").bind(requestId, user.id, methodName, amount),
         env.DB.prepare("SELECT changes() AS inserted")
       ]);
-      if(Number(reserved[2]?.results?.[0]?.inserted)!==1){
-        const pending=await env.DB.prepare("SELECT id FROM demo_withdrawals WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
-        if(pending)return json({error:"আপনার একটি Withdrawal Request এখনো Pending আছে"},409);
-        return json({error:"পর্যাপ্ত Virtual Coin নেই"},400);
+      if (Number(reserved[2]?.results?.[0]?.inserted) !== 1) {
+        const pending = await env.DB.prepare("SELECT id FROM demo_withdrawals WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
+        if (pending) return json({ error: "আপনার একটি Withdrawal Request এখনো Pending আছে" }, 409);
+        return json({ error: "পর্যাপ্ত কয়েন নেই" }, 400);
       }
-      const after=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
-      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"demo_withdrawal_hold",-amount,after.balance,"Demo virtual coin reserved on withdrawal request").run();
-      return json({ok:true,balance:after.balance});
+      const after = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(), user.id, "withdrawal_hold", -amount, after.balance, "Coin reserved on withdrawal request").run();
+      return json({ ok: true, balance: after.balance });
     }
 
     if (p === "/api/coin-requests" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      const rows=await env.DB.prepare("SELECT id,amount,status,created_at FROM coin_requests WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
-      return json({requests:rows.results||[]});
+      const rows = await env.DB.prepare("SELECT id,amount,status,created_at FROM coin_requests WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      return json({ requests: rows.results || [] });
     }
+
     if (p === "/api/coin-requests" && method === "POST") {
-      if(!user)return json({error:"লগইন করুন"},401);
-      const body=await req.json();const amount=Number(body.amount);
-      if(![100,200,300,500,1000].includes(amount))return json({error:"সঠিক কয়েন পরিমাণ নির্বাচন করুন"},400);
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      const body = await req.json();
+      const amount = Number(body.amount);
+      if (![100, 200, 300, 500, 1000].includes(amount)) {
+        return json({ error: "সঠিক কয়েন পরিমাণ নির্বাচন করুন" }, 400);
+      }
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      const pending=await env.DB.prepare("SELECT id FROM coin_requests WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
-      if(pending)return json({error:"আপনার একটি Request এখনো Pending আছে"},409);
-      await env.DB.prepare("INSERT INTO coin_requests(id,user_id,amount,status) VALUES(?,?,?,'pending')").bind(uid(),user.id,amount).run();
-      return json({ok:true});
+      const pending = await env.DB.prepare("SELECT id FROM coin_requests WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
+      if (pending) return json({ error: "আপনার একটি Request এখনো Pending আছে" }, 409);
+      await env.DB.prepare("INSERT INTO coin_requests(id,user_id,amount,status) VALUES(?,?,?,'pending')").bind(uid(), user.id, amount).run();
+      return json({ ok: true });
     }
 
     if (p === "/api/me") {
@@ -457,7 +575,8 @@ async function route(req, env) {
         : json({ error: "লগইন করুন" }, 401);
     }
 
-    if (p === "/api/logout" && method === "POST") {      const token = (req.headers.get("Authorization") || "")
+    if (p === "/api/logout" && method === "POST") {
+      const token = (req.headers.get("Authorization") || "")
         .replace(/^Bearer /, "");
 
       if (token) {
@@ -474,36 +593,75 @@ async function route(req, env) {
       const images = {};
       let hiddenIds = [];
       for (const row of (rows.results || [])) {
-        if (row.key === 'slot_display_hidden') {
-          try { hiddenIds = JSON.parse(String(row.value || '[]')); } catch { hiddenIds = []; }
+        if (row.key === "slot_display_hidden") {
+          try {
+            hiddenIds = JSON.parse(String(row.value || "[]"));
+          } catch {
+            hiddenIds = [];
+          }
           continue;
         }
         const id = String(row.key).replace(/^slot_display_image_/, "");
-        const url = String(row.value || "").trim();
-        if (/^https:\/\//i.test(url)) images[id] = url;
+        const urlVal = String(row.value || "").trim();
+        if (/^https:\/\//i.test(urlVal)) images[id] = urlVal;
       }
       let nameOverrides = {};
-      const nameRow = (rows.results || []).find(r => r.key === 'game_name_overrides');
-      try { nameOverrides = JSON.parse(String(nameRow?.value || '{}')); } catch { nameOverrides = {}; }
-      return json({ images, hiddenIds: Array.isArray(hiddenIds) ? hiddenIds.filter(x => typeof x === 'string') : [], nameOverrides });
+      const nameRow = (rows.results || []).find(r => r.key === "game_name_overrides");
+      try {
+        nameOverrides = JSON.parse(String(nameRow?.value || "{}"));
+      } catch {
+        nameOverrides = {};
+      }
+      return json({
+        images,
+        hiddenIds: Array.isArray(hiddenIds) ? hiddenIds.filter(x => typeof x === "string") : [],
+        nameOverrides
+      });
     }
 
     if (p === "/api/support-settings" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number','demo_number_bkash','demo_number_nagad','demo_number_rocket','withdraw_demo_ids_bkash','withdraw_demo_ids_nagad','withdraw_demo_ids_rocket','deposit_content','withdraw_content')").all();
-      const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
-      const image = String(values.support_telegram_image_url || '');
-      const validImage = key => /^https:\/\//i.test(String(values[key] || '')) ? String(values[key]) : '';
-      const demoNumber = /^01[3-9][0-9]{8}$/.test(String(values.demo_display_number || '')) ? String(values.demo_display_number) : '01790365006';
-      const validDemoNumber=(key,fallback)=>/^\d{11}$/.test(String(values[key]||''))?String(values[key]):fallback;
-      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_numbers:{bkash:validDemoNumber('demo_number_bkash','12345678912'),nagad:validDemoNumber('demo_number_nagad','55555555555'),rocket:validDemoNumber('demo_number_rocket','33333333333')},demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')},withdraw_demo_ids:{bkash:parseDemoIds(values.withdraw_demo_ids_bkash,'DEMO-BKASH-01'),nagad:parseDemoIds(values.withdraw_demo_ids_nagad,'DEMO-NAGAD-01'),rocket:parseDemoIds(values.withdraw_demo_ids_rocket,'DEMO-ROCKET-01')},deposit_content:parseDepositContent(values.deposit_content),withdraw_content:parseWithdrawContent(values.withdraw_content)});
+      const rows = await env.DB.prepare(
+        "SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','payment_image_bkash','payment_image_nagad','payment_image_rocket','display_number','number_bkash','number_nagad','number_rocket','withdraw_ids_bkash','withdraw_ids_nagad','withdraw_ids_rocket','deposit_content','withdraw_content')"
+      ).all();
+      const values = Object.fromEntries((rows.results || []).map(r => [r.key, r.value]));
+      const image = String(values.support_telegram_image_url || "");
+      const validImage = key => /^https:\/\//i.test(String(values[key] || "")) ? String(values[key]) : "";
+      const displayNumber = /^01[3-9][0-9]{8}$/.test(String(values.display_number || ""))
+        ? String(values.display_number)
+        : "01790365006";
+      const validNumber = (key, fallback) =>
+        /^\d{11}$/.test(String(values[key] || "")) ? String(values[key]) : fallback;
+
+      return json({
+        telegram_username: String(values.support_telegram_username || ""),
+        telegram_image_url: /^https:\/\//i.test(image) ? image : "",
+        display_number: displayNumber,
+        numbers: {
+          bkash: validNumber("number_bkash", "01700000001"),
+          nagad: validNumber("number_nagad", "01800000002"),
+          rocket: validNumber("number_rocket", "01900000003")
+        },
+        payment_images: {
+          bkash: validImage("payment_image_bkash"),
+          nagad: validImage("payment_image_nagad"),
+          rocket: validImage("payment_image_rocket")
+        },
+        withdraw_ids: {
+          bkash: parseRefIds(values.withdraw_ids_bkash, "BKASH-01"),
+          nagad: parseRefIds(values.withdraw_ids_nagad, "NAGAD-01"),
+          rocket: parseRefIds(values.withdraw_ids_rocket, "ROCKET-01")
+        },
+        deposit_content: parseDepositContent(values.deposit_content),
+        withdraw_content: parseWithdrawContent(values.withdraw_content)
+      });
     }
 
-  if (p === "/api/home-banners" && method === "GET") {
+    if (p === "/api/home-banners" && method === "GET") {
       const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'home_banner_%' ORDER BY key").all();
       const banners = (rows.results || [])
         .map(r => String(r.value || "").trim())
         .filter(v => /^https:\/\//i.test(v))
-        .slice(0,5);
+        .slice(0, 5);
       return json({ banners });
     }
 
@@ -518,23 +676,34 @@ async function route(req, env) {
     }
 
     if (p === "/api/games" && method === "GET") {
-      // Normalize the original game's display name once; admin can rename it later.
       await env.DB.prepare("UPDATE games SET name='Aviator' WHERE id='aviator' AND name='Aviator Free'").run();
-      // Hide the duplicate Aviator 2 entry while preserving its historical rounds.
       await env.DB.prepare("UPDATE games SET active=0 WHERE id='aviator-2'").run();
       await env.DB.prepare(`
         UPDATE games SET sort_order=3
         WHERE id='super-ace' AND sort_order=2
       `).run();
 
-      // Built-in free virtual-coin mini games; no paid provider/API required.
-      const miniGames = [["gold-mines","Gold Mines","slots",4],["plinko","Plinko","slots",5],["classic-dice","Classic Dice","hot",6],["royal-coinflip","Royal Coinflip","hot",7],["european-roulette","European Roulette","live",8],["blackjack-21","Blackjack 21","poker",9],["baccarat","Baccarat","live",10],["diamond-slots","Diamond Slots","slots",11],["fortune-wheel","Fortune Wheel","lottery",12],["royal-keno","Royal Keno","lottery",13],["live-roulette","Live Roulette","live",14],["live-blackjack","Live Blackjack","live",15],["live-baccarat","Live Baccarat","live",16]];
-      for (const [id,name,category,order] of miniGames) {
+      const miniGames = [
+        ["gold-mines", "Gold Mines", "slots", 4],
+        ["plinko", "Plinko", "slots", 5],
+        ["classic-dice", "Classic Dice", "hot", 6],
+        ["royal-coinflip", "Royal Coinflip", "hot", 7],
+        ["european-roulette", "European Roulette", "live", 8],
+        ["blackjack-21", "Blackjack 21", "poker", 9],
+        ["baccarat", "Baccarat", "live", 10],
+        ["diamond-slots", "Diamond Slots", "slots", 11],
+        ["fortune-wheel", "Fortune Wheel", "lottery", 12],
+        ["royal-keno", "Royal Keno", "lottery", 13],
+        ["live-roulette", "Live Roulette", "live", 14],
+        ["live-blackjack", "Live Blackjack", "live", 15],
+        ["live-baccarat", "Live Baccarat", "live", 16]
+      ];
+      for (const [id, name, category, order] of miniGames) {
         await env.DB.prepare(`
           INSERT OR IGNORE INTO games
           (id,name,category_id,image_url,game_type,sort_order)
           VALUES(?,?,?,'','minigame',?)
-        `).bind(id,name,category,order).run();
+        `).bind(id, name, category, order).run();
       }
 
       const rows = await env.DB.prepare(`
@@ -547,11 +716,15 @@ async function route(req, env) {
 
       const nameRow = await env.DB.prepare("SELECT value FROM settings WHERE key='game_name_overrides'").first();
       let nameOverrides = {};
-      try { nameOverrides = JSON.parse(String(nameRow?.value || '{}')); } catch { nameOverrides = {}; }
+      try {
+        nameOverrides = JSON.parse(String(nameRow?.value || "{}"));
+      } catch {
+        nameOverrides = {};
+      }
       const games = (rows.results || []).map(g => ({
         ...g,
-        name: typeof nameOverrides[g.id] === 'string' && nameOverrides[g.id].trim()
-          ? nameOverrides[g.id].trim().slice(0,80) : g.name
+        name: typeof nameOverrides[g.id] === "string" && nameOverrides[g.id].trim()
+          ? nameOverrides[g.id].trim().slice(0, 80) : g.name
       }));
       return json({ games });
     }
@@ -591,13 +764,9 @@ async function route(req, env) {
       const { gameId, betAmount } = await req.json();
       const bet = Number(betAmount);
 
-      if (
-        !Number.isSafeInteger(bet) ||
-        bet < 1 ||
-        bet > 1000000
-      ) {
+      if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) {
         return json({
-          error: "বেটের পরিমাণ ১ থেকে ১০,০০,০০০ ফ্রি ক্রেডিটের মধ্যে দিন"
+          error: "বেটের পরিমাণ ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন"
         }, 400);
       }
 
@@ -625,7 +794,7 @@ async function route(req, env) {
       `).bind(bet, user.id, bet).run();
 
       if (!debit.meta.changes) {
-        return json({ error: "পর্যাপ্ত ফ্রি ক্রেডিট নেই" }, 400);
+        return json({ error: "পর্যাপ্ত ক্রেডিট নেই" }, 400);
       }
 
       try {
@@ -685,14 +854,14 @@ async function route(req, env) {
       }
     }
 
-    /* FREE VIRTUAL-COIN MINI GAMES: outcomes are generated on the server. */
+    /* MINI GAMES */
     if (p === "/api/mini-play" && method === "POST") {
       const body = await req.json();
       const gameId = String(body.gameId || "");
       const bet = Number(body.betAmount);
       const choice = String(body.choice || "");
       if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) {
-        return json({ error: "১ থেকে ১০,০০,০০০ ফ্রি কয়েনের মধ্যে বেট দিন" }, 400);
+        return json({ error: "১ থেকে ১০,০০,০০০ কয়েনের মধ্যে বেট দিন" }, 400);
       }
       const game = await env.DB.prepare(
         "SELECT id,name,game_type FROM games WHERE id=? AND active=1"
@@ -702,34 +871,34 @@ async function route(req, env) {
       }
 
       let multiplier = 0, result = "", detail = "";
-      const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+      const pick = arr => arr[Math.floor(rand() * arr.length)];
       if (gameId === "gold-mines") {
         const mine = 1 + Math.floor(rand() * 5);
         const selected = Number(choice);
-        if (!Number.isInteger(selected) || selected < 1 || selected > 5) return json({error:"১ থেকে ৫-এর একটি ঘর বাছুন"},400);
+        if (!Number.isInteger(selected) || selected < 1 || selected > 5) return json({ error: "১ থেকে ৫-এর একটি ঘর বাছুন" }, 400);
         multiplier = selected === mine ? 0 : 1.8;
         result = selected === mine ? "💣 মাইন! বেট হারিয়েছেন" : "💎 নিরাপদ ঘর! জয়";
         detail = "আপনার ঘর: " + selected + " · মাইন: " + mine;
       } else if (gameId === "plinko") {
-        multiplier = pick([0,0,0.5,0.5,1,1,1.5,2,3,5]);
+        multiplier = pick([0, 0, 0.5, 0.5, 1, 1, 1.5, 2, 3, 5]);
         result = multiplier > 0 ? "বলটি জিতেছে!" : "বলটি শূন্য ঘরে পড়েছে";
         detail = "মাল্টিপ্লায়ার " + multiplier + "x";
       } else if (gameId === "classic-dice") {
-        if (!["high","low"].includes(choice)) return json({error:"High অথবা Low বাছুন"},400);
+        if (!["high", "low"].includes(choice)) return json({ error: "High অথবা Low বাছুন" }, 400);
         const roll = 1 + Math.floor(rand() * 6);
         multiplier = (choice === "high" ? roll >= 4 : roll <= 3) ? 1.9 : 0;
         result = "ডাইস: " + roll + " · " + (multiplier ? "আপনি জিতেছেন" : "আপনি হেরেছেন");
         detail = choice === "high" ? "High (৪–৬)" : "Low (১–৩)";
       } else if (gameId === "royal-coinflip") {
-        if (!["heads","tails"].includes(choice)) return json({error:"Heads অথবা Tails বাছুন"},400);
-        const side = pick(["heads","tails"]);
+        if (!["heads", "tails"].includes(choice)) return json({ error: "Heads অথবা Tails বাছুন" }, 400);
+        const side = pick(["heads", "tails"]);
         multiplier = choice === side ? 1.9 : 0;
         result = side === "heads" ? "🪙 HEADS" : "🪙 TAILS";
         detail = multiplier ? "সঠিক অনুমান!" : "ভুল অনুমান";
       } else if (gameId === "european-roulette") {
-        if (!["red","black","green"].includes(choice)) return json({error:"Roulette-এর রং বাছুন"},400);
+        if (!["red", "black", "green"].includes(choice)) return json({ error: "Roulette-এর রং বাছুন" }, 400);
         const n = Math.floor(rand() * 37);
-        const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+        const red = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
         const color = n === 0 ? "green" : red.has(n) ? "red" : "black";
         multiplier = choice === color ? (color === "green" ? 14 : 1.9) : 0;
         result = "বল পড়েছে " + n + " · " + color.toUpperCase();
@@ -740,38 +909,38 @@ async function route(req, env) {
         result = "আপনার কার্ডের মোট: " + total;
         detail = total >= 18 ? "২১-এর কাছাকাছি! জয়" : "১৮-এর কম · হার";
       } else if (gameId === "baccarat") {
-        if (!["player","banker","tie"].includes(choice)) return json({error:"Player, Banker অথবা Tie বাছুন"},400);
-        const outcome = pick(["player","banker","player","banker","tie"]);
+        if (!["player", "banker", "tie"].includes(choice)) return json({ error: "Player, Banker অথবা Tie বাছুন" }, 400);
+        const outcome = pick(["player", "banker", "player", "banker", "tie"]);
         multiplier = choice === outcome ? (outcome === "tie" ? 8 : 1.95) : 0;
         result = "ফলাফল: " + outcome.toUpperCase();
         detail = "আপনার পছন্দ: " + choice.toUpperCase();
       } else if (gameId === "diamond-slots") {
-        const symbols = ["💎","7️⃣","🔔","🍀","👑"];
-        const reels = [pick(symbols),pick(symbols),pick(symbols)];
-        const counts = Object.fromEntries(reels.map(x => [x,(reels.filter(y=>y===x).length)]));
+        const symbols = ["💎", "7️⃣", "🔔", "🍀", "👑"];
+        const reels = [pick(symbols), pick(symbols), pick(symbols)];
+        const counts = Object.fromEntries(reels.map(x => [x, (reels.filter(y => y === x).length)]));
         const max = Math.max(...Object.values(counts));
         multiplier = max === 3 ? 5 : max === 2 ? 1.5 : 0;
         result = reels.join("  ");
         detail = max === 3 ? "জ্যাকপট!" : max === 2 ? "দুটি মিলেছে!" : "মিল পাওয়া যায়নি";
       } else if (gameId === "fortune-wheel") {
-        multiplier = pick([0,0,0.5,1,1,1.5,2,3,5,10]);
+        multiplier = pick([0, 0, 0.5, 1, 1, 1.5, 2, 3, 5, 10]);
         result = "চাকা থেমেছে " + multiplier + "x-এ";
         detail = multiplier > 0 ? "আপনার পেআউট তৈরি হয়েছে" : "এইবার জয় হয়নি";
       } else if (gameId === "royal-keno") {
         const selected = Number(choice);
-        if (!Number.isInteger(selected) || selected < 1 || selected > 10) return json({error:"১ থেকে ১০-এর মধ্যে একটি নম্বর বাছুন"},400);
+        if (!Number.isInteger(selected) || selected < 1 || selected > 10) return json({ error: "১ থেকে ১০-এর মধ্যে একটি নম্বর বাছুন" }, 400);
         const drawn = 1 + Math.floor(rand() * 10);
         multiplier = selected === drawn ? 8 : 0;
         result = "ড্র নম্বর: " + drawn;
         detail = selected === drawn ? "নম্বর মিলেছে!" : "নম্বর মেলেনি";
       } else if (gameId === "live-roulette") {
-        if (!["red","black","green"].includes(choice)) return json({error:"রং বাছুন"},400);
+        if (!["red", "black", "green"].includes(choice)) return json({ error: "রং বাছুন" }, 400);
         const n = Math.floor(rand() * 37);
-        const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+        const red = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
         const color = n === 0 ? "green" : red.has(n) ? "red" : "black";
         multiplier = choice === color ? (color === "green" ? 14 : 1.9) : 0;
         result = "ডিলারের রুলেট থেমেছে " + n + " · " + color.toUpperCase();
-        detail = "সিমুলেটেড লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
+        detail = "লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
       } else if (gameId === "live-blackjack") {
         const player = 15 + Math.floor(rand() * 7);
         const dealer = 15 + Math.floor(rand() * 7);
@@ -779,38 +948,38 @@ async function route(req, env) {
         result = "PLAYER " + player + " · DEALER " + dealer;
         detail = "ডিলারের কার্ড খোলা হয়েছে · " + (multiplier === 1.9 ? "আপনি জিতেছেন" : multiplier === 1 ? "টাই" : "ডিলার জিতেছেন");
       } else if (gameId === "live-baccarat") {
-        if (!["player","banker","tie"].includes(choice)) return json({error:"Player, Banker অথবা Tie বাছুন"},400);
-        const outcome = pick(["player","banker","player","banker","tie"]);
+        if (!["player", "banker", "tie"].includes(choice)) return json({ error: "Player, Banker অথবা Tie বাছুন" }, 400);
+        const outcome = pick(["player", "banker", "player", "banker", "tie"]);
         multiplier = choice === outcome ? (outcome === "tie" ? 8 : 1.95) : 0;
         result = "ডিলারের ফলাফল: " + outcome.toUpperCase();
-        detail = "সিমুলেটেড লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
+        detail = "লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
       } else {
-        return json({error:"এই গেমটি সমর্থিত নয়"},400);
+        return json({ error: "এই গেমটি সমর্থিত নয়" }, 400);
       }
 
       const payout = Math.floor(bet * multiplier);
       const debit = await env.DB.prepare(
         "UPDATE users SET balance=balance-? WHERE id=? AND balance>=?"
-      ).bind(bet,user.id,bet).run();
-      if (!debit.meta.changes) return json({error:"পর্যাপ্ত ফ্রি Virtual Coin নেই"},400);
+      ).bind(bet, user.id, bet).run();
+      if (!debit.meta.changes) return json({ error: "পর্যাপ্ত Coin নেই" }, 400);
 
       try {
         if (payout) await env.DB.prepare(
           "UPDATE users SET balance=balance+? WHERE id=?"
-        ).bind(payout,user.id).run();
+        ).bind(payout, user.id).run();
         const bal = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
         const roundId = uid();
         await env.DB.batch([
           env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)")
-            .bind(roundId,user.id,gameId,"minigame",bet,multiplier,payout),
+            .bind(roundId, user.id, gameId, "minigame", bet, multiplier, payout),
           env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
-            .bind(uid(),user.id,"game",-bet,bal.balance-payout,game.name+" বেট"),
+            .bind(uid(), user.id, "game", -bet, bal.balance - payout, game.name + " বেট"),
           ...(payout ? [env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
-            .bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়")] : [])
+            .bind(uid(), user.id, "win", payout, bal.balance, game.name + " জয়")] : [])
         ]);
-        return json({ok:true,multiplier,payout,balance:bal.balance,result,detail,roundId});
+        return json({ ok: true, multiplier, payout, balance: bal.balance, result, detail, roundId });
       } catch (e) {
-        await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(bet-payout,user.id).run();
+        await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(bet - payout, user.id).run();
         throw e;
       }
     }
@@ -840,11 +1009,10 @@ async function route(req, env) {
 
       if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) {
         return json({
-          error: "বেট ১ থেকে ১০,০০,০০০ ফ্রি ক্রেডিটের মধ্যে দিন"
+          error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন"
         }, 400);
       }
 
-      // One indexed read replaces crashState() and its extra history/session reads.
       const session = await env.DB.prepare(`
         SELECT cs.*,g.name AS game_name
         FROM crash_sessions cs
@@ -875,14 +1043,13 @@ async function route(req, env) {
         }, 409);
       }
 
-      // Preserve the conditional atomic balance debit.
       const debit = await env.DB.prepare(`
         UPDATE users SET balance=balance-?
         WHERE id=? AND balance>=?
       `).bind(bet, user.id, bet).run();
 
       if (!debit.meta.changes) {
-        return json({ error: "পর্যাপ্ত ফ্রি ক্রেডিট নেই" }, 400);
+        return json({ error: "পর্যাপ্ত ক্রেডিট নেই" }, 400);
       }
 
       const roundId = uid();
@@ -899,8 +1066,8 @@ async function route(req, env) {
               AND start_ms>? AND crash_multiplier>?
           )
         `).bind(
-          roundId,user.id,gameId,bet,session.crash_multiplier,
-          session.start_ms,session.id,session.id,Date.now(),current
+          roundId, user.id, gameId, bet, session.crash_multiplier,
+          session.start_ms, session.id, session.id, Date.now(), current
         ).run();
 
         if (!ins.meta.changes) {
@@ -916,7 +1083,7 @@ async function route(req, env) {
           (id,user_id,type,amount,balance_after,note)
           VALUES(?,?,?,?,?,?)
         `).bind(
-          uid(),user.id,"game",-bet,bal.balance,session.game_name+" বেট"
+          uid(), user.id, "game", -bet, bal.balance, session.game_name + " বেট"
         ).run();
 
         return json({
@@ -927,7 +1094,7 @@ async function route(req, env) {
       } catch (e) {
         await env.DB.prepare(
           "UPDATE users SET balance=balance+? WHERE id=?"
-        ).bind(bet,user.id).run();
+        ).bind(bet, user.id).run();
         throw e;
       }
     }
@@ -1257,7 +1424,8 @@ async function route(req, env) {
 
       const [u, g, c, t] = await Promise.all([
         env.DB.prepare("SELECT COUNT(*) n FROM users").first(),
-        env.DB.prepare("SELECT COUNT(*) n FROM games").first(),        env.DB.prepare("SELECT COUNT(*) n FROM categories").first(),
+        env.DB.prepare("SELECT COUNT(*) n FROM games").first(),
+        env.DB.prepare("SELECT COUNT(*) n FROM categories").first(),
         env.DB.prepare("SELECT COUNT(*) n FROM game_rounds").first()
       ]);
 
@@ -1273,9 +1441,9 @@ async function route(req, env) {
 
     if (p === "/api/admin/users") {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
-      const q = String(url.searchParams.get("q") || "").trim().slice(0,40);
+      const q = String(url.searchParams.get("q") || "").trim().slice(0, 40);
       const rows = q
-        ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%"+q+"%","%"+q+"%").all()
+        ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%" + q + "%", "%" + q + "%").all()
         : await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users ORDER BY created_at DESC LIMIT 100").all();
       return json({ users: rows.results || [] });
     }
@@ -1321,11 +1489,11 @@ async function route(req, env) {
       const current = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(userId).first();
       if (!current) return json({ error: "ইউজার পাওয়া যায়নি" }, 404);
       const delta = nextBalance - Number(current.balance);
-      const updated = await env.DB.prepare("UPDATE users SET balance=? WHERE id=? AND balance=?").bind(nextBalance,userId,current.balance).run();
+      const updated = await env.DB.prepare("UPDATE users SET balance=? WHERE id=? AND balance=?").bind(nextBalance, userId, current.balance).run();
       if (!updated.meta?.changes) return json({ error: "ব্যালেন্স অন্য অনুরোধে পরিবর্তিত হয়েছে। আবার চেষ্টা করুন।" }, 409);
       await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(
         uid(), userId, "admin_balance_set", delta, nextBalance,
-        String(body.note || "Admin directly set virtual coin balance").slice(0,160)
+        String(body.note || "Admin directly set coin balance").slice(0, 160)
       ).run();
       return json({ ok: true, balance: nextBalance, previousBalance: Number(current.balance) });
     }
@@ -1386,16 +1554,19 @@ async function route(req, env) {
       const body = await req.json();
       const userId = String(body.userId || "");
       const newPassword = String(body.newPassword || "");
-      if (!userId || newPassword.length < 6 || newPassword.length > 128) return json({ error: "নতুন পাসওয়ার্ড কমপক্ষে ৬ এবং সর্বোচ্চ ১২৮ অক্ষরের হতে হবে" }, 400);
+      if (!userId || newPassword.length < 6 || newPassword.length > 128) {
+        return json({ error: "নতুন পাসওয়ার্ড কমপক্ষে ৬ এবং সর্বোচ্চ ১২৮ অক্ষরের হতে হবে" }, 400);
+      }
       const target = await env.DB.prepare("SELECT id FROM users WHERE id=? AND role!='admin'").bind(userId).first();
       if (!target) return json({ error: "ইউজার পাওয়া যায়নি অথবা এই অ্যাকাউন্ট রিসেট করা যাবে না" }, 404);
       const salt = uid();
       const passwordHash = await passHash(newPassword, salt);
-      const updated = await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND role!='admin'").bind(passwordHash,salt,userId).run();
+      const updated = await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND role!='admin'").bind(passwordHash, salt, userId).run();
       if (!updated.meta?.changes) return json({ error: "পাসওয়ার্ড পরিবর্তন করা যায়নি" }, 500);
       await env.DB.prepare("DELETE FROM sessions WHERE user_id=?").bind(userId).run();
       return json({ ok: true, message: "পাসওয়ার্ড রিসেট হয়েছে; পুরোনো সব লগইন সেশন বন্ধ করা হয়েছে" });
     }
+
     /* ADMIN CATEGORIES */
 
     if (p === "/api/admin/categories" && method === "GET") {
@@ -1516,19 +1687,23 @@ async function route(req, env) {
     if (p === "/api/admin/game-name" && method === "POST") {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       const { id, name } = await req.json();
-      const gameId = String(id || '').trim();
-      const gameName = String(name || '').trim().slice(0,80);
+      const gameId = String(id || "").trim();
+      const gameName = String(name || "").trim().slice(0, 80);
       if (!gameId || !gameName) return json({ error: "গেমের ID ও নতুন নাম দিন" }, 400);
       const row = await env.DB.prepare("SELECT id FROM games WHERE id=?").bind(gameId).first();
       if (row) {
-        await env.DB.prepare("UPDATE games SET name=? WHERE id=?").bind(gameName,gameId).run();
-      } else if (gameId.startsWith('slot-display-')) {
+        await env.DB.prepare("UPDATE games SET name=? WHERE id=?").bind(gameName, gameId).run();
+      } else if (gameId.startsWith("slot-display-")) {
         const current = await env.DB.prepare("SELECT value FROM settings WHERE key='game_name_overrides'").first();
         let overrides = {};
-        try { overrides = JSON.parse(String(current?.value || '{}')); } catch { overrides = {}; }
+        try {
+          overrides = JSON.parse(String(current?.value || "{}"));
+        } catch {
+          overrides = {};
+        }
         overrides[gameId] = gameName;
         await env.DB.prepare("INSERT INTO settings(key,value) VALUES('game_name_overrides',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
-          .bind(JSON.stringify(overrides).slice(0,10000)).run();
+          .bind(JSON.stringify(overrides).slice(0, 10000)).run();
       } else {
         return json({ error: "গেম পাওয়া যায়নি" }, 404);
       }
@@ -1547,78 +1722,85 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
-
     if (p === "/api/admin/demo-deposits" && method === "GET") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
-      const rows=await env.DB.prepare("SELECT d.id,d.method,d.amount,d.demo_reference,d.status,d.created_at,u.username,u.email FROM demo_deposits d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
-      return json({requests:rows.results||[]});
-    }
-    if (p === "/api/admin/demo-deposits/review" && method === "POST") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
-      const body=await req.json();
-      const status=String(body.status||'');
-      if(!['accepted','cancelled'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
-      const result=await env.DB.prepare("UPDATE demo_deposits SET status=? WHERE id=? AND status='pending'").bind(status,String(body.id||'')).run();
-      if(!result.meta?.changes)return json({error:"Request পাওয়া যায়নি অথবা আগেই সিদ্ধান্ত নেওয়া হয়েছে"},404);
-      return json({ok:true,status});
-    }
-    if (p.startsWith("/api/admin/demo-deposits/") && method === "DELETE") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
-      const id=decodeURIComponent(p.split("/").pop());
-      await env.DB.prepare("DELETE FROM demo_deposits WHERE id=?").bind(id).run();
-      return json({ok:true});
+      const rows = await env.DB.prepare("SELECT d.id,d.method,d.amount,d.demo_reference,d.status,d.created_at,u.username,u.email FROM demo_deposits d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
+      return json({ requests: rows.results || [] });
     }
 
+    if (p === "/api/admin/demo-deposits/review" && method === "POST") {
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const status = String(body.status || "");
+      if (!["accepted", "cancelled"].includes(status)) return json({ error: "সঠিক সিদ্ধান্ত দিন" }, 400);
+      const result = await env.DB.prepare("UPDATE demo_deposits SET status=? WHERE id=? AND status='pending'").bind(status, String(body.id || "")).run();
+      if (!result.meta?.changes) return json({ error: "Request পাওয়া যায়নি অথবা আগেই সিদ্ধান্ত নেওয়া হয়েছে" }, 404);
+      return json({ ok: true, status });
+    }
+
+    if (p.startsWith("/api/admin/demo-deposits/") && method === "DELETE") {
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const id = decodeURIComponent(p.split("/").pop());
+      await env.DB.prepare("DELETE FROM demo_deposits WHERE id=?").bind(id).run();
+      return json({ ok: true });
+    }
 
     if (p === "/api/admin/withdraw-requests" && method === "GET") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
-      const rows=await env.DB.prepare("SELECT d.id,d.method,d.amount,d.status,d.created_at,u.username,u.email,u.balance FROM demo_withdrawals d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
-      return json({requests:rows.results||[]});
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
+      } catch (e) {}
+      const rows = await env.DB.prepare("SELECT d.id,d.method,d.amount,d.status,d.created_at,u.username,u.email,u.balance FROM demo_withdrawals d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
+      return json({ requests: rows.results || [] });
     }
+
     if (p === "/api/admin/withdraw-requests/review" && method === "POST") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
-      const body=await req.json();const status=String(body.status||'');const id=String(body.id||'');
-      if(!['approved','rejected'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
-      const request=await env.DB.prepare("SELECT * FROM demo_withdrawals WHERE id=? AND status='pending'").bind(id).first();
-      if(!request)return json({error:"Request পাওয়া যায়নি অথবা আগেই Review হয়েছে"},404);
-      const updated=await env.DB.prepare("UPDATE demo_withdrawals SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,id).run();
-      if(!updated.meta?.changes)return json({error:"Request ইতিমধ্যে Review হয়েছে"},409);
-      if(status==='rejected' && Number(request.coin_reserved)===1){
-        const refunded=await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(request.amount,request.user_id).run();
-        if(!refunded.meta?.changes)return json({error:"কয়েন ফেরত দেওয়া যায়নি; Admin লগ পরীক্ষা করুন"},500);
-        const u=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
-        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),request.user_id,"demo_withdrawal_refund",request.amount,u.balance,"Demo virtual coin refunded after withdrawal rejection").run();
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const status = String(body.status || "");
+      const id = String(body.id || "");
+      if (!["approved", "rejected"].includes(status)) return json({ error: "সঠিক সিদ্ধান্ত দিন" }, 400);
+      const request = await env.DB.prepare("SELECT * FROM demo_withdrawals WHERE id=? AND status='pending'").bind(id).first();
+      if (!request) return json({ error: "Request পাওয়া যায়নি অথবা আগেই Review হয়েছে" }, 404);
+      const updated = await env.DB.prepare("UPDATE demo_withdrawals SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status, user.id, id).run();
+      if (!updated.meta?.changes) return json({ error: "Request ইতিমধ্যে Review হয়েছে" }, 409);
+      if (status === "rejected" && Number(request.coin_reserved) === 1) {
+        const refunded = await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(request.amount, request.user_id).run();
+        if (!refunded.meta?.changes) return json({ error: "কয়েন ফেরত দেওয়া যায়নি; Admin লগ পরীক্ষা করুন" }, 500);
+        const u = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
+        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(), request.user_id, "withdrawal_refund", request.amount, u.balance, "Coin refunded after withdrawal rejection").run();
       }
-      return json({ok:true,status});
+      return json({ ok: true, status });
     }
 
     if (p === "/api/admin/coin-requests" && method === "GET") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      const q=String(url.searchParams.get("q")||"").trim();
-      const rows=q
-        ? await env.DB.prepare("SELECT cr.id,cr.user_id,cr.amount,cr.status,cr.created_at,u.username,u.email FROM coin_requests cr JOIN users u ON u.id=cr.user_id WHERE u.username LIKE ? OR u.email LIKE ? ORDER BY cr.created_at DESC LIMIT 200").bind('%'+q+'%','%'+q+'%').all()
+      const q = String(url.searchParams.get("q") || "").trim();
+      const rows = q
+        ? await env.DB.prepare("SELECT cr.id,cr.user_id,cr.amount,cr.status,cr.created_at,u.username,u.email FROM coin_requests cr JOIN users u ON u.id=cr.user_id WHERE u.username LIKE ? OR u.email LIKE ? ORDER BY cr.created_at DESC LIMIT 200").bind("%" + q + "%", "%" + q + "%").all()
         : await env.DB.prepare("SELECT cr.id,cr.user_id,cr.amount,cr.status,cr.created_at,u.username,u.email FROM coin_requests cr JOIN users u ON u.id=cr.user_id ORDER BY cr.created_at DESC LIMIT 200").all();
-      return json({requests:rows.results||[]});
+      return json({ requests: rows.results || [] });
     }
+
     if (p === "/api/admin/coin-requests/review" && method === "POST") {
-      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
-      const body=await req.json();const status=String(body.status||'');
-      if(!['approved','rejected'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const status = String(body.status || "");
+      if (!["approved", "rejected"].includes(status)) return json({ error: "সঠিক সিদ্ধান্ত দিন" }, 400);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      const cr=await env.DB.prepare("SELECT * FROM coin_requests WHERE id=? AND status='pending'").bind(String(body.id||'')).first();
-      if(!cr)return json({error:"Request পাওয়া যায়নি অথবা আগেই Review হয়েছে"},404);
-      if(status==='approved'){
+      const cr = await env.DB.prepare("SELECT * FROM coin_requests WHERE id=? AND status='pending'").bind(String(body.id || "")).first();
+      if (!cr) return json({ error: "Request পাওয়া যায়নি অথবা আগেই Review হয়েছে" }, 404);
+      if (status === "approved") {
         await env.DB.batch([
-          env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(cr.amount,cr.user_id),
-          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,id,'free_coin',?,balance,'Admin approved free virtual coin request' FROM users WHERE id=?").bind(uid(),cr.amount,cr.user_id)
+          env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(cr.amount, cr.user_id),
+          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,id,'coin_bonus',?,balance,'Admin approved coin request' FROM users WHERE id=?").bind(uid(), cr.amount, cr.user_id)
         ]);
       }
-      await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,cr.id).run();
-      return json({ok:true});
+      await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status, user.id, cr.id).run();
+      return json({ ok: true });
     }
 
     /* ADMIN SETTINGS */
@@ -1642,45 +1824,79 @@ async function route(req, env) {
 
       const { key, value } = await req.json();
 
-      if (key === 'demo_display_number' && !/^01[3-9][0-9]{8}$/.test(String(value || ''))) {
+      if (key === "display_number" && !/^01[3-9][0-9]{8}$/.test(String(value || ""))) {
         return json({ error: "সঠিক ১১ সংখ্যার নম্বর দিন" }, 400);
       }
-      if (key === 'withdraw_content') {
+
+      if (key === "withdraw_content") {
         try {
-          const parsed=JSON.parse(String(value||'{}'));
-          if(!parsed||typeof parsed!=='object'||!parsed.fields||typeof parsed.fields!=='object') throw new Error();
-          for(const v of Object.values(parsed.fields)) if(typeof v!=='string'||v.length>300) throw new Error();
-          const required=["pageTitle","safetyNote","methodTitle","methodBkash","methodNagad","methodRocket","demoBadge","demoIdsHint","demoIdsLabel","noDemoIds","amountLabel","amountPlaceholder","balanceLabel","coinSuffix","submitButton","historyTitle","loadingText","emptyHistory","recordTitle","emptyRecord","backButton","chooseMethodError","amountError","balanceError","successMessage","statusPending","statusApproved","statusRejected","historyCoinSuffix"];
-          if(required.some(k=>typeof parsed.fields[k]!=='string')) throw new Error();
-          if(!/(|real money|no wallet)/i.test(String(parsed.fields.safetyNote||''))) throw new Error();
-        } catch { return json({error:'Withdrawal text data সঠিক নয়; নিরাপত্তার সতর্কবার্তা রাখতে হবে।'},400); }
+          const parsed = JSON.parse(String(value || "{}"));
+          if (!parsed || typeof parsed !== "object" || !parsed.fields || typeof parsed.fields !== "object") throw new Error();
+          for (const v of Object.values(parsed.fields)) {
+            if (typeof v !== "string" || v.length > 300) throw new Error();
+          }
+          const required = [
+            "pageTitle", "safetyNote", "methodTitle", "methodBkash", "methodNagad", "methodRocket",
+            "amountLabel", "amountPlaceholder", "balanceLabel", "coinSuffix", "submitButton",
+            "historyTitle", "loadingText", "emptyHistory", "recordTitle", "emptyRecord", "backButton",
+            "chooseMethodError", "amountError", "balanceError", "successMessage",
+            "statusPending", "statusApproved", "statusRejected", "historyCoinSuffix"
+          ];
+          if (required.some(k => typeof parsed.fields[k] !== "string")) throw new Error();
+        } catch {
+          return json({ error: "Withdrawal text data সঠিক নয়।" }, 400);
+        }
       }
-      if (key === 'deposit_content') {
+
+      if (key === "deposit_content") {
         try {
-          const parsed=JSON.parse(String(value||'{}'));
-          if(!parsed||typeof parsed!=='object'||!parsed.fields||typeof parsed.fields!=='object'||!Array.isArray(parsed.categories)||parsed.categories.length>12) throw new Error();
-          for(const v of Object.values(parsed.fields)) if(typeof v!=='string'||v.length>300) throw new Error();
-          for(const c of parsed.categories) if(!c||typeof c.title!=='string'||c.title.length>80||typeof c.text!=='string'||c.text.length>300) throw new Error();
-          const required=['pageTitle','numberLabel','copyButton','numberNotice','paymentTitle','amountLabel','amountPlaceholder','referenceLabel','referencePlaceholder','referenceHint','submitButton','historyTitle','loadingText','backButton','chooseMethodError','amountError','referenceError','successMessage','emptyHistory','historyDemoSuffix','statusPending','statusAccepted','statusCancelled','currencyPrefix','methodBkash','methodNagad','methodRocket','demoBadge','copiedButton','copySuccess','preset100','preset200','preset300','preset500','preset1000'];
-          if(required.some(k=>typeof parsed.fields[k]!=='string')) throw new Error();
-          const fixed=String(parsed.fields.numberNotice||'').toLowerCase();
-          if(!/(|send money|real money)/i.test(fixed)) throw new Error();
-        } catch { return json({error:'Deposit Demo text data সঠিক নয়; Demo সতর্কবার্তা অপরিবর্তিত রাখুন।'},400); }
+          const parsed = JSON.parse(String(value || "{}"));
+          if (!parsed || typeof parsed !== "object" || !parsed.fields || typeof parsed.fields !== "object" || !Array.isArray(parsed.categories) || parsed.categories.length > 12) throw new Error();
+          for (const v of Object.values(parsed.fields)) {
+            if (typeof v !== "string" || v.length > 300) throw new Error();
+          }
+          for (const c of parsed.categories) {
+            if (!c || typeof c.title !== "string" || c.title.length > 80 || typeof c.text !== "string" || c.text.length > 300) throw new Error();
+          }
+          const required = [
+            "pageTitle", "numberLabel", "copyButton", "numberNotice", "paymentTitle",
+            "amountLabel", "amountPlaceholder", "referenceLabel", "referencePlaceholder", "referenceHint",
+            "submitButton", "historyTitle", "loadingText", "backButton", "chooseMethodError",
+            "amountError", "referenceError", "successMessage", "emptyHistory",
+            "statusPending", "statusAccepted", "statusCancelled", "currencyPrefix",
+            "methodBkash", "methodNagad", "methodRocket", "copiedButton", "copySuccess",
+            "preset100", "preset200", "preset300", "preset500", "preset1000"
+          ];
+          if (required.some(k => typeof parsed.fields[k] !== "string")) throw new Error();
+        } catch {
+          return json({ error: "Deposit text data সঠিক নয়।" }, 400);
+        }
       }
-      if (['withdraw_ids_bkash','withdraw_ids_nagad'].includes(key)) {
-        try { const ids=JSON.parse(String(value||'[]')); if(!Array.isArray(ids)||ids.length>10||ids.some(x=>!/^DEMO-[A-Z0-9-]{1,24}$/.test(String(x)))||new Set(ids).size!==ids.length) throw new Error(); }
-        catch { return json({error:'শুধু DEMO- দিয়ে শুরু কাল্পনিক কোড দিন (সর্বোচ্চ ১০টি)'},400); }
+
+      if (["withdraw_ids_bkash", "withdraw_ids_nagad", "withdraw_ids_rocket"].includes(key)) {
+        try {
+          const ids = JSON.parse(String(value || "[]"));
+          if (!Array.isArray(ids) || ids.length > 10 || ids.some(x => !/^[A-Z0-9_-]{2,32}$/.test(String(x))) || new Set(ids).size !== ids.length) {
+            throw new Error();
+          }
+        } catch {
+          return json({ error: "সঠিক কোড দিন (সর্বোচ্চ ১০টি)" }, 400);
+        }
       }
-      if (['number_bkash','dnumber_nagad','number_rocket'].includes(key) && !/^\d{11}$/.test(String(value || ''))) {
-        return json({ error: " নম্বর অবশ্যই ১১ সংখ্যার হতে হবে" }, 400);
+
+      if (["number_bkash", "number_nagad", "number_rocket"].includes(key) && !/^\d{11}$/.test(String(value || ""))) {
+        return json({ error: "নম্বর অবশ্যই ১১ সংখ্যার হতে হবে" }, 400);
       }
 
       if (!key || String(key).length > 80) {
         return json({ error: "Key প্রয়োজন" }, 400);
       }
 
-      const maxSettingLength = ['deposit_content','withdraw_content'].includes(key) ? 16000 : 1000;
-      if (String(value).length > maxSettingLength) return json({error:'Setting text limit অতিক্রম করেছে'},400);
+      const maxSettingLength = ["deposit_content", "withdraw_content"].includes(key) ? 16000 : 1000;
+      if (String(value).length > maxSettingLength) {
+        return json({ error: "Setting text limit অতিক্রম করেছে" }, 400);
+      }
+
       await env.DB.prepare(`
         INSERT INTO settings(key,value)
         VALUES(?,?)
