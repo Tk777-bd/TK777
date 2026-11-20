@@ -945,12 +945,12 @@ body{background:#063b39}
   box-shadow:0 1px 8px rgba(255,255,255,.14),inset 0 1px 2px rgba(255,255,255,.55);
   -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
   opacity:1;transition:opacity .25s ease,transform .25s ease;
-  pointer-events:none;
+  pointer-events:auto;
 }
 .aviator-cashout-popup.is-hiding{opacity:0;transform:translate(-50%,-5px)}
 
 
-.aviator-cashout-popup{position:relative;padding-right:23px}
+.aviator-cashout-popup{position:fixed;padding-right:23px;pointer-events:auto}
 .aviator-cashout-close{
   position:absolute;top:1px;right:3px;width:16px;height:16px;
   padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);
