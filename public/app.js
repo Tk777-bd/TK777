@@ -375,74 +375,56 @@ function filterGames(id) {
 
 function showAuth() {
   stopCrashMonitor();
-
   shell(`
-    <div class="page">
-      <div class="card auth-card">
-        <h2>Welcome to TK777</h2>
-        <div class="tabs">
-          <button id="loginTab" class="active" onclick="authMode('login')">Login</button>
-          <button id="registerTab" onclick="authMode('register')">Create Account</button>
-        </div>
-
-        <form id="authform">
-          <div id="usernameWrap" class="hidden">
-            <label>Username</label>
-            <input class="field" name="username" placeholder="আপনার নাম">
-          </div>
-          <label id="identityLabel">মোবাইল নম্বর / পুরোনো Gmail</label>
-          <input class="field" name="identity" type="text" required autocomplete="username" placeholder="মোবাইল নম্বর অথবা পুরোনো Gmail">
-          <label>Password</label>
-          <input class="field" name="password" type="password" minlength="8" required placeholder="কমপক্ষে ৮ অক্ষর">
-          <button class="primary" id="authSubmit">Login</button>
-        </form>
-
-        <p class="muted">নতুন অ্যাকাউন্টের প্রাথমিক ব্যালেন্স: <b>০ ক্রেডিট</b></p>
+    <div class="page"><div class="card auth-card">
+      <h2>Welcome to TK777</h2>
+      <div class="tabs">
+        <button id="loginTab" class="active" onclick="authMode('login')">Login</button>
+        <button id="registerTab" onclick="authMode('register')">Create Account</button>
       </div>
-    </div>
-  `);
-
+      <form id="authform">
+        <label>মোবাইল নম্বর</label>
+        <input class="field" name="phone" type="tel" inputmode="numeric" required autocomplete="tel" placeholder="01XXXXXXXXX">
+        <label>Password</label>
+        <input class="field" name="password" type="password" minlength="8" maxlength="128" required placeholder="কমপক্ষে ৮ অক্ষর">
+        <div id="confirmPasswordWrap" class="hidden">
+          <label>Confirm Password</label>
+          <input class="field" name="confirmPassword" type="password" minlength="8" maxlength="128" placeholder="পাসওয়ার্ড আবার লিখুন">
+        </div>
+        <button class="primary" id="authSubmit">Login</button>
+      </form>
+      <p class="muted">নতুন অ্যাকাউন্টের প্রাথমিক ব্যালেন্স: <b>০ ক্রেডিট</b></p>
+    </div></div>`);
   authMode('login');
 }
-
 let mode = 'login';
-
 function authMode(m) {
   mode = m;
   const f = $('#authform');
   if (!f) return;
-
-  $('#usernameWrap').classList.toggle('hidden',m !== 'register');
-  const identityLabel = $('#identityLabel');
-  const identityInput = f.elements.identity;
-  identityLabel.textContent = m === 'register' ? 'মোবাইল নম্বর' : 'মোবাইল নম্বর / পুরোনো Gmail';
-  identityInput.placeholder = m === 'register' ? '01XXXXXXXXX' : 'মোবাইল নম্বর অথবা পুরোনো Gmail';
-  identityInput.type = 'text';
+  $('#confirmPasswordWrap').classList.toggle('hidden',m !== 'register');
+  f.elements.confirmPassword.required = m === 'register';
+  f.elements.password.autocomplete = m === 'register' ? 'new-password' : 'current-password';
   $('#loginTab').classList.toggle('active',m === 'login');
   $('#registerTab').classList.toggle('active',m === 'register');
   $('#authSubmit').textContent = m === 'register' ? 'Create Account' : 'Login';
-
   f.onsubmit = async e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(f));
-    const identity = String(data.identity || '').trim();
-    delete data.identity;
-    if (mode === 'register') data.phone = identity;
-    else if (identity.includes('@')) data.email = identity;
-    else data.phone = identity;
-
+    if (mode === 'register' && data.password !== data.confirmPassword) {
+      toast('পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না');
+      return;
+    }
+    delete data.confirmPassword;
     try {
       const r = await api('/'+mode,data);
       token = r.token;
       localStorage.setItem('tk777_token',token);
       me = r.user;
       home();
-    } catch (err) {
-      toast(err.message);
-    }
+    } catch (err) { toast(err.message); }
   };
 }
-
 /* MEMBER AND PAGES */
 
 
