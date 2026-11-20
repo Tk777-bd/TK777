@@ -1593,11 +1593,13 @@ async function route(req, env) {
         return json({ error: "Key প্রয়োজন" }, 400);
       }
 
+      const maxSettingLength = key === 'deposit_content' ? 16000 : 1000;
+      if (String(value).length > maxSettingLength) return json({error:'Setting text limit অতিক্রম করেছে'},400);
       await env.DB.prepare(`
         INSERT INTO settings(key,value)
         VALUES(?,?)
         ON CONFLICT(key) DO UPDATE SET value=excluded.value
-      `).bind(key, String(value).slice(0, 1000)).run();
+      `).bind(key, String(value)).run();
 
       return json({ ok: true });
     }
