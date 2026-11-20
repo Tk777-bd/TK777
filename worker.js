@@ -799,7 +799,7 @@ async function route(req, env) {
         });
       }
 
-      const payout = Math.floor(Number(round.bet_amount) * current);
+      const payout = Math.round(Number(round.bet_amount) * current * 100) / 100;
 
       await env.DB.batch([
         env.DB.prepare(`
