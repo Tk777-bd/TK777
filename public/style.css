@@ -777,3 +777,8 @@ body{background:#063b39}
 .promo-spribe em{font-style:normal;color:#fff;background:#58a92f;border-radius:50%;padding:0 3px}
 .promo-spribe small{color:#d1d1d1;font-size:clamp(7px,1.6vw,11px)}
 .aviator-promo .promo-plane{left:8px;bottom:5px;opacity:.8}
+
+
+/* Make Aviator win amounts clearly readable */
+.aviator-slot-status{font-size:11px;line-height:1.35}
+.aviator-slot-status small{font-size:10px;color:#d5d5d5;line-height:1.4}
