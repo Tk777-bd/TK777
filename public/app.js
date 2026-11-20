@@ -90,6 +90,22 @@ function stopCrashMonitor() {
 }
 
 const TK777_AVATARS = ['😎','🧑🏻‍🚀','🐼','🐧','🐯'];
+let accountProfile = null;
+async function loadAccountProfile(){
+  try {
+    const data=await api('/account/profile');
+    accountProfile=data.profile||null;
+    const label='VIP LEVEL '+Number(accountProfile?.vip_level||0);
+    const top=document.getElementById('topVipBadge'),member=document.getElementById('memberVipBadge');
+    if(top){top.textContent=label;top.hidden=false;}
+    if(member)member.textContent=label;
+    const name=document.getElementById('memberProfileName'),phone=document.getElementById('memberProfilePhone'),gmail=document.getElementById('memberProfileGmail');
+    if(name)name.textContent=accountProfile.display_name||'নাম সেট করা হয়নি';
+    if(phone)phone.textContent='ইউজার নাম: '+(accountProfile.phone||'');
+    if(gmail)gmail.textContent='Gmail: '+(accountProfile.gmail_masked||'***');
+    return accountProfile;
+  } catch(e) { return null; }
+}
 function selectedAvatar() {
   const n = Number(localStorage.getItem('tk777_profile_avatar') || 0);
   return Number.isInteger(n) && n >= 0 && n < TK777_AVATARS.length ? n : 0;
@@ -146,9 +162,10 @@ function memberCenter() {
             ${avatarImage(selectedAvatar(),'member-large-avatar').replace('<img ','<img id="memberProfileAvatar" ')}
           </button>
           <div class="member-identity">
-            <span class="member-level">✦ TK777 MEMBER</span>
-            <h2>${esc(me.username || 'Member')}</h2>
-            <p>${esc(me.email || '')}</p>
+            <span class="member-level" id="memberVipBadge">VIP LEVEL —</span>
+            <h2 id="memberProfileName">${esc(me.username || 'Member')}</h2>
+            <p id="memberProfilePhone">ইউজার নাম: ${esc(me.username || '')}</p>
+            <p id="memberProfileGmail">Gmail: ***</p>
           </div>
         </div>
         <div class="member-balance">
@@ -182,6 +199,7 @@ function memberCenter() {
       </div>
     </div>
   `);
+  loadAccountProfile();
 }
 
 async function profitLossPage() {
@@ -216,7 +234,7 @@ function shell(content) {
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
           ${me ? '<div class="balance-chip"><span id="topBalanceValue">'+money(me.balance)+'</span><button class="balance-refresh" type="button" onclick="refreshBalance(this)" aria-label="Refresh balance">↻</button></div>' : ''}
-          ${me ? '<button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
+          ${me ? '<span class="top-vip-badge" id="topVipBadge" hidden>VIP LEVEL —</span><button class="top-profile-button" id="topProfileAvatar" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
         </div>
         ${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
       </header>
@@ -672,6 +690,22 @@ async function claimReferralMilestone(milestone){
   }catch(e){toast(e.message);}
 }
 
+async function myAccountPage(){
+  shell('<div class="page member-subpage my-account-page"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>My Account</h2></div><div class="account-profile-card"><span class="account-vip-badge" id="accountVipBadge">VIP LEVEL —</span><button class="account-avatar-button" onclick="toggleAvatarPicker()" aria-label="প্রোফাইল ছবি পরিবর্তন">'+avatarImage(selectedAvatar(),'account-large-avatar')+'</button><h2 id="accountDisplayName">লোড হচ্ছে...</h2><p class="account-user-phone" id="accountPhone">ইউজার নাম: —</p><p id="accountGmail">Gmail: ***</p><div class="account-turnover"><span>মোট গেম খেলেছেন</span><b id="accountTurnover">—</b></div><div class="account-vip-progress"><div><span id="accountNextLevel">পরবর্তী VIP Level</span><b id="accountProgressText">—</b></div><div class="account-progress-track"><i id="accountProgressBar"></i></div></div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+  const profile=await loadAccountProfile();
+  if(!profile){const n=document.getElementById('accountDisplayName');if(n)n.textContent='প্রোফাইল লোড করা যায়নি';return;}
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  set('accountDisplayName',profile.display_name||'নাম সেট করা হয়নি');
+  set('accountPhone','ইউজার নাম: '+(profile.phone||''));
+  set('accountGmail','Gmail: '+(profile.gmail_masked||'***'));
+  set('accountTurnover',Number(profile.turnover||0).toLocaleString('en-US')+' টাকা');
+  set('accountVipBadge','VIP LEVEL '+Number(profile.vip_level||0));
+  const level=Number(profile.vip_level||0),turnover=Number(profile.turnover||0);
+  set('accountNextLevel','পরবর্তী VIP Level '+(level+1));
+  set('accountProgressText',Math.floor(turnover%2000).toLocaleString('en-US')+' / 2,000');
+  const bar=document.getElementById('accountProgressBar');if(bar)bar.style.width=Math.min(100,(turnover%2000)/20)+'%';
+}
+
 async function securityCenterPage(){if(!me)return showAuth();shell('<div class="page member-subpage"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>Security Center</h2></div><div class="card"><h3>নিজের নাম সেট করুন</h3><p class="muted">নাম একবার সেভ করলে নিজে আর পরিবর্তন করতে পারবেন না।</p><input id="securityDisplayName" class="field" maxlength="60" placeholder="আপনার নাম"><button id="saveSecurityName" class="primary" onclick="saveSecurityProfile(\'name\')">নাম সেভ করুন</button><small id="securityNameMsg" class="muted"></small></div><div class="card"><h3>লগইন পাসওয়ার্ড পরিবর্তন</h3><input id="securityOldPassword" class="field" type="password" placeholder="পুরোনো পাসওয়ার্ড"><input id="securityNewPassword" class="field" type="password" minlength="6" maxlength="128" placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)"><input id="securityConfirmPassword" class="field" type="password" minlength="6" maxlength="128" placeholder="নতুন পাসওয়ার্ড আবার লিখুন"><button class="primary" onclick="changeLoginPassword()">পাসওয়ার্ড পরিবর্তন</button><small id="securityPasswordMsg" class="muted"></small></div><div class="card"><h3>উইথড্র পাসওয়ার্ড পরিবর্তন</h3><p class="muted">বর্তমান ৬ সংখ্যার পাসওয়ার্ড দিয়ে যাচাই করতে হবে।</p><input id="securityOldWithdrawPassword" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="বর্তমান উইথড্র পাসওয়ার্ড"><input id="securityNewWithdrawPassword" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="নতুন ৬ সংখ্যার পাসওয়ার্ড"><input id="securityConfirmWithdrawPassword" class="field" type="password" inputmode="numeric" maxlength="6" placeholder="নতুন পাসওয়ার্ড আবার লিখুন"><button class="primary" onclick="changeWithdrawPassword()">উইথড্র পাসওয়ার্ড পরিবর্তন</button><small id="securityWithdrawMsg" class="muted"></small></div><div class="card"><h3>যোগাযোগের তথ্য</h3><p class="muted">তিনটি তথ্য একবার সেভ করলে আর পরিবর্তন করা যাবে না।</p><label>WhatsApp নম্বর</label><input id="securityWhatsapp" class="field" type="tel" maxlength="20" placeholder="WhatsApp নম্বর"><label>Facebook লিংক</label><input id="securityFacebook" class="field" type="url" maxlength="250" placeholder="https://facebook.com/..."><label>Gmail</label><input id="securityGmail" class="field" type="email" maxlength="254" placeholder="আপনার Gmail"><button id="saveSecurityContacts" class="primary" onclick="saveSecurityProfile(\'contacts\')">তথ্য সেভ করুন</button><small id="securityContactMsg" class="muted"></small></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');try{const d=await api('/security/profile'),f=d.profile||{},n=document.getElementById('securityDisplayName');if(f.display_name){n.value=f.display_name;n.readOnly=true;document.getElementById('saveSecurityName').remove();document.getElementById('securityNameMsg').textContent='নাম সেভ হয়েছে।';}if(d.contactsSaved){document.getElementById('securityWhatsapp').value=f.whatsapp_number||'';document.getElementById('securityFacebook').value=f.facebook_url||'';document.getElementById('securityGmail').value=f.gmail_masked||'';for(const id of ['securityWhatsapp','securityFacebook','securityGmail'])document.getElementById(id).readOnly=true;document.getElementById('saveSecurityContacts').remove();document.getElementById('securityContactMsg').textContent='তথ্য সেভ হয়েছে। আর পরিবর্তন করা যাবে না।';}}catch(e){document.getElementById('securityContactMsg').textContent=e.message;}}
 async function saveSecurityProfile(kind){const n=document.getElementById('securityDisplayName'),nm=document.getElementById('securityNameMsg'),cm=document.getElementById('securityContactMsg');let body={};if(kind==='name'){body.displayName=String(n.value||'').trim();if(body.displayName.length<2){nm.textContent='কমপক্ষে ২ অক্ষরের নাম লিখুন।';return;}}else{body.whatsapp=document.getElementById('securityWhatsapp').value.trim();body.facebook=document.getElementById('securityFacebook').value.trim();body.gmail=document.getElementById('securityGmail').value.trim();if(!body.whatsapp||!body.facebook||!body.gmail){cm.textContent='WhatsApp, Facebook লিংক ও Gmail—তিনটিই পূরণ করুন।';return;}}try{const d=await api('/security/profile',body);if(kind==='name'){n.value=d.profile.display_name;n.readOnly=true;document.getElementById('saveSecurityName').remove();nm.textContent='নাম সেভ হয়েছে।';}else{document.getElementById('securityWhatsapp').readOnly=true;document.getElementById('securityFacebook').readOnly=true;const g=document.getElementById('securityGmail');g.value=d.profile.gmail_masked||('***'+body.gmail.slice(-3));g.readOnly=true;document.getElementById('saveSecurityContacts').remove();cm.textContent='তথ্য সেভ হয়েছে। আর পরিবর্তন করা যাবে না।';}}catch(e){(kind==='name'?nm:cm).textContent=e.message;}}
 async function changeLoginPassword(){const msg=document.getElementById('securityPasswordMsg'),oldPassword=document.getElementById('securityOldPassword').value,newPassword=document.getElementById('securityNewPassword').value,confirmPassword=document.getElementById('securityConfirmPassword').value;if(!oldPassword||newPassword.length<6||newPassword.length>128){msg.textContent='পুরোনো পাসওয়ার্ড দিন এবং নতুন পাসওয়ার্ড ৬–১২৮ অক্ষরের করুন।';return;}if(newPassword!==confirmPassword){msg.textContent='নতুন পাসওয়ার্ড দুটি মিলছে না।';return;}try{const d=await api('/security/password',{oldPassword,newPassword});msg.textContent=d.message;document.getElementById('securityOldPassword').value='';document.getElementById('securityNewPassword').value='';document.getElementById('securityConfirmPassword').value='';}catch(e){msg.textContent=e.message;}}
@@ -687,6 +721,7 @@ function page(name) {
   if (name === 'withdrawRecord') return withdrawRecordPage();
   if (name === 'depositRecord') return depositRecordPage();
   if (name === 'history') return historyPage();
+  if (name === 'account') return myAccountPage();
   if (name === 'profitloss') return profitLossPage();
 
   const pages = {
