@@ -947,7 +947,7 @@ async function route(req, env) {
         SELECT value FROM settings WHERE key='aviator_next_crash_multiplier'
       `).first();
 
-      if (!next || !Number.isFinite(Number(next.value))) {
+      if (!next || !Number.isFinite(Number(next.value)) || Number(next.value) < 1.01 || Number(next.value) > 1000) {
         const value = Number((1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2));
         await env.DB.prepare(`
           INSERT INTO settings(key,value)
