@@ -23,6 +23,10 @@ const parseDepositContent = raw => {
   } catch { return defaults; }
 };
 
+const parseWithdrawContent = raw => {
+ const defaults={"fields":{"pageTitle":"Demo Withdrawal","safetyNote":"শুধু নগদমূল্যহীন Virtual Coin-এর Demo Request। বিকাশ/নগদ/রকেট বাটনগুলো কেবল পদ্ধতি বাছাইয়ের জন্য—কোনো ওয়ালেট নম্বর, টাকা পাঠানো বা নগদ উত্তোলন নেই।","methodTitle":"পদ্ধতি নির্বাচন করুন","methodBkash":"bKash","methodNagad":"Nagad","methodRocket":"Rocket","demoBadge":"DEMO","demoIdsHint":"বিকাশ বা নগদ নির্বাচন করলে Demo পরিচিতি দেখাবে।","demoIdsLabel":"শুধু Demo পরিচিতি:","noDemoIds":"এই পদ্ধতিতে কোনো Demo পরিচিতি যোগ করা হয়নি।","amountLabel":"কয়েনের পরিমাণ","amountPlaceholder":"কত Virtual Coin ফেরত চান","balanceLabel":"বর্তমান ব্যালেন্স:","coinSuffix":"Coin","submitButton":"Submit Demo Withdrawal","historyTitle":"আমার Withdrawal Requests","loadingText":"লোড হচ্ছে…","emptyHistory":"এখনো কোনো Request নেই","recordTitle":"Withdrawal Record","emptyRecord":"কোনো Withdrawal Record নেই","backButton":"Member Center","chooseMethodError":"বিকাশ, নগদ অথবা রকেট নির্বাচন করুন।","amountError":"সঠিক কয়েনের পরিমাণ লিখুন।","balanceError":"আপনার ব্যালেন্সে পর্যাপ্ত Virtual Coin নেই।","successMessage":"Request জমা হয়েছে। নির্ধারিত Virtual Coin সঙ্গে সঙ্গে ব্যালেন্স থেকে কেটে Pending থাকবে; Admin বাতিল করলে কয়েন ফেরত আসবে। কোনো টাকা পাঠানো হবে না।","statusPending":"Pending","statusApproved":"Approved","statusRejected":"Rejected","historyCoinSuffix":"Virtual Coin"}};
+ try{const parsed=JSON.parse(String(raw||"{}"));const fields={};for(const [key,fallback] of Object.entries(defaults.fields)){const value=parsed?.fields?.[key];fields[key]=typeof value==="string"?value.slice(0,300):fallback;}return {fields};}catch{return defaults;}
+};
 const parseDemoIds = (raw, fallback) => {
   try {
     const values = JSON.parse(String(raw || "[]"));
@@ -485,13 +489,13 @@ async function route(req, env) {
     }
 
     if (p === "/api/support-settings" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number','demo_number_bkash','demo_number_nagad','demo_number_rocket','withdraw_demo_ids_bkash','withdraw_demo_ids_nagad','withdraw_demo_ids_rocket','deposit_content')").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number','demo_number_bkash','demo_number_nagad','demo_number_rocket','withdraw_demo_ids_bkash','withdraw_demo_ids_nagad','withdraw_demo_ids_rocket','deposit_content','withdraw_content')").all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
       const image = String(values.support_telegram_image_url || '');
       const validImage = key => /^https:\/\//i.test(String(values[key] || '')) ? String(values[key]) : '';
       const demoNumber = /^01[3-9][0-9]{8}$/.test(String(values.demo_display_number || '')) ? String(values.demo_display_number) : '01790365006';
       const validDemoNumber=(key,fallback)=>/^\d{11}$/.test(String(values[key]||''))?String(values[key]):fallback;
-      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_numbers:{bkash:validDemoNumber('demo_number_bkash','12345678912'),nagad:validDemoNumber('demo_number_nagad','55555555555'),rocket:validDemoNumber('demo_number_rocket','33333333333')},demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')},withdraw_demo_ids:{bkash:parseDemoIds(values.withdraw_demo_ids_bkash,'DEMO-BKASH-01'),nagad:parseDemoIds(values.withdraw_demo_ids_nagad,'DEMO-NAGAD-01'),rocket:parseDemoIds(values.withdraw_demo_ids_rocket,'DEMO-ROCKET-01')},deposit_content:parseDepositContent(values.deposit_content)});
+      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_numbers:{bkash:validDemoNumber('demo_number_bkash','12345678912'),nagad:validDemoNumber('demo_number_nagad','55555555555'),rocket:validDemoNumber('demo_number_rocket','33333333333')},demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')},withdraw_demo_ids:{bkash:parseDemoIds(values.withdraw_demo_ids_bkash,'DEMO-BKASH-01'),nagad:parseDemoIds(values.withdraw_demo_ids_nagad,'DEMO-NAGAD-01'),rocket:parseDemoIds(values.withdraw_demo_ids_rocket,'DEMO-ROCKET-01')},deposit_content:parseDepositContent(values.deposit_content),withdraw_content:parseWithdrawContent(values.withdraw_content)});
     }
 
   if (p === "/api/home-banners" && method === "GET") {
@@ -1641,6 +1645,16 @@ async function route(req, env) {
       if (key === 'demo_display_number' && !/^01[3-9][0-9]{8}$/.test(String(value || ''))) {
         return json({ error: "সঠিক ১১ সংখ্যার Demo নম্বর দিন" }, 400);
       }
+      if (key === 'withdraw_content') {
+        try {
+          const parsed=JSON.parse(String(value||'{}'));
+          if(!parsed||typeof parsed!=='object'||!parsed.fields||typeof parsed.fields!=='object') throw new Error();
+          for(const v of Object.values(parsed.fields)) if(typeof v!=='string'||v.length>300) throw new Error();
+          const required=["pageTitle","safetyNote","methodTitle","methodBkash","methodNagad","methodRocket","demoBadge","demoIdsHint","demoIdsLabel","noDemoIds","amountLabel","amountPlaceholder","balanceLabel","coinSuffix","submitButton","historyTitle","loadingText","emptyHistory","recordTitle","emptyRecord","backButton","chooseMethodError","amountError","balanceError","successMessage","statusPending","statusApproved","statusRejected","historyCoinSuffix"];
+          if(required.some(k=>typeof parsed.fields[k]!=='string')) throw new Error();
+          if(!/(কোনো ওয়ালেট নম্বর|কোনো টাকা পাঠানো|no real money|no wallet)/i.test(String(parsed.fields.safetyNote||''))) throw new Error();
+        } catch { return json({error:'Withdrawal Demo text data সঠিক নয়; নিরাপত্তার Demo সতর্কবার্তা রাখতে হবে।'},400); }
+      }
       if (key === 'deposit_content') {
         try {
           const parsed=JSON.parse(String(value||'{}'));
@@ -1665,7 +1679,7 @@ async function route(req, env) {
         return json({ error: "Key প্রয়োজন" }, 400);
       }
 
-      const maxSettingLength = key === 'deposit_content' ? 16000 : 1000;
+      const maxSettingLength = ['deposit_content','withdraw_content'].includes(key) ? 16000 : 1000;
       if (String(value).length > maxSettingLength) return json({error:'Setting text limit অতিক্রম করেছে'},400);
       await env.DB.prepare(`
         INSERT INTO settings(key,value)
