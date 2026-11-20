@@ -527,7 +527,10 @@ function authMode(m) {
       return;
     }
     const data = { phone: f.querySelector('input[name="phone"]').value, password };
-    if (currentMode === 'register') data.confirmPassword = confirmPassword;
+    if(currentMode==='register'){
+      data.confirmPassword=confirmPassword;
+      data.referralCode=new URLSearchParams(window.location.search).get('ref')||'';
+    }
     try {
       const r = await api('/'+currentMode,data);
       token = r.token;
@@ -588,10 +591,28 @@ async function submitWithdrawRequest(){
 }
 
 
+
+async function inviteFriendsPage() {
+  if(!me)return showAuth();
+  shell('<div class="page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Invite Friends</h2></div><div class="card"><h3>আপনার Referral Link</h3><p>বন্ধুকে এই লিংক পাঠান। নতুন প্লেয়ার রেজিস্ট্রেশন করে ২০০ Virtual Coin বা বেশি ব্যালেন্সে পৌঁছালে আপনি অটোমেটিক ১০৮ Virtual Coin পাবেন।</p><input class="field" id="referralLink" readonly value="লোড হচ্ছে..."><button class="primary" id="copyReferralLink" type="button">Copy Invite Link</button><div id="referralMsg" class="muted"></div></div><div class="card"><h3>Referral Summary</h3><p>মোট Invite: <b id="refTotal">—</b></p><p>শর্ত পূরণ করেছে: <b id="refQualified">—</b></p><p>মোট Referral Bonus: <b id="refEarned">—</b> Virtual Coin</p></div></div>');
+  try{
+    const d=await api('/referral'),link=window.location.origin+'/?ref='+encodeURIComponent(d.code),input=document.getElementById('referralLink');
+    if(input)input.value=link;
+    document.getElementById('refTotal').textContent=d.total;
+    document.getElementById('refQualified').textContent=d.qualified;
+    document.getElementById('refEarned').textContent=d.earned;
+    document.getElementById('copyReferralLink').onclick=async()=>{
+      try{await navigator.clipboard.writeText(link);document.getElementById('referralMsg').textContent='Referral Link কপি হয়েছে।';}
+      catch{input.select();document.execCommand('copy');document.getElementById('referralMsg').textContent='Referral Link কপি হয়েছে।';}
+    };
+  }catch(e){const m=document.getElementById('referralMsg');if(m)m.textContent=e.message;}
+}
+
 function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
   if (name === 'member') return memberCenter();
+  if (name === 'invite') return inviteFriendsPage();
   if (name === 'deposit') return depositPage();
   if (name === 'withdraw') return withdrawPage();
   if (name === 'withdrawRecord') return withdrawRecordPage();
