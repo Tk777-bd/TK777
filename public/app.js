@@ -679,6 +679,77 @@ function openGame(id) {
 
   if (g.game_type === 'aviator') aviator(g);
   else if (g.game_type === 'superace') superAce(g);
+  else if (g.game_type === 'minigame') miniGame(g);
+}
+
+/* ==========================================
+   FREE VIRTUAL-COIN MINI GAMES
+========================================== */
+const MINI_GAME_INFO = {
+  'gold-mines':{icon:'💎',subtitle:'Find a safe gem tile',choices:[['1','1'],['2','2'],['3','3'],['4','4'],['5','5']],hint:'একটি ঘর বাছুন। মাইন এড়াতে পারলে 1.8x।'},
+  'plinko':{icon:'🔴',subtitle:'Drop the ball',choices:[],hint:'বলটি নিজে থেকেই একটি মাল্টিপ্লায়ার ঘরে পড়বে।'},
+  'classic-dice':{icon:'🎲',subtitle:'Predict the dice',choices:[['high','HIGH · 4–6'],['low','LOW · 1–3']],hint:'High বা Low বেছে নিন। সঠিক হলে 1.9x।'},
+  'royal-coinflip':{icon:'🪙',subtitle:'Heads or Tails',choices:[['heads','HEADS'],['tails','TAILS']],hint:'এক পাশ বেছে নিন। সঠিক হলে 1.9x।'},
+  'european-roulette':{icon:'🎡',subtitle:'Choose a colour',choices:[['red','RED'],['black','BLACK'],['green','GREEN · 0']],hint:'লাল/কালোতে 1.9x, সবুজ 0-তে 14x।'},
+  'blackjack-21':{icon:'🂡',subtitle:'Reach 18–21',choices:[],hint:'কার্ড তুলুন। সার্ভার ফলাফল তৈরি করবে; ১৮ বা বেশি হলে 1.8x।'},
+  'baccarat':{icon:'♠️',subtitle:'Player · Banker · Tie',choices:[['player','PLAYER'],['banker','BANKER'],['tie','TIE']],hint:'Player/Banker 1.95x, Tie 8x।'},
+  'diamond-slots':{icon:'💎',subtitle:'Match the reels',choices:[],hint:'তিনটি রিল ঘুরবে। তিনটি এক হলে 5x, দুটি মিললে 1.5x।'},
+  'fortune-wheel':{icon:'🎯',subtitle:'Spin for a multiplier',choices:[],hint:'চাকা ঘুরিয়ে 0x থেকে 10x পর্যন্ত ফল পান।'},
+  'royal-keno':{icon:'👑',subtitle:'Pick a lucky number',choices:Array.from({length:10},(_,i)=>[String(i+1),String(i+1)]),hint:'১–১০ থেকে নম্বর বাছুন। মিললে 8x।'}
+};
+function miniGame(g) {
+  stopCrashMonitor();
+  const info = MINI_GAME_INFO[g.id];
+  if (!info) return toast('গেমটি প্রস্তুত নয়');
+  const buttons = info.choices.length
+    ? info.choices.map(([value,label])=>'<button type="button" class="mini-choice" data-choice="'+esc(value)+'" onclick="selectMiniChoice(this)">'+esc(label)+'</button>').join('')
+    : '';
+  shell(`
+    <div class="page mini-game-page">
+      <div class="mini-game-top"><button class="secondary" onclick="home()">‹ BACK</button><b>${esc(g.name)}</b><span id="miniBalance">${money(me.balance)}</span></div>
+      <section class="card mini-game-board">
+        <div class="mini-game-icon" id="miniIcon">${info.icon}</div>
+        <h2>${esc(g.name)}</h2><p class="muted">${esc(info.subtitle)}</p>
+        <div class="mini-result" id="miniResult">READY TO PLAY</div>
+        <div class="mini-detail" id="miniDetail">${esc(info.hint)}</div>
+        ${buttons ? '<div class="mini-choices" id="miniChoices">'+buttons+'</div>' : '<div class="mini-auto-art">'+info.icon+'</div>'}
+        <label for="miniBet">BET · VIRTUAL COIN</label>
+        <input class="field" id="miniBet" type="number" min="1" max="1000000" step="1" value="10">
+        <button class="primary mini-play-button" id="miniPlay" onclick="playMiniGame('${esc(g.id)}')">PLAY NOW</button>
+        <small class="muted">শুধু নগদমূল্যহীন Virtual Coin · কোনো বাস্তব অর্থ নয়</small>
+      </section>
+      <button class="secondary" onclick="home()">ফিরে যান</button>
+    </div>
+  `);
+}
+function selectMiniChoice(button) {
+  document.querySelectorAll('.mini-choice').forEach(x=>x.classList.remove('selected'));
+  button.classList.add('selected');
+}
+async function playMiniGame(gameId) {
+  const button = document.getElementById('miniPlay');
+  const bet = Number(document.getElementById('miniBet')?.value);
+  const selected = document.querySelector('.mini-choice.selected');
+  const choice = selected?.dataset.choice || '';
+  if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) return toast('১ থেকে ১০,০০,০০০-এর মধ্যে বেট দিন');
+  const info = MINI_GAME_INFO[gameId];
+  if (info?.choices.length && !choice) return toast('আগে একটি অপশন বেছে নিন');
+  button.disabled = true;
+  button.textContent = 'PLAYING...';
+  try {
+    const r = await api('/mini-play',{gameId,betAmount:bet,choice});
+    me.balance = r.balance;
+    const bal = document.getElementById('miniBalance');
+    if (bal) bal.textContent = money(r.balance);
+    const result = document.getElementById('miniResult');
+    if (result) result.textContent = r.result;
+    const detail = document.getElementById('miniDetail');
+    if (detail) detail.textContent = r.detail+' · '+r.multiplier+'x · পেআউট '+r.payout+' কয়েন';
+    const icon = document.getElementById('miniIcon');
+    if (icon) icon.classList.add('mini-animate');
+    toast(r.payout > bet ? 'আপনি জিতেছেন!' : r.payout === bet ? 'বেট ফেরত এসেছে' : 'এই রাউন্ডে জয় হয়নি');
+  } catch(e) { toast(e.message); }
+  finally { button.disabled = false; button.textContent = 'PLAY AGAIN'; }
 }
 
 /* ==========================================
