@@ -414,7 +414,7 @@ dashboard();
 async function referralSettings(){
  try{
   const v=await api('/admin/referral-settings');
-  $('#view').innerHTML=`<div class="card"><h3>Referral System Settings</h3><p class="muted">সব পরিমাণ নগদমূল্যহীন Virtual Coin। নতুন প্লেয়ারের ব্যালেন্স নির্ধারিত সীমায় পৌঁছালে রেফারকারী একবার বোনাস পাবেন।</p><label>শর্ত পূরণের ব্যালেন্স (Virtual Coin)</label><input class="field" id="refThreshold" type="number" min="1" max="1000000" step="1" value="${v.threshold}"><label>Referral Bonus (Virtual Coin)</label><input class="field" id="refBonus" type="number" min="1" max="1000000" step="1" value="${v.bonus}"><button class="primary" onclick="saveReferralSettings()">Save Referral Settings</button><div id="refSettingsMsg" class="muted"></div></div>`;
+  $('#view').innerHTML=`<div class="card"><h3>Referral System Settings</h3><p class="muted">সব পরিমাণ নগদমূল্যহীন Virtual Coin। নতুন প্লেয়ার গেম খেলে নির্ধারিত মোট টার্নওভার পূরণ করলে রেফারকারী একবার বোনাস পাবেন।</p><label>টার্নওভার শর্ত (Virtual Coin)</label><input class="field" id="refThreshold" type="number" min="1" max="1000000" step="1" value="${v.threshold}"><label>Referral Bonus (Virtual Coin)</label><input class="field" id="refBonus" type="number" min="1" max="1000000" step="1" value="${v.bonus}"><button class="primary" onclick="saveReferralSettings()">Save Referral Settings</button><div id="refSettingsMsg" class="muted"></div></div>`;
  }catch(e){$('#view').textContent=e.message;}
 }
 async function saveReferralSettings(){
