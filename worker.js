@@ -430,10 +430,11 @@ async function route(req, env) {
     }
 
     if (p === "/api/support-settings" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url')").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket')").all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
       const image = String(values.support_telegram_image_url || '');
-      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : ''});
+      const validImage = key => /^https:\/\//i.test(String(values[key] || '')) ? String(values[key]) : '';
+      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')}});
     }
 
   if (p === "/api/home-banners" && method === "GET") {
