@@ -6,6 +6,10 @@ let crashGameId = null;
 let crashPollBusy = false;
 let crashPhase = 'countdown';
 let crashHistoryData = [];
+let crashVisualFrame = null;
+let crashVisualValue = 1;
+let crashVisualSegment = null;
+let crashVisualUpdatedAt = 0;
 
 let crashSlots = [
   { roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null },
@@ -51,6 +55,11 @@ function esc(s = '') {
 }
 
 function stopCrashMonitor() {
+  if (crashVisualFrame !== null) cancelAnimationFrame(crashVisualFrame);
+  crashVisualFrame = null;
+  crashVisualSegment = null;
+  crashVisualValue = 1;
+  crashVisualUpdatedAt = 0;
   if (crashTimer) clearInterval(crashTimer);
   crashTimer = null;
   crashGameId = null;
@@ -558,15 +567,6 @@ function aviator(g) {
           `).join('')}
         </div>
 
-        <section class="aviator-bottom-feed">
-          <div class="feed-tabs">
-            <button class="active" id="feedAll" type="button" onclick="setAviatorFeed('all')">All Bets</button>
-            <button id="feedPrevious" type="button" onclick="setAviatorFeed('previous')">Previous</button>
-            <button id="feedTop" type="button" onclick="setAviatorFeed('top')">Top</button>
-          </div>
-          <div class="feed-summary"><b>Previous rounds</b><span>Virtual coin results</span></div>
-          <div id="crashHistory" class="crash-history"><span class="muted">Loading results…</span></div>
-        </section>
         <div class="aviator-footer-note">TK777 • FREE VIRTUAL COINS • NO CASH VALUE</div>
       </section>
     </main>
@@ -620,10 +620,8 @@ function startCrashMonitor(gameId) {
 
 function updateCrashHistory(previous) {
   crashHistoryData = Array.isArray(previous) ? previous.slice() : [];
-  const el = $('#crashHistory');
   const ticker = $('#crashHistoryTicker');
   if (!previous || !previous.length) {
-    if (el) el.innerHTML = '<span class="muted">এখনো কোনো Crash History নেই</span>';
     if (ticker) ticker.innerHTML = '<i>No previous rounds yet</i>';
     return;
   }
@@ -631,9 +629,8 @@ function updateCrashHistory(previous) {
   const chips = previous.map(x => {
     const n = Number(x.crash_multiplier);
     const cls = n >= 2 ? 'history-high' : 'history-low';
-    return {n,cls,html:`<span class="crash-chip ${cls}">${n.toFixed(2)}x</span>`};
+    return {n,cls};
   });
-  if (el) el.innerHTML = chips.map(x => x.html).join('');
   if (ticker) ticker.innerHTML = chips.slice(0,12).map(x =>
     `<span class="${x.cls}">${x.n.toFixed(2)}x</span>`
   ).join('');
@@ -731,6 +728,8 @@ async function pollCrashState() {
       stage.classList.remove('running','crashed');
       stage.classList.add('countdown');
 
+      stopCrashVisualAnimation();
+      crashVisualValue = 1;
       if (multi) multi.textContent = '1.00x';
 
       updateFlightCurve(1);
@@ -757,13 +756,9 @@ async function pollCrashState() {
       stage.classList.remove('countdown','crashed');
       stage.classList.add('running');
 
-      if (multi) {
-        multi.textContent = multiplier.toFixed(2)+'x';
-      }
+      setCrashVisualTarget(multiplier);
 
       if (status) status.textContent = 'FLYING';
-
-      updateFlightCurve(multiplier);
 
       for (let i=0;i<crashSlots.length;i++) {
         const slot = crashSlots[i];
@@ -783,9 +778,10 @@ async function pollCrashState() {
       stage.classList.remove('running','countdown');
       stage.classList.add('crashed');
 
-      if (multi) {
-        multi.textContent = multiplier.toFixed(2)+'x';
-      }
+      stopCrashVisualAnimation();
+      crashVisualValue = multiplier;
+      if (multi) multi.textContent = multiplier.toFixed(2)+'x';
+      updateFlightCurve(multiplier);
 
       if (status) status.textContent = 'CRASHED AT '+multiplier.toFixed(2)+'x';
 
@@ -847,6 +843,51 @@ async function pollCrashState() {
     if (status) status.textContent = 'RECONNECTING...';
   } finally {
     crashPollBusy = false;
+  }
+}
+
+/* Smoothly interpolate between authoritative server multiplier snapshots. */
+function stopCrashVisualAnimation() {
+  if (crashVisualFrame !== null) cancelAnimationFrame(crashVisualFrame);
+  crashVisualFrame = null;
+  crashVisualSegment = null;
+}
+
+function setCrashVisualTarget(target) {
+  const now = performance.now();
+  const startValue = crashVisualValue || 1;
+  const duration = crashVisualUpdatedAt
+    ? Math.max(180,Math.min(520,now-crashVisualUpdatedAt))
+    : 400;
+  crashVisualUpdatedAt = now;
+  crashVisualSegment = {from:startValue,to:Math.max(startValue,Number(target)||1),start:now,duration};
+
+  if (crashVisualFrame === null) {
+    crashVisualFrame = requestAnimationFrame(renderCrashVisual);
+  }
+}
+
+function renderCrashVisual(now) {
+  const segment = crashVisualSegment;
+  if (!segment || !$('#aviatorStage')) {
+    crashVisualFrame = null;
+    return;
+  }
+
+  const progress = Math.min(1,Math.max(0,(now-segment.start)/segment.duration));
+  const value = segment.from + (segment.to-segment.from)*progress;
+  crashVisualValue = value;
+
+  const multi = $('#multi');
+  if (multi) multi.textContent = value.toFixed(2)+'x';
+  updateFlightCurve(value);
+
+  if (progress < 1) {
+    crashVisualFrame = requestAnimationFrame(renderCrashVisual);
+  } else {
+    crashVisualValue = segment.to;
+    crashVisualSegment = null;
+    crashVisualFrame = null;
   }
 }
 
