@@ -1176,7 +1176,7 @@ async function cashout(index) {
     }
     if (r.status === 'cashed_out') {
       showAviatorCashoutPopup(
-        `ক্যাশ আউট সফল!\nপেআউট: BDT ${payoutAmount.toFixed(2)}\nলাভ: BDT ${profitAmount.toFixed(2)}\nমাল্টিপ্লায়ার: ${Number(r.multiplier).toFixed(2)}x\nবর্তমান ব্যালেন্স: ${money(r.balance)}`
+        `${Number(r.multiplier).toFixed(2)}x  ·  লাভ BDT ${profitAmount.toFixed(2)}`
       );
     }
 
