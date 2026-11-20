@@ -970,3 +970,13 @@ body{background:#063b39}
 .aviator-cancel-button{display:none}
 .aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-bet-button{display:none}
 .aviator-cashout-popup{min-width:190px;padding-left:18px;padding-right:25px}
+
+
+/* Aviator crash result title, matching the supplied reference. */
+.crash-flew-away{
+  display:none;position:absolute;top:20%;left:50%;transform:translateX(-50%);
+  z-index:8;width:max-content;max-width:90%;color:#fff;text-align:center;
+  font-size:clamp(20px,5.2vw,36px);font-weight:400;letter-spacing:1px;
+  line-height:1.2;text-shadow:0 2px 8px #000b;pointer-events:none;
+}
+.aviator-stage.crashed .crash-flew-away{display:block}
