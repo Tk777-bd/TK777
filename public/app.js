@@ -397,8 +397,7 @@ const displaySlotGames = [
   {id:'slot-display-fortune-tiger',name:'Fortune Tiger',mark:'🐯',tone:'fortune'},
   {id:'slot-display-fortune-ox',name:'Fortune Ox',mark:'🐂',tone:'azteca'},
   {id:'slot-display-fortune-rabbit',name:'Fortune Rabbit',mark:'🐇',tone:'magic'},
-  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},
-  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},
+  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},
   {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},
   {id:'slot-display-wild-bandito',name:'Wild Bandito',mark:'🤠',tone:'flyx'},
   {id:'slot-display-ways-of-the-qilin',name:'Ways of the Qilin',mark:'🐉',tone:'anubis'}
@@ -600,7 +599,11 @@ async function depositPage(){
   if(!me) return showAuth();
   shell(`<div class="page member-subpage">
     <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Demo Deposit</h2></div>
-    <div class="demo-deposit-warning"><b>⚠ DEMO ONLY — কোনো আসল টাকা পাঠাবেন না</b><span>TK777 আসল টাকার গেম নয়। bKash, Nagad বা Rocket-এ কোনো পেমেন্ট করবেন না। এই পেজটি শুধু UI পরীক্ষার জন্য।</span></div>
+    <div class="demo-number-panel">
+      <div class="demo-number-label">DEMO NUMBER · COPY ONLY</div>
+      <div class="demo-number-row"><strong>01790365006</strong><button type="button" onclick="copyDemoNumber(this)">Copy</button></div>
+      <small>এটি শুধু কাল্পনিক Demo নম্বর। কোনো টাকা পাঠাবেন না।</small>
+    </div>
     <div class="card coin-request-card demo-deposit-card">
       <h3>পেমেন্ট পদ্ধতি (ডেমো)</h3>
       <div class="demo-payment-methods">
@@ -629,6 +632,23 @@ async function depositPage(){
   </div>`);
   loadDemoDeposits();
 }
+
+function copyDemoNumber(button){
+  const number='01790365006';
+  const done=()=>{if(button){button.textContent='Copied';setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast('Demo নম্বর কপি হয়েছে');};
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(number).then(done).catch(()=>fallbackCopyDemoNumber(number,done));
+  }else fallbackCopyDemoNumber(number,done);
+}
+function fallbackCopyDemoNumber(number,done){
+  const field=document.createElement('textarea');
+  field.value=number;field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';
+  document.body.appendChild(field);field.select();
+  try{if(document.execCommand('copy'))done();else toast('কপি করা যায়নি');}
+  catch(e){toast('কপি করা যায়নি');}
+  field.remove();
+}
+
 async function loadDemoDeposits(){
  const box=document.getElementById('demoDepositHistory');if(!box)return;
  try{const d=await api('/demo-deposits');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · ৳'+Number(x.amount)+' (Demo)<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?'Pending':x.status==='accepted'?'Accepted':'Cancelled')+'</b></div>').join('')||'এখনো কোনো Demo Request নেই';}
@@ -797,8 +817,7 @@ function miniGame(g) {
         <small class="muted">শুধু নগদমূল্যহীন Virtual Coin · কোনো বাস্তব অর্থ নয়</small>
       </section>
       <button class="secondary" onclick="home()">ফিরে যান</button>
-    </div>
-  `);
+    </div>  `);
 }
 function selectMiniChoice(button) {
   document.querySelectorAll('.mini-choice').forEach(x=>x.classList.remove('selected'));
@@ -1197,8 +1216,7 @@ async function pollCrashState() {
       const resetGraph = $('#flightChart');
       if (resetPlane) {
         resetPlane.classList.remove('plane-hover','plane-approach','plane-crashed');
-        resetPlane.style.left = '10%';
-        resetPlane.style.top = '70%';
+        resetPlane.style.left = '10%';        resetPlane.style.top = '70%';
       }
       if (resetGraph) resetGraph.classList.remove('graph-crashed');
       if (multi) multi.textContent = '1.00x';
@@ -1598,7 +1616,6 @@ async function startCrash(index) {
     if (result) {
       result.textContent = 'বেট সফল! প্লেন উড়লে Cash Out করতে পারবেন।';
     }
-
   } catch (e) {
     const errorText = String(e?.message || '');
     const displayMessage = /পর্যাপ্ত ফ্রি কয়েন নেই|insufficient.*(coin|balance)|not enough.*(coin|balance)/i.test(errorText)
@@ -1876,3 +1893,11 @@ async function playAce(gameId) {
  
 /* START APPLICATION */
 init();
+
+/* Copyable fictional demo number; explicitly not a payment destination */
+.demo-number-panel{margin:12px 0;padding:15px 12px;border:1px solid #c9a24e;border-radius:13px;background:linear-gradient(145deg,#173d39,#0b292f);text-align:center;box-shadow:0 5px 14px #0004}
+.demo-number-label{font-size:10px;font-weight:1000;letter-spacing:1.5px;color:#f5d77e}
+.demo-number-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
+.demo-number-row strong{font-size:clamp(25px,7vw,34px);letter-spacing:1.5px;color:#fff1bd;text-shadow:0 2px 8px #0008}
+.demo-number-row button{padding:9px 14px;border:1px solid #f3d17c;border-radius:9px;background:linear-gradient(145deg,#ffe58a,#d59a2e);color:#30210c;font-weight:1000}
+.demo-number-panel small{display:block;font-size:11px;color:#ffe6b3;line-height:1.5}
