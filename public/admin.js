@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -107,9 +107,6 @@ async function games(){
  const settingData=await api('/admin/settings');
  const settingValues=Object.fromEntries((settingData.settings||[]).map(x=>[x.key,x.value]));
  let gameNameOverrides={};try{gameNameOverrides=JSON.parse(settingValues.game_name_overrides||'{}');if(!gameNameOverrides||typeof gameNameOverrides!=='object')gameNameOverrides={};}catch{gameNameOverrides={};}
- const gameNameRows=d.games.map(g=>'<div class="row" style="gap:8px;align-items:center;margin:8px 0"><input class="field game-name-edit" data-game-id="'+esc(g.id)+'" value="'+esc(g.name)+'" maxlength="80" style="flex:1;min-width:0"><button type="button" onclick="saveGameName(\''+esc(g.id)+'\')">Save Name</button></div>').join('');
- const slotNameRows=slotPosterItems.map(([id,name])=>'<div class="row" style="gap:8px;align-items:center;margin:8px 0"><input class="field game-name-edit" data-game-id="'+id+'" value="'+esc(gameNameOverrides[id]||name)+'" maxlength="80" style="flex:1;min-width:0"><button type="button" onclick="saveGameName(\''+id+'\')">Save Name</button></div>').join('');
- $('#view').insertAdjacentHTML('afterbegin','<div class="card"><h3>প্রতিটি গেমের নাম পরিবর্তন</h3><p class="muted">নতুন নাম Save করলে User Site-এও দেখা যাবে। গেমের ID ও পুরোনো হিস্ট্রি অপরিবর্তিত থাকবে।</p>'+gameNameRows+slotNameRows+'</div>');
  let hiddenSlotIds=[];try{hiddenSlotIds=JSON.parse(settingValues.slot_display_hidden||'[]');if(!Array.isArray(hiddenSlotIds))hiddenSlotIds=[];}catch{hiddenSlotIds=[];}
  $('#view').insertAdjacentHTML('afterbegin',`<div class="card"><h3>নতুন Slot গেমের ছবি (Image URL)</h3>
  <p class="muted">Super Ace-এর মতো প্রতিটি Slot গেমের জন্য সরাসরি HTTPS Image URL দিন। Save করলে ইউজার সাইটের গেম কার্ডে ছবিটি দেখা যাবে। খালি রাখলে নামসহ ডিফল্ট পোস্টার দেখাবে।</p>
@@ -145,6 +142,29 @@ async function games(){
  $('#game').onsubmit=async e=>{e.preventDefault();try{await api('/admin/games',Object.fromEntries(new FormData(e.target)));alert('গেমের তথ্য ও ছবির লিংক সেভ হয়েছে');games()}catch(err){alert(err.message)}};
 }
 function editGame(id){const s=$('#existingGame');if(s){s.value=id;s.dispatchEvent(new Event('change'));window.scrollTo({top:0,behavior:'smooth'});}}
+
+
+async function gameNameEdit(){
+ const [d,s]=await Promise.all([api('/admin/games'),api('/admin/settings')]);
+ const settings=Object.fromEntries((s.settings||[]).map(x=>[x.key,x.value]));
+ let overrides={};
+ try{overrides=JSON.parse(settings.game_name_overrides||'{}');if(!overrides||typeof overrides!=='object')overrides={};}catch{overrides={};}
+ const slotItems=[
+  ['slot-display-super-elements','Super Elements'],['slot-display-azteca-legacy','Azteca Legacy'],['slot-display-flyx','FlyX'],
+  ['slot-display-magic-ace','Magic Ace'],['slot-display-circus-joker','Circus Joker'],['slot-display-fortune-gems-3','Fortune Gems 3'],
+  ['slot-display-super-ace-ii','Super Ace II'],['slot-display-boxing-king','Boxing King'],['slot-display-super-ace-deluxe','Super Ace Deluxe'],
+  ['slot-display-dragon-gems','Dragon Gems'],['slot-display-treasures-of-aztec','Treasures of Aztec'],['slot-display-anubis-wrath','Anubis Wrath'],
+  ['slot-display-golden-empire','Golden Empire'],['slot-display-money-coming','Money Coming'],['slot-display-fortune-gems','Fortune Gems'],
+  ['slot-display-fortune-gems-2','Fortune Gems 2'],['slot-display-devil-fire-2','Devil Fire 2'],['slot-display-zeus','Zeus'],
+  ['slot-display-wild-ace','Wild Ace'],['slot-display-golden-bank','Golden Bank'],['slot-display-party-night','Party Night'],
+  ['slot-display-lucky-goldbricks','Lucky Goldbricks'],['slot-display-mahjong-ways','Mahjong Ways'],['slot-display-mahjong-ways-2','Mahjong Ways 2'],
+  ['slot-display-fortune-tiger','Fortune Tiger'],['slot-display-fortune-ox','Fortune Ox'],['slot-display-fortune-rabbit','Fortune Rabbit'],
+  ['slot-display-lucky-neko','Lucky Neko'],['slot-display-dragon-hatch','Dragon Hatch'],['slot-display-ganesha-fortune','Ganesha Fortune'],
+  ['slot-display-wild-bandito','Wild Bandito'],['slot-display-ways-of-the-qilin','Ways of the Qilin']
+ ];
+ const rows=d.games.map(g=>({id:g.id,name:g.name,group:'গেম'})).concat(slotItems.map(([id,name])=>({id,name:overrides[id]||name,group:'Slot'})));
+ $('#view').innerHTML='<div class="card"><h3>গেম নাম এডিট</h3><p class="muted">এখান থেকে প্রতিটি গেমের নাম পরিবর্তন করে Save Name চাপুন। পরিবর্তিত নাম User Site-এও দেখা যাবে। গেমের ID, ডিজাইন ও পুরোনো হিস্ট্রি অপরিবর্তিত থাকবে।</p>'+rows.map(g=>'<div class="row" style="gap:8px;align-items:center;margin:8px 0"><span style="width:54px;flex-shrink:0">'+esc(g.group)+'</span><input class="field game-name-edit" data-game-id="'+esc(g.id)+'" value="'+esc(g.name)+'" maxlength="80" style="flex:1;min-width:0"><button type="button" onclick="saveGameName(\''+esc(g.id)+'\')">Save Name</button></div>').join('')+'</div>';
+}
 
 async function saveGameName(id){
  const input=Array.from(document.querySelectorAll('.game-name-edit')).find(x=>x.dataset.gameId===id);
