@@ -565,22 +565,60 @@ function page(name) {
 }
 
 
+function selectDemoMethod(method){
+  const input=document.getElementById('demoPaymentMethod');
+  if(!input)return;
+  input.value=method;
+  document.querySelectorAll('.demo-payment-method').forEach(el=>{
+    const selected=el.dataset.method===method;
+    el.classList.toggle('selected',selected);
+    el.setAttribute('aria-pressed',selected?'true':'false');
+  });
+}
+function selectDemoAmount(amount){
+  const input=document.getElementById('demoAmount');
+  if(!input)return;
+  input.value=String(amount);
+  document.querySelectorAll('.demo-amount-button').forEach(el=>{
+    const selected=Number(el.dataset.amount)===Number(amount);
+    el.classList.toggle('selected',selected);
+    el.setAttribute('aria-pressed',selected?'true':'false');
+  });
+}
+function syncDemoAmountInput(){
+  const input=document.getElementById('demoAmount');
+  if(!input)return;
+  document.querySelectorAll('.demo-amount-button').forEach(el=>{
+    const selected=el.dataset.amount===input.value;
+    el.classList.toggle('selected',selected);
+    el.setAttribute('aria-pressed',selected?'true':'false');
+  });
+}
 async function depositPage(){
   if(!me) return showAuth();
-  const demoRef='DEMO-'+Math.random().toString(36).slice(2,8).toUpperCase()+'-'+Date.now().toString().slice(-4);
   shell(`<div class="page member-subpage">
     <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Demo Deposit</h2></div>
     <div class="demo-deposit-warning"><b>⚠ DEMO ONLY — কোনো আসল টাকা পাঠাবেন না</b><span>TK777 আসল টাকার গেম নয়। bKash, Nagad বা Rocket-এ কোনো পেমেন্ট করবেন না। এই পেজটি শুধু UI পরীক্ষার জন্য।</span></div>
     <div class="card coin-request-card demo-deposit-card">
       <h3>পেমেন্ট পদ্ধতি (ডেমো)</h3>
-      <div class="demo-payment-methods"><div class="demo-payment-method">bKash <small>DEMO</small></div><div class="demo-payment-method">Nagad <small>DEMO</small></div><div class="demo-payment-method">Rocket <small>DEMO</small></div></div>
-      <label for="demoPaymentMethod">ডেমো পেমেন্ট পদ্ধতি</label>
-      <select id="demoPaymentMethod" class="field"><option value="Demo bKash">Demo bKash</option><option value="Demo Nagad">Demo Nagad</option><option value="Demo Rocket">Demo Rocket</option></select>
-      <label for="demoAmount">ডেমো পরিমাণ</label>
-      <select id="demoAmount" class="field"><option value="100">৳100 (Demo)</option><option value="200">৳200 (Demo)</option><option value="500">৳500 (Demo)</option><option value="1000">৳1000 (Demo)</option></select>
-      <label for="demoReference">Demo Reference ID</label>
-      <input id="demoReference" class="field" value="${demoRef}" readonly>
-      <small class="muted">এটি সিস্টেমের তৈরি কাল্পনিক Reference ID; কোনো লেনদেনের প্রমাণ নয়।</small>
+      <div class="demo-payment-methods">
+        <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">bKash <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">Nagad <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">Rocket <small>DEMO</small></button>
+      </div>
+      <input type="hidden" id="demoPaymentMethod" value="">
+      <label>ডেমো পরিমাণ</label>
+      <div class="demo-amount-buttons">
+        <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">৳100</button>
+        <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">৳200</button>
+        <button type="button" class="demo-amount-button" data-amount="300" onclick="selectDemoAmount(300)">৳300</button>
+        <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">৳500</button>
+        <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">৳1000</button>
+      </div>
+      <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="অথবা নিজের Demo Amount লিখুন" oninput="syncDemoAmountInput()">
+      <label for="demoReference">Demo Transaction ID (কাল্পনিক)</label>
+      <input id="demoReference" class="field" type="text" maxlength="80" autocomplete="off" placeholder="নিজের Demo Transaction ID লিখুন">
+      <small class="muted">শুধু পরীক্ষার জন্য কাল্পনিক ID লিখুন। এটি কোনো আসল লেনদেনের প্রমাণ নয়।</small>
       <button class="primary" onclick="submitDemoDeposit()">Submit Demo Request</button>
       <p id="demoDepositMsg" class="muted"></p>
     </div>
@@ -597,8 +635,11 @@ async function loadDemoDeposits(){
 async function submitDemoDeposit(){
  const method=document.getElementById('demoPaymentMethod')?.value;
  const amount=Number(document.getElementById('demoAmount')?.value);
- const demo_reference=document.getElementById('demoReference')?.value;
+ const demo_reference=document.getElementById('demoReference')?.value.trim();
  const msg=document.getElementById('demoDepositMsg');if(!msg)return;
+ if(!method){msg.textContent='আগে একটি Demo পেমেন্ট পদ্ধতি সিলেক্ট করুন।';return;}
+ if(!Number.isFinite(amount)||amount<=0||!Number.isInteger(amount)){msg.textContent='সঠিক Demo Amount লিখুন।';return;}
+ if(!demo_reference){msg.textContent='একটি কাল্পনিক Demo Transaction ID লিখুন।';return;}
  try{await api('/demo-deposits',{method,amount,demo_reference});msg.textContent='Demo Request জমা হয়েছে। এটি কোনো আসল পেমেন্ট নয় এবং কোনো কয়েন যোগ হবে না।';await loadDemoDeposits();}
  catch(e){msg.textContent=e.message;}
 }
