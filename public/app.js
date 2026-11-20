@@ -695,7 +695,10 @@ const MINI_GAME_INFO = {
   'baccarat':{icon:'♠️',subtitle:'Player · Banker · Tie',choices:[['player','PLAYER'],['banker','BANKER'],['tie','TIE']],hint:'Player/Banker 1.95x, Tie 8x।'},
   'diamond-slots':{icon:'💎',subtitle:'Match the reels',choices:[],hint:'তিনটি রিল ঘুরবে। তিনটি এক হলে 5x, দুটি মিললে 1.5x।'},
   'fortune-wheel':{icon:'🎯',subtitle:'Spin for a multiplier',choices:[],hint:'চাকা ঘুরিয়ে 0x থেকে 10x পর্যন্ত ফল পান।'},
-  'royal-keno':{icon:'👑',subtitle:'Pick a lucky number',choices:Array.from({length:10},(_,i)=>[String(i+1),String(i+1)]),hint:'১–১০ থেকে নম্বর বাছুন। মিললে 8x।'}
+  'royal-keno':{icon:'👑',subtitle:'Pick a lucky number',choices:Array.from({length:10},(_,i)=>[String(i+1),String(i+1)]),hint:'১–১০ থেকে নম্বর বাছুন। মিললে 8x।'},
+  'live-roulette':{icon:'🎡',subtitle:'Live Roulette Table',choices:[['red','RED'],['black','BLACK'],['green','GREEN · 0']],hint:'ডিলার-স্টাইল সিমুলেটেড রুলেট টেবিল। লাল/কালো 1.9x, সবুজ 14x।'},
+  'live-blackjack':{icon:'🂡',subtitle:'Live Blackjack Table',choices:[],hint:'অ্যানিমেটেড ডিলার কার্ড খুলবে। এটি সিমুলেটেড টেবিল, আসল লাইভ ডিলার নয়।'},
+  'live-baccarat':{icon:'♠️',subtitle:'Live Baccarat Table',choices:[['player','PLAYER'],['banker','BANKER'],['tie','TIE']],hint:'ডিলার-স্টাইল সিমুলেটেড Baccarat। Player/Banker 1.95x, Tie 8x।'}
 };
 function miniGameStage(gameId) {
   const stages = {
@@ -708,7 +711,10 @@ function miniGameStage(gameId) {
     'baccarat':'<div class="mg-baccarat"><div><small>PLAYER</small><span>?</span><span>?</span></div><div><small>BANKER</small><span>?</span><span>?</span></div></div>',
     'diamond-slots':'<div class="mg-reels"><span>💎</span><span>👑</span><span>7️⃣</span></div>',
     'fortune-wheel':'<div class="mg-wheel-wrap"><i class="mg-wheel-pointer"></i><div class="mg-wheel"><b>2x</b><b>5x</b><b>0x</b><b>3x</b><b>10x</b><b>1x</b><b>4x</b><b>0x</b></div></div>',
-    'royal-keno':'<div class="mg-keno-balls">'+Array.from({length:10},(_,i)=>'<span style="--i:'+i+'">'+(i+1)+'</span>').join('')+'</div>'
+    'royal-keno':'<div class="mg-keno-balls">'+Array.from({length:10},(_,i)=>'<span style="--i:'+i+'">'+(i+1)+'</span>').join('')+'</div>',
+    'live-roulette':'<div class="live-table-scene"><div class="live-dealer"><span>👩🏻‍💼</span><b>DEALER MAYA</b></div><div class="mg-roulette-wrap"><div class="mg-roulette"><span>0</span>'+Array.from({length:11},(_,i)=>'<b>'+(i+1)+'</b>').join('')+'</div><i class="mg-roulette-pointer"></i></div><small>SIMULATED LIVE ROULETTE</small></div>',
+    'live-blackjack':'<div class="live-table-scene"><div class="live-dealer"><span>👨🏻‍💼</span><b>DEALER ALEX</b></div><div class="mg-cards"><span>?</span><span>?</span><span>?</span></div><small>SIMULATED LIVE BLACKJACK</small></div>',
+    'live-baccarat':'<div class="live-table-scene"><div class="live-dealer"><span>👩🏻‍💼</span><b>DEALER LUNA</b></div><div class="mg-baccarat"><div><small>PLAYER</small><span>?</span><span>?</span></div><div><small>BANKER</small><span>?</span><span>?</span></div></div><small>SIMULATED LIVE BACCARAT</small></div>'
   };
   return '<div class="mini-stage mini-stage-'+gameId+'" id="miniStage">'+(stages[gameId]||'<div class="mg-fallback">✨</div>')+'</div>';
 }
@@ -723,7 +729,7 @@ function miniGame(g) {
     <div class="page mini-game-page">
       <div class="mini-game-top"><button class="secondary" onclick="home()">‹ BACK</button><b>${esc(g.name)}</b><span id="miniBalance">${Number(me.balance).toLocaleString("en-US")} Coin</span></div>
       <section class="card mini-game-board">
-        <div class="mini-game-kicker">TK777 • FREE ARCADE</div>
+        <div class="mini-game-kicker">${g.id.startsWith("live-") ? "TK777 • SIMULATED LIVE TABLE" : "TK777 • FREE ARCADE"}</div>
         <h2>${esc(g.name)}</h2><p class="muted">${esc(info.subtitle)}</p>
         ${miniGameStage(g.id)}
         <div class="mini-result" id="miniResult">READY TO PLAY</div>
