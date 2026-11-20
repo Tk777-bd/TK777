@@ -434,12 +434,23 @@ async function route(req, env) {
     }
 
     if (p === "/api/games" && method === "GET") {
+      // Keep the original free Aviator and add Aviator 2 as a separate crash game.
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO games
+        (id,name,category_id,image_url,game_type,sort_order)
+        VALUES('aviator-2','Aviator 2','hot','','aviator',2)
+      `).run();
+      await env.DB.prepare(`
+        UPDATE games SET sort_order=3
+        WHERE id='super-ace' AND sort_order=2
+      `).run();
+
       const rows = await env.DB.prepare(`
         SELECT id,name,category_id,image_url,game_type,
                html_content,active,sort_order
         FROM games
         WHERE active=1
-        ORDER BY sort_order
+        ORDER BY sort_order,id
       `).all();
 
       return json({ games: rows.results });
