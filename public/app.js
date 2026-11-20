@@ -397,8 +397,7 @@ const displaySlotGames = [
   {id:'slot-display-fortune-tiger',name:'Fortune Tiger',mark:'🐯',tone:'fortune'},
   {id:'slot-display-fortune-ox',name:'Fortune Ox',mark:'🐂',tone:'azteca'},
   {id:'slot-display-fortune-rabbit',name:'Fortune Rabbit',mark:'🐇',tone:'magic'},
-  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},
-  {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},
+  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},  {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},
   {id:'slot-display-wild-bandito',name:'Wild Bandito',mark:'🤠',tone:'flyx'},
   {id:'slot-display-ways-of-the-qilin',name:'Ways of the Qilin',mark:'🐉',tone:'anubis'}
 ];
@@ -599,6 +598,12 @@ async function depositPage(){
   if(!me) return showAuth();
   shell(`<div class="page member-subpage">
     <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Demo Deposit</h2></div>
+    <style>.demo-number-panel{margin:12px 0;padding:15px 12px;border:1px solid #c9a24e;border-radius:13px;background:linear-gradient(145deg,#173d39,#0b292f);text-align:center;box-shadow:0 5px 14px #0004}
+.demo-number-label{font-size:10px;font-weight:1000;letter-spacing:1.5px;color:#f5d77e}
+.demo-number-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
+.demo-number-row strong{font-size:clamp(25px,7vw,34px);letter-spacing:1.5px;color:#fff1bd;text-shadow:0 2px 8px #0008}
+.demo-number-row button{padding:9px 14px;border:1px solid #f3d17c;border-radius:9px;background:linear-gradient(145deg,#ffe58a,#d59a2e);color:#30210c;font-weight:1000}
+.demo-number-panel small{display:block;font-size:11px;color:#ffe6b3;line-height:1.5}</style>
     <div class="demo-number-panel">
       <div class="demo-number-label">DEMO NUMBER · COPY ONLY</div>
       <div class="demo-number-row"><strong>01790365006</strong><button type="button" onclick="copyDemoNumber(this)">Copy</button></div>
@@ -797,8 +802,7 @@ function miniGameStage(gameId) {
 function miniGame(g) {
   stopCrashMonitor();
   const info = MINI_GAME_INFO[g.id];
-  if (!info) return toast('গেমটি প্রস্তুত নয়');
-  const buttons = info.choices.length
+  if (!info) return toast('গেমটি প্রস্তুত নয়');  const buttons = info.choices.length
     ? info.choices.map(([value,label])=>'<button type="button" class="mini-choice" data-choice="'+esc(value)+'" onclick="selectMiniChoice(this)">'+esc(label)+'</button>').join('')
     : '';
   shell(`
@@ -1198,7 +1202,6 @@ async function pollCrashState() {
     const multi = $('#multi');
     const status = $('#crashStatus');
     const stage = $('#aviatorStage');
-
     crashPhase = state.status;
     updateAviatorCrowd(state);
 
@@ -1597,8 +1600,7 @@ async function startCrash(index) {
 
     slot.autoTarget = target;
     slot.busy = true;
-    updateSlotButtons(index);
-    const r = await api('/crash/start',{
+    updateSlotButtons(index);    const r = await api('/crash/start',{
       gameId:crashGameId,
       betAmount:bet
     });
@@ -1893,11 +1895,3 @@ async function playAce(gameId) {
  
 /* START APPLICATION */
 init();
-
-/* Copyable fictional demo number; explicitly not a payment destination */
-.demo-number-panel{margin:12px 0;padding:15px 12px;border:1px solid #c9a24e;border-radius:13px;background:linear-gradient(145deg,#173d39,#0b292f);text-align:center;box-shadow:0 5px 14px #0004}
-.demo-number-label{font-size:10px;font-weight:1000;letter-spacing:1.5px;color:#f5d77e}
-.demo-number-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
-.demo-number-row strong{font-size:clamp(25px,7vw,34px);letter-spacing:1.5px;color:#fff1bd;text-shadow:0 2px 8px #0008}
-.demo-number-row button{padding:9px 14px;border:1px solid #f3d17c;border-radius:9px;background:linear-gradient(145deg,#ffe58a,#d59a2e);color:#30210c;font-weight:1000}
-.demo-number-panel small{display:block;font-size:11px;color:#ffe6b3;line-height:1.5}
