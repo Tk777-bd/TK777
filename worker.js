@@ -1581,6 +1581,7 @@ async function route(req, env) {
 
     if (p === "/api/admin/users") {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
       const q = String(url.searchParams.get("q") || "").trim().slice(0, 40);
       const rows = q
         ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at,wallet_number FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%" + q + "%", "%" + q + "%").all()
