@@ -569,6 +569,18 @@ async function withdrawPage(){
  <small class="muted">${esc(withdrawText('balanceLabel'))} <b>${Number(me.balance||0).toLocaleString('en-US')} ${esc(withdrawText('coinSuffix'))}</b></small><button class="primary" onclick="submitWithdrawRequest()">${esc(withdrawText('submitButton'))}</button><p id="withdrawRequestMsg" class="muted"></p></div>
  <h3>${esc(withdrawText('historyTitle'))}</h3><div id="withdrawRequestHistory" class="card">${esc(withdrawText('loadingText'))}</div><button class="secondary" onclick="page('member')">${esc(withdrawText('backButton'))}</button></div>`);
  loadWithdrawRequests();
+ loadWithdrawWalletNumber();
+}
+async function loadWithdrawWalletNumber(){
+ const input=document.getElementById('withdrawWalletNumber'),btn=document.getElementById('saveWithdrawWalletBtn'),msg=document.getElementById('withdrawWalletMsg');if(!input)return;
+ try{const d=await api('/wallet-number');if(d.walletNumber){input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.style.display='none';if(msg)msg.textContent='নম্বর সেট করা আছে। পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।';}}
+ catch(e){if(msg)msg.textContent=e.message;}
+}
+async function saveWithdrawWalletNumber(){
+ const input=document.getElementById('withdrawWalletNumber'),msg=document.getElementById('withdrawWalletMsg'),btn=document.getElementById('saveWithdrawWalletBtn'),walletNumber=String(input?.value||'').trim();
+ if(!/^[0-9+ -]{8,20}$/.test(walletNumber)){if(msg)msg.textContent='সঠিক ওয়ালেট নম্বর লিখুন।';return;}
+ if(!confirm('এই নম্বরটি একবার সেট করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
+ try{const d=await api('/wallet-number',{walletNumber});input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.style.display='none';if(msg)msg.textContent='নম্বর সেট হয়েছে। পরিবর্তনের জন্য অ্যাডমিনের সাহায্য নিন।';}catch(e){if(msg)msg.textContent=e.message;}
 }
 async function loadWithdrawRequests(){
  const box=document.getElementById('withdrawRequestHistory');if(!box)return;
@@ -585,7 +597,7 @@ async function submitWithdrawRequest(){
  const amount=Number(document.getElementById('withdrawCoinAmount')?.value);
  const walletNumber=String(document.getElementById('withdrawWalletNumber')?.value||'').trim();
  if(!selectedWithdrawMethod){msg.textContent=withdrawText('chooseMethodError');return;}
- if(!/^[0-9+\- ]{8,20}$/.test(walletNumber)){msg.textContent='সঠিক ওয়ালেট নম্বর লিখুন।';return;}
+ if(!/^[0-9+ -]{8,20}$/.test(walletNumber)||!document.getElementById('withdrawWalletNumber')?.readOnly){msg.textContent='আগে ওয়ালেট নম্বর সেট করুন।';return;}
  if(!Number.isSafeInteger(amount)||amount<1){msg.textContent=withdrawText('amountError');return;}
  if(amount>Number(me.balance||0)){msg.textContent=withdrawText('balanceError');return;}
  try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount,walletNumber});msg.textContent=withdrawText('successMessage');await loadWithdrawRequests();await refreshBalance();}
