@@ -405,6 +405,7 @@ async function route(req, env) {
 
     if (p === "/api/withdraw-requests" && method === "GET" && user) {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
       const rows=await env.DB.prepare("SELECT id,method,amount,status,created_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
       return json({requests:rows.results||[]});
     }
@@ -413,10 +414,11 @@ async function route(req, env) {
       const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);
       if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||!Number.isSafeInteger(amount)||amount<1||amount>10000000)return json({error:"সঠিক Demo Withdrawal তথ্য দিন"},400);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
       const requestId=uid();
       const reserved=await env.DB.batch([
         env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=? AND NOT EXISTS (SELECT 1 FROM demo_withdrawals WHERE user_id=? AND status='pending')").bind(amount,user.id,amount,user.id),
-        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status) SELECT ?,?,?,?,'pending' WHERE changes()=1").bind(requestId,user.id,methodName,amount),
+        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status,coin_reserved) SELECT ?,?,?,?,'pending',1 WHERE changes()=1").bind(requestId,user.id,methodName,amount),
         env.DB.prepare("SELECT changes() AS inserted")
       ]);
       if(Number(reserved[2]?.results?.[0]?.inserted)!==1){
@@ -1508,6 +1510,7 @@ async function route(req, env) {
     if (p === "/api/admin/withdraw-requests" && method === "GET") {
       if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      try{await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();}catch(e){}
       const rows=await env.DB.prepare("SELECT d.id,d.method,d.amount,d.status,d.created_at,u.username,u.email,u.balance FROM demo_withdrawals d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
       return json({requests:rows.results||[]});
     }
@@ -1519,7 +1522,7 @@ async function route(req, env) {
       if(!request)return json({error:"Request পাওয়া যায়নি অথবা আগেই Review হয়েছে"},404);
       const updated=await env.DB.prepare("UPDATE demo_withdrawals SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,id).run();
       if(!updated.meta?.changes)return json({error:"Request ইতিমধ্যে Review হয়েছে"},409);
-      if(status==='rejected'){
+      if(status==='rejected' && Number(request.coin_reserved)===1){
         const refunded=await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(request.amount,request.user_id).run();
         if(!refunded.meta?.changes)return json({error:"কয়েন ফেরত দেওয়া যায়নি; Admin লগ পরীক্ষা করুন"},500);
         const u=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
