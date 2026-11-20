@@ -609,7 +609,8 @@ async function depositPage(){
         <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : 'Rocket'} <small>DEMO</small></button>
       </div>
       <input type="hidden" id="demoPaymentMethod" value="">
-      <label>ডেমো পরিমাণ</label>
+      <label for="demoAmount">ডেমো পরিমাণ</label>
+      <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="অথবা নিজের Demo Amount লিখুন" oninput="syncDemoAmountInput()">
       <div class="demo-amount-buttons">
         <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">৳100</button>
         <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">৳200</button>
@@ -617,7 +618,6 @@ async function depositPage(){
         <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">৳500</button>
         <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">৳1000</button>
       </div>
-      <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="অথবা নিজের Demo Amount লিখুন" oninput="syncDemoAmountInput()">
       <label for="demoReference">Demo Transaction ID (কাল্পনিক)</label>
       <input id="demoReference" class="field" type="text" maxlength="80" autocomplete="off" placeholder="নিজের Demo Transaction ID লিখুন">
       <small class="muted">শুধু পরীক্ষার জন্য কাল্পনিক ID লিখুন। এটি কোনো আসল লেনদেনের প্রমাণ নয়।</small>
