@@ -1,3 +1,4 @@
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -145,7 +146,7 @@ async function getCrashSession(env, gameId) {
     crash_multiplier: Number(
       (1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2)
     ),
-    start_ms: Date.now()
+    start_ms: Date.now() + 5000
   };
 
   try {
@@ -192,7 +193,24 @@ async function crashState(env, gameId) {
     SELECT * FROM crash_sessions WHERE id=?
   `).bind(s.id).first();
 
-  const elapsed = Math.max(0, Date.now() - Number(s.start_ms));
+  const now = Date.now();
+  const startMs = Number(s.start_ms);
+  const elapsed = Math.max(0, now - startMs);
+
+  let phase = s.status;
+  let multiplier = Number(s.crash_multiplier);
+  let countdownMs = 0;
+
+  if (s.status === "active") {
+    if (now < startMs) {
+      phase = "countdown";
+      multiplier = 1;
+      countdownMs = startMs - now;
+    } else {
+      phase = "active";
+      multiplier = Number(Math.exp(elapsed / 12000).toFixed(2));
+    }
+  }
 
   const history = await env.DB.prepare(`
     SELECT crash_multiplier,created_at
@@ -204,14 +222,13 @@ async function crashState(env, gameId) {
 
   return {
     sessionId: s.id,
-    status: s.status,
-    multiplier: s.status === "crashed"
-      ? Number(s.crash_multiplier)
-      : Number(Math.exp(elapsed / 12000).toFixed(2)),
+    status: phase,
+    multiplier,
+    countdownMs,
     crashMultiplier: s.status === "crashed"
       ? Number(s.crash_multiplier)
       : null,
-    startMs: Number(s.start_ms),
+    startMs,
     previous: history.results || []
   };
 }
@@ -561,9 +578,9 @@ async function route(req, env) {
 
       const state = await crashState(env, gameId);
 
-      if (state.status !== "active") {
+      if (state.status !== "countdown") {
         return json({
-          error: "নতুন রাউন্ড শুরু হচ্ছে, একটু অপেক্ষা করুন"
+          error: "শুধু ৫ সেকেন্ডের কাউন্টডাউনের সময় বেট করা যাবে"
         }, 409);
       }
 
@@ -573,9 +590,9 @@ async function route(req, env) {
         WHERE id=? AND status='active'
       `).bind(state.sessionId).first();
 
-      if (!session) {
+      if (!session || Date.now() >= Number(session.start_ms)) {
         return json({
-          error: "রাউন্ড শেষ হয়ে গেছে, আবার চেষ্টা করুন"
+          error: "বেট করার সময় শেষ, পরের রাউন্ডে চেষ্টা করুন"
         }, 409);
       }
 
@@ -610,7 +627,9 @@ async function route(req, env) {
           SELECT ?,?,?,?,?,?,'active',?
           WHERE EXISTS (
             SELECT 1 FROM crash_sessions
-            WHERE id=? AND status='active' AND crash_multiplier>?
+            WHERE id=? AND status='active'
+              AND start_ms>?
+              AND crash_multiplier>?
           )
         `).bind(
           roundId,
@@ -621,11 +640,12 @@ async function route(req, env) {
           session.start_ms,
           session.id,
           session.id,
+          Date.now(),
           current
         ).run();
 
         if (!ins.meta.changes) {
-          throw new Error("রাউন্ড শেষ হয়ে গেছে, আবার চেষ্টা করুন");
+          throw new Error("বেট করার সময় শেষ, আবার চেষ্টা করুন");
         }
 
         const bal = await env.DB.prepare(`
@@ -746,6 +766,12 @@ async function route(req, env) {
           payout: f.payout || 0,
           balance: b.balance
         });
+      }
+
+      if (Date.now() < Number(session.start_ms)) {
+        return json({
+          error: "প্লেন এখনো উড়তে শুরু করেনি"
+        }, 409);
       }
 
       const current = Number(
