@@ -683,7 +683,11 @@ function updateSlotButtons(i) {
     targetInput.value = Number(slot.autoTarget || 2).toFixed(2);
   }
 
-  if (cancel) cancel.disabled = !slot.auto;
+  if (cancel) {
+    const canCancelBet = !!slot.roundId && crashPhase === 'countdown' && !slot.busy;
+    cancel.disabled = !(canCancelBet || slot.auto);
+    cancel.textContent = canCancelBet ? 'Cancel' : 'Cancel';
+  }
 
   start.disabled =
     !!slot.roundId ||
@@ -1028,15 +1032,39 @@ function toggleAuto(index,enabled) {
   updateSlotButtons(index);
 }
 
-function cancelAuto(index) {
+async function cancelAuto(index) {
   const slot = crashSlots[index];
-  if (!slot) return;
+  if (!slot || slot.busy) return;
+
+  if (slot.roundId && crashPhase === 'countdown') {
+    slot.busy = true;
+    updateSlotButtons(index);
+    try {
+      const r = await api('/crash/cancel',{ roundId:slot.roundId });
+      slot.roundId = null;
+      slot.status = 'cancelled';
+      slot.auto = false;
+      if (r.balance !== undefined) {
+        me.balance = r.balance;
+        const bal = $('#gameBalance');
+        if (bal) bal.textContent = money(me.balance);
+      }
+      updateSlotStatus(index,'BET CANCELLED');
+      const result = $('#result'+index);
+      if (result) result.textContent = 'বেট বাতিল হয়েছে';
+      toast('বেট বাতিল হয়েছে');
+    } catch (e) {
+      toast(e.message || 'বেট বাতিল করা যায়নি');
+    } finally {
+      slot.busy = false;
+      updateSlotButtons(index);
+    }
+    return;
+  }
 
   slot.auto = false;
-
   const toggle = $('#autoToggle'+index);
   if (toggle) toggle.checked = false;
-
   updateSlotButtons(index);
   toast('Auto Cash Out বাতিল করা হয়েছে');
 }
@@ -1122,12 +1150,23 @@ function showAviatorCashoutPopup(message) {
   popup.id = 'aviatorCashoutPopup';
   popup.className = 'aviator-cashout-popup';
   popup.textContent = message;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'aviator-cashout-close';
+  close.setAttribute('aria-label','Close');
+  close.textContent = '×';
+  close.onclick = () => {
+    window.clearTimeout(window.aviatorCashoutPopupTimer);
+    popup.classList.add('is-hiding');
+    window.setTimeout(() => popup.remove(), 180);
+  };
+  popup.appendChild(close);
   document.body.appendChild(popup);
   window.clearTimeout(window.aviatorCashoutPopupTimer);
   window.aviatorCashoutPopupTimer = window.setTimeout(() => {
     popup.classList.add('is-hiding');
-    window.setTimeout(() => popup.remove(), 350);
-  }, 4200);
+    window.setTimeout(() => popup.remove(), 180);
+  }, 2000);
 }
 
 async function cashout(index) {
