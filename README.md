@@ -53,3 +53,4 @@ This project is free-play only. Credits have no monetary value. It has no real-m
 - Review the code and Cloudflare configuration before sharing publicly.
 - Custom HTML games are untrusted content. They run with scripts enabled but without same-origin permission in a sandboxed iframe; upload only code you trust.
 - This is a demo starter, not a security audit or a guarantee of uninterrupted service.
+Cloudflare build test
