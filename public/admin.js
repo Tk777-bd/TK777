@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -187,6 +187,18 @@ async function saveHomeBanners(){
  try{for(let i=1;i<=5;i++){const value=$('#homeBanner'+i).value.trim();if(value&&!/^https:\/\//i.test(value))throw Error('Banner '+i+': HTTPS Image URL দিন');await api('/admin/settings',{key:'home_banner_'+i,value});}msg.textContent='ব্যানার সংরক্ষণ হয়েছে।';}catch(e){msg.textContent=e.message;}
 }
 
+
+
+async function demoDepositRequests(){
+ const d=await api('/admin/demo-deposits');
+ $('#view').innerHTML=`<div class="card"><h3>Demo Deposit Requests</h3><p class="muted">এগুলো কাল্পনিক পরীক্ষামূলক রেকর্ড। কোনো টাকা যাচাই বা কয়েন যোগ হয় না।</p><div id="demoDepositAdminList"></div></div>`;
+ renderDemoDepositRequests(d.requests||[]);
+}
+function renderDemoDepositRequests(rows){
+ const box=$('#demoDepositAdminList');if(!box)return;
+ box.innerHTML=rows.map(x=>`<div class="card"><b>${esc(x.username||x.email||'User')}</b><p>${esc(x.method)} · ৳${Number(x.amount)} (Demo)</p><p>Reference: ${esc(x.demo_reference)}</p><p>Status: ${esc(x.status)} · ${esc(x.created_at)}</p><button onclick="deleteDemoDeposit('${esc(x.id)}')">Delete Demo Record</button></div>`).join('')||'কোনো Demo Request নেই';
+}
+async function deleteDemoDeposit(id){if(!confirm('এই Demo Record মুছে ফেলবেন?'))return;try{await api('/admin/demo-deposits/'+encodeURIComponent(id),null,'DELETE');await demoDepositRequests();}catch(e){alert(e.message);}}
 
 async function coinRequests(){
  const d=await api('/admin/coin-requests');
