@@ -56,7 +56,36 @@ async function users(){const d=await api('/admin/users');$('#view').innerHTML=`<
 async function adjust(id){const amount=prompt('ফ্রি ক্রেডিট যোগ করতে positive, কমাতে negative amount লিখুন');if(amount===null)return;const note=prompt('কারণ লিখুন')||'Admin adjustment';try{await api('/admin/balance',{userId:id,amount:Number(amount),note});users()}catch(e){alert(e.message)}}
 async function cats(){const d=await api('/admin/categories');$('#view').innerHTML=`<div class="card"><h3>Add / Edit Category</h3><form id="cat"><input class="field" name="id" placeholder="ID (e.g. hot-games)"><input class="field" name="name" placeholder="Category name" required><input class="field" name="image_url" placeholder="Category image URL"><input class="field" name="sort_order" type="number" placeholder="Sort order"><button>Save Category</button></form></div><div class="card">${d.categories.map(c=>`<p>${esc(c.name)} · ${esc(c.image_url)} <button onclick="delCat('${c.id}')">Disable</button></p>`).join('')}</div>`;$('#cat').onsubmit=async e=>{e.preventDefault();const x=Object.fromEntries(new FormData(e.target));try{await api('/admin/categories',x);cats()}catch(err){alert(err.message)}}}
 async function delCat(id){if(confirm('Disable category?')){await api('/admin/categories/'+id,null,'DELETE');cats()}}
-async function games(){const [d,c]=await Promise.all([api('/admin/games'),api('/admin/categories')]);$('#view').innerHTML=`<div class="card"><h3>Add / Edit Game</h3><form id="game"><input class="field" name="id" placeholder="Game ID (e.g. my-game)"><input class="field" name="name" placeholder="Game name" required><select class="field" name="category_id">${c.categories.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><input class="field" name="image_url" placeholder="Game image URL"><select class="field" name="game_type"><option value="aviator">Aviator-style demo</option><option value="superace">Super Ace-style demo</option><option value="html">Custom HTML (sandboxed / informational)</option></select><label>Free-play HTML game upload (optional)</label><input class="field" id="htmlfile" type="file" accept=".html,.htm,text/html"><textarea class="field" id="htmlsource" name="html_content" placeholder="ফ্রি-প্লে HTML গেমের সোর্স (অথবা HTML ফাইল আপলোড করুন)"></textarea><input class="field" name="sort_order" type="number" placeholder="Sort order"><button>Save Game</button></form></div><div class="card">${d.games.map(g=>`<p>${esc(g.name)} · ${esc(g.game_type)} <button onclick="delGame('${g.id}')">Disable</button></p>`).join('')}</div>`;$('#htmlfile').onchange=async e=>{const f=e.target.files[0];if(f){if(f.size>500000) return alert('HTML ফাইল সর্বোচ্চ 500KB হতে পারবে');$('#htmlsource').value=await f.text();}};$('#game').onsubmit=async e=>{e.preventDefault();try{await api('/admin/games',Object.fromEntries(new FormData(e.target)));games()}catch(err){alert(err.message)}}}
+async function games(){
+ const [d,c]=await Promise.all([api('/admin/games'),api('/admin/categories')]);
+ const existing=d.games.filter(g=>['aviator','superace'].includes(g.game_type));
+ $('#view').innerHTML=`<div class="card"><h3>গেমের কার্ডের ছবি পরিবর্তন</h3>
+ <p class="muted">Aviator বা Super Ace নির্বাচন করে ছবির সরাসরি URL দিন। Save Game করলে ইউজার সাইটে ছবিটি দেখা যাবে।</p>
+ <form id="game">
+ <label>আগের গেম নির্বাচন করুন</label>
+ <select class="field" id="existingGame"><option value="">নতুন গেম / নিজে ID লিখুন</option>${d.games.map(g=>`<option value="${esc(g.id)}">${esc(g.name)} · ${esc(g.game_type)}</option>`).join('')}</select>
+ <input class="field" name="id" id="gameId" placeholder="Game ID (e.g. aviator)" required>
+ <input class="field" name="name" id="gameName" placeholder="Game name" required>
+ <select class="field" name="category_id" id="gameCategory">${c.categories.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select>
+ <label>কার্ডের ছবির লিংক (Image URL)</label>
+ <input class="field" name="image_url" id="gameImageUrl" placeholder="https://example.com/aviator-image.jpg" type="url">
+ <div id="gameImagePreview" class="muted" style="margin:4px 0 12px">ছবির লিংক দিলে এখানে প্রিভিউ দেখা যাবে।</div>
+ <label>Game Type</label>
+ <select class="field" name="game_type" id="gameType"><option value="aviator">Aviator</option><option value="superace">Super Ace</option><option value="html">Custom HTML</option></select>
+ <label>Free-play HTML game upload (optional)</label><input class="field" id="htmlfile" type="file" accept=".html,.htm,text/html">
+ <textarea class="field" id="htmlsource" name="html_content" placeholder="ফ্রি-প্লে HTML গেমের সোর্স (অথবা HTML ফাইল আপলোড করুন)"></textarea>
+ <input class="field" name="sort_order" id="gameSort" type="number" placeholder="Sort order">
+ <button class="primary">Save Game</button></form></div>
+ <div class="card"><h3>আগের গেমগুলো</h3>${d.games.map(g=>`<div class="row" style="justify-content:space-between;margin:8px 0"><span>${esc(g.name)} · ${esc(g.game_type)}</span><span><button type="button" onclick="editGame('${esc(g.id)}')">Edit</button> <button type="button" onclick="delGame('${esc(g.id)}')">Disable</button></span></div>`).join('')}</div>`;
+ window.adminGameRows=d.games;
+ const preview=()=>{const url=$('#gameImageUrl').value.trim(),box=$('#gameImagePreview');box.innerHTML=url?`<img src="${esc(url)}" alt="Image preview" style="max-width:100%;max-height:150px;border-radius:8px" onerror="this.outerHTML='<span class=\\'muted\\'>ছবিটি লোড করা যায়নি। URL পরীক্ষা করুন।</span>'">`:'ছবির লিংক দিলে এখানে প্রিভিউ দেখা যাবে।';};
+ $('#gameImageUrl').oninput=preview;
+ $('#existingGame').onchange=()=>{const g=d.games.find(x=>x.id===$('#existingGame').value);if(!g)return;$('#gameId').value=g.id;$('#gameName').value=g.name;$('#gameCategory').value=g.category_id||'';$('#gameImageUrl').value=g.image_url||'';$('#gameType').value=g.game_type;$('#gameSort').value=g.sort_order??'';preview();};
+ $('#htmlfile').onchange=async e=>{const f=e.target.files[0];if(f){if(f.size>500000)return alert('HTML ফাইল সর্বোচ্চ 500KB হতে পারবে');$('#htmlsource').value=await f.text();}};
+ $('#game').onsubmit=async e=>{e.preventDefault();try{await api('/admin/games',Object.fromEntries(new FormData(e.target)));alert('গেমের তথ্য ও ছবির লিংক সেভ হয়েছে');games()}catch(err){alert(err.message)}};
+}
+function editGame(id){const s=$('#existingGame');if(s){s.value=id;s.dispatchEvent(new Event('change'));window.scrollTo({top:0,behavior:'smooth'});}}
+
 async function delGame(id){if(confirm('Disable game?')){await api('/admin/games/'+id,null,'DELETE');games()}}
 async function settings(){const d=await api('/admin/settings');$('#view').innerHTML=`<div class="card"><h3>Site Settings</h3>${d.settings.map(s=>`<div><label>${esc(s.key)}</label><input class="field" id="set-${esc(s.key)}" value="${esc(s.value)}"><button onclick="saveSetting('${esc(s.key)}')">Save</button></div>`).join('')}<p class="muted">Settings values are stored in D1.</p></div>`}
 async function saveSetting(key){await api('/admin/settings',{key,value:$('#set-'+key).value});alert('Saved')}
