@@ -697,6 +697,21 @@ const MINI_GAME_INFO = {
   'fortune-wheel':{icon:'🎯',subtitle:'Spin for a multiplier',choices:[],hint:'চাকা ঘুরিয়ে 0x থেকে 10x পর্যন্ত ফল পান।'},
   'royal-keno':{icon:'👑',subtitle:'Pick a lucky number',choices:Array.from({length:10},(_,i)=>[String(i+1),String(i+1)]),hint:'১–১০ থেকে নম্বর বাছুন। মিললে 8x।'}
 };
+function miniGameStage(gameId) {
+  const stages = {
+    'gold-mines':'<div class="mg-mines-grid">'+Array.from({length:5},(_,i)=>'<span class="mg-mine-tile" style="--i:'+i+'">?</span>').join('')+'</div>',
+    'plinko':'<div class="mg-plinko"><div class="mg-plinko-pegs">'+Array.from({length:6},(_,r)=>'<div>'+Array.from({length:r+3},()=>'<i></i>').join('')+'</div>').join('')+'</div><span class="mg-plinko-ball">●</span><div class="mg-plinko-bins"><i>0.5x</i><i>1x</i><i>2x</i><i>5x</i><i>1x</i></div></div>',
+    'classic-dice':'<div class="mg-dice">⚄</div>',
+    'royal-coinflip':'<div class="mg-coin"><span>TK</span></div>',
+    'european-roulette':'<div class="mg-roulette-wrap"><div class="mg-roulette"><span>0</span>'+Array.from({length:11},(_,i)=>'<b>'+(i+1)+'</b>').join('')+'</div><i class="mg-roulette-pointer"></i></div>',
+    'blackjack-21':'<div class="mg-cards"><span>?</span><span>?</span><span>?</span></div>',
+    'baccarat':'<div class="mg-baccarat"><div><small>PLAYER</small><span>?</span><span>?</span></div><div><small>BANKER</small><span>?</span><span>?</span></div></div>',
+    'diamond-slots':'<div class="mg-reels"><span>💎</span><span>👑</span><span>7️⃣</span></div>',
+    'fortune-wheel':'<div class="mg-wheel-wrap"><i class="mg-wheel-pointer"></i><div class="mg-wheel"><b>2x</b><b>5x</b><b>0x</b><b>3x</b><b>10x</b><b>1x</b><b>4x</b><b>0x</b></div></div>',
+    'royal-keno':'<div class="mg-keno-balls">'+Array.from({length:10},(_,i)=>'<span style="--i:'+i+'">'+(i+1)+'</span>').join('')+'</div>'
+  };
+  return '<div class="mini-stage mini-stage-'+gameId+'" id="miniStage">'+(stages[gameId]||'<div class="mg-fallback">✨</div>')+'</div>';
+}
 function miniGame(g) {
   stopCrashMonitor();
   const info = MINI_GAME_INFO[g.id];
@@ -708,14 +723,15 @@ function miniGame(g) {
     <div class="page mini-game-page">
       <div class="mini-game-top"><button class="secondary" onclick="home()">‹ BACK</button><b>${esc(g.name)}</b><span id="miniBalance">${Number(me.balance).toLocaleString("en-US")} Coin</span></div>
       <section class="card mini-game-board">
-        <div class="mini-game-icon" id="miniIcon">${info.icon}</div>
+        <div class="mini-game-kicker">TK777 • FREE ARCADE</div>
         <h2>${esc(g.name)}</h2><p class="muted">${esc(info.subtitle)}</p>
+        ${miniGameStage(g.id)}
         <div class="mini-result" id="miniResult">READY TO PLAY</div>
         <div class="mini-detail" id="miniDetail">${esc(info.hint)}</div>
-        ${buttons ? '<div class="mini-choices" id="miniChoices">'+buttons+'</div>' : '<div class="mini-auto-art">'+info.icon+'</div>'}
+        ${buttons ? '<div class="mini-choices" id="miniChoices">'+buttons+'</div>' : ''}
         <label for="miniBet">BET · VIRTUAL COIN</label>
         <input class="field" id="miniBet" type="number" min="1" max="1000000" step="1" value="10">
-        <button class="primary mini-play-button" id="miniPlay" onclick="playMiniGame('${esc(g.id)}')">PLAY NOW</button>
+        <button class="primary mini-play-button" id="miniPlay" onclick="playMiniGame('${esc(g.id)}')">▶ PLAY NOW</button>
         <small class="muted">শুধু নগদমূল্যহীন Virtual Coin · কোনো বাস্তব অর্থ নয়</small>
       </section>
       <button class="secondary" onclick="home()">ফিরে যান</button>
@@ -735,9 +751,14 @@ async function playMiniGame(gameId) {
   const info = MINI_GAME_INFO[gameId];
   if (info?.choices.length && !choice) return toast('আগে একটি অপশন বেছে নিন');
   button.disabled = true;
-  button.textContent = 'PLAYING...';
+  button.textContent = 'ANIMATING...';
+  const stage = document.getElementById('miniStage');
+  if (stage) { stage.classList.remove('is-result'); stage.classList.add('is-spinning'); }
+  const startedAt = Date.now();
   try {
     const r = await api('/mini-play',{gameId,betAmount:bet,choice});
+    const remaining = Math.max(0,1700-(Date.now()-startedAt));
+    if (remaining) await new Promise(resolve=>setTimeout(resolve,remaining));
     me.balance = r.balance;
     const bal = document.getElementById('miniBalance');
     if (bal) bal.textContent = Number(r.balance).toLocaleString('en-US')+' Coin';
@@ -745,13 +766,13 @@ async function playMiniGame(gameId) {
     if (result) result.textContent = r.result;
     const detail = document.getElementById('miniDetail');
     if (detail) detail.textContent = r.detail+' · '+r.multiplier+'x · পেআউট '+r.payout+' কয়েন';
-    const icon = document.getElementById('miniIcon');
-    if (icon) icon.classList.add('mini-animate');
+    if (stage) { stage.classList.remove('is-spinning'); stage.classList.add('is-result'); }
     toast(r.payout > bet ? 'আপনি জিতেছেন!' : r.payout === bet ? 'বেট ফেরত এসেছে' : 'এই রাউন্ডে জয় হয়নি');
-  } catch(e) { toast(e.message); }
-  finally { button.disabled = false; button.textContent = 'PLAY AGAIN'; }
+  } catch(e) {
+    if (stage) stage.classList.remove('is-spinning');
+    toast(e.message);
+  } finally { button.disabled = false; button.textContent = '↻ PLAY AGAIN'; }
 }
-
 /* ==========================================
    TK777 FLIGHT GAME SCREEN
 ========================================== */
