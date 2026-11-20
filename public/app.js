@@ -1450,6 +1450,25 @@ async function cashout(index) {
    SUPER ACE
 ========================================== */
 
+function renderSuperAceCards(randomize = false) {
+  const faces = [
+    {rank:'A',symbol:'♠',kind:'ace'},
+    {rank:'K',symbol:'♛',kind:'king'},
+    {rank:'Q',symbol:'♛',kind:'queen'},
+    {rank:'J',symbol:'♞',kind:'jack'},
+    {rank:'',symbol:'♠',kind:'spade'}
+  ];
+  return Array.from({length:20},(_,i) => {
+    const item = randomize
+      ? {rank:['A','K','Q','J','10'][Math.floor(Math.random()*5)],symbol:['♠','♥','♦','♣'][Math.floor(Math.random()*4)],kind:'random'}
+      : faces[i%5];
+    return `<div class="sa-card sa-${item.kind}">
+      ${item.rank ? `<span class="sa-rank">${item.rank}</span>` : ''}
+      <span class="sa-art">${item.symbol}</span>
+    </div>`;
+  }).join('');
+}
+
 function superAce(g) {
   stopCrashMonitor();
 
@@ -1459,25 +1478,33 @@ function superAce(g) {
       <b>${esc(g.name)}</b>
       <span id="gameBalance">${money(me.balance)}</span>
     </div>
-
-    <div class="game-screen">
-      <div class="super-board">
-        <div class="ace-head">SUPER ACE</div>
-        <p class="ace-sub">FREE CARD GAME</p>
-        <div class="cards-grid" id="cards">
-          ${Array.from({length:20},(_,i) =>
-            `<div class="playing-card">${['♠','♥','♦','♣'][i%4]}</div>`
-          ).join('')}
+    <div class="game-screen sa-screen">
+      <div class="sa-cabinet">
+        <div class="sa-wood-top">
+          <div class="sa-buy-bonus">BUY<br>BONUS</div>
+          <div class="sa-brand">SUPER ACE</div>
+          <div class="sa-multipliers">
+            <span class="active">×1</span><span>×2</span><span>×3</span><span>×5</span>
+          </div>
+          <div class="sa-wild-note">MATCH THE CARDS • WIN BIG <span>♛ WILD</span></div>
         </div>
-      </div>
-
-      <div class="card">
-        <label>Bet Amount</label>
-        <input class="field" id="acebet"
-          type="number" min="1" max="1000000" step="1" value="10">
-        <button class="primary" id="aceSpin"
-          onclick="playAce('${esc(g.id)}')">SPIN</button>
-        <div id="result" class="notice">Spin চাপুন</div>
+        <div class="sa-reel-frame">
+          <div class="cards-grid sa-cards" id="cards">
+            ${renderSuperAceCards()}
+          </div>
+        </div>
+        <div class="sa-win-line"><span>WIN</span><strong id="saWin">0.000</strong></div>
+        <div class="sa-controls">
+          <div class="sa-control-icon">⚙</div>
+          <div class="sa-bet-control">
+            <label for="acebet">BET</label>
+            <input id="acebet" type="number" min="1" max="1000000" step="1" value="10">
+          </div>
+          <button class="sa-spin" id="aceSpin" onclick="playAce('${esc(g.id)}')"><span>✦</span><small>SPIN</small></button>
+          <div class="sa-control-icon sa-turbo">↻</div>
+        </div>
+        <div class="sa-balance-line"><span>LV 0</span> Balance <strong id="gameBalanceBottom">${money(me.balance)}</strong></div>
+        <div id="result" class="sa-result">স্পিন করতে গোল্ড বাটনে চাপ দিন</div>
       </div>
     </div>
   `);
@@ -1503,14 +1530,14 @@ async function playAce(gameId) {
 
     const suits = ['♠','♥','♦','♣'];
 
-    $('#cards').innerHTML = Array.from({length:20},() =>
-      `<div class="playing-card">${suits[Math.floor(Math.random()*suits.length)]}</div>`
-    ).join('');
+    $('#cards').innerHTML = renderSuperAceCards(true);
 
+    $('#saWin').textContent = Number(r.payout || 0).toFixed(3);
     $('#result').textContent =
       `ফলাফল ${r.multiplier}x · পেআউট ${r.payout} ক্রেডিট · ব্যালেন্স ${money(r.balance)}`;
 
     $('#gameBalance').textContent = money(r.balance);
+    $('#gameBalanceBottom').textContent = money(r.balance);
 
   } catch (e) {
     toast(e.message);
