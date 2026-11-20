@@ -277,7 +277,6 @@ async function route(req, env) {
     const password = String(body.password || "");
     const confirmPassword = String(body.confirmPassword || "");
     const bnDigits = "০১২৩৪৫৬৭৮৯";
-    phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
     phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
@@ -296,7 +295,6 @@ async function route(req, env) {
     let phone = String(body.phone || "").trim();
     const password = body.password;
     const bnDigits = "০১২৩৪৫৬৭৮৯";
-    phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
     phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
