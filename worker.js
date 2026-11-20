@@ -706,6 +706,36 @@ async function route(req, env) {
         ? json({ user })
         : json({ error: "লগইন করুন" }, 401);
     }
+    if (p === "/api/security/profile" && user && method === "GET") {
+      for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
+      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();return json({profile:profile||{}});
+    }
+    if (p === "/api/security/profile" && user && method === "POST") {
+      for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
+      const b=await req.json(),n=String(b.displayName||"").trim().slice(0,60),w=String(b.whatsapp||"").trim(),f=String(b.facebook||"").trim(),g=String(b.gmail||"").trim();
+      if(n&&n.length<2)return json({error:"নাম কমপক্ষে ২ অক্ষরের হতে হবে"},400);
+      if(w&&(w.length<8||w.length>20))return json({error:"সঠিক WhatsApp নম্বর দিন"},400);
+      if(f&&(!(f.startsWith("https://facebook.com/")||f.startsWith("https://www.facebook.com/")||f.startsWith("https://fb.com/"))||f.length>250))return json({error:"সঠিক Facebook https লিংক দিন"},400);
+      if(g&&(!g.toLowerCase().endsWith("@gmail.com")||!g.includes("@")||g.length>254))return json({error:"সঠিক Gmail ঠিকানা দিন"},400);
+      const old=await env.DB.prepare("SELECT display_name FROM users WHERE id=?").bind(user.id).first();if(n&&old?.display_name&&n!==old.display_name)return json({error:"নাম একবার সেভ হলে নিজে পরিবর্তন করা যাবে না"},409);
+      await env.DB.prepare("UPDATE users SET display_name=CASE WHEN display_name IS NULL OR display_name='' THEN ? ELSE display_name END,whatsapp_number=?,facebook_url=?,gmail=? WHERE id=?").bind(n,w,f,g,user.id).run();
+      const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();return json({ok:true,nameSaved:!!profile?.display_name,profile});
+    }
+    if (p === "/api/security/password" && user && method === "POST") {
+      const b=await req.json(),old=String(b.oldPassword||""),next=String(b.newPassword||"");if(!old||next.length<6||next.length>128)return json({error:"পুরোনো পাসওয়ার্ড ও ৬–১২৮ অক্ষরের নতুন পাসওয়ার্ড দিন"},400);
+      const row=await env.DB.prepare("SELECT password_hash,password_salt FROM users WHERE id=?").bind(user.id).first();if(!row||await passHash(old,row.password_salt)!==row.password_hash)return json({error:"পুরোনো পাসওয়ার্ড সঠিক নয়"},401);
+      const salt=uid(),ph=await passHash(next,salt);await env.DB.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id=?").bind(ph,salt,user.id).run();
+      const t=(req.headers.get("Authorization")||"").replace(/^Bearer /,"");if(t)await env.DB.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash!=?").bind(user.id,await hash(t)).run();return json({ok:true,message:"লগইন পাসওয়ার্ড পরিবর্তন হয়েছে।"});
+    }
+    if (p === "/api/security/withdraw-password" && user && method === "POST") {
+      for (const [c,d] of [["withdraw_password_hash","TEXT NOT NULL DEFAULT ''"],["withdraw_password_salt","TEXT NOT NULL DEFAULT ''"],["withdraw_password_attempts","INTEGER NOT NULL DEFAULT 0"],["withdraw_password_locked_until","INTEGER NOT NULL DEFAULT 0"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
+      const b=await req.json(),old=String(b.oldPassword||""),next=String(b.newPassword||"");if(!/^[0-9]{6}$/.test(old)||!/^[0-9]{6}$/.test(next))return json({error:"বর্তমান ও নতুন ৬ সংখ্যার পাসওয়ার্ড দিন"},400);
+      const row=await env.DB.prepare("SELECT withdraw_password_hash,withdraw_password_salt,withdraw_password_locked_until FROM users WHERE id=?").bind(user.id).first();if(!row?.withdraw_password_hash)return json({error:"আগে Withdrawal পেজ থেকে একটি উইথড্র পাসওয়ার্ড সেট করুন"},400);
+      if(Number(row.withdraw_password_locked_until||0)>Date.now())return json({error:"অনেকবার ভুল হয়েছে। ১৫ মিনিট পর আবার চেষ্টা করুন।"},429);
+      if(await passHash(old,String(row.withdraw_password_salt||""))!==String(row.withdraw_password_hash)){await env.DB.prepare("UPDATE users SET withdraw_password_attempts=withdraw_password_attempts+1,withdraw_password_locked_until=CASE WHEN withdraw_password_attempts+1>=5 THEN ? ELSE withdraw_password_locked_until END WHERE id=?").bind(Date.now()+15*60*1000,user.id).run();return json({error:"বর্তমান উইথড্র পাসওয়ার্ড সঠিক নয়"},401);}
+      const salt=uid(),ph=await passHash(next,salt);await env.DB.prepare("UPDATE users SET withdraw_password_hash=?,withdraw_password_salt=?,withdraw_password_attempts=0,withdraw_password_locked_until=0 WHERE id=?").bind(ph,salt,user.id).run();return json({ok:true,message:"উইথড্র পাসওয়ার্ড পরিবর্তন হয়েছে।"});
+    }
+
     if (p === "/api/wallet-number" && user && (method === "GET" || method === "POST")) {
       await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
       if(method === "GET"){
@@ -1635,7 +1665,8 @@ async function route(req, env) {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       const userId = decodeURIComponent(p.slice("/api/admin/users/".length));
       await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
-      const target = await env.DB.prepare("SELECT id,username,email,balance,role,created_at,wallet_number FROM users WHERE id=?").bind(userId).first();
+      for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
+      const target = await env.DB.prepare("SELECT id,username,display_name,email,whatsapp_number,facebook_url,gmail,balance,role,created_at,wallet_number FROM users WHERE id=?").bind(userId).first();
       if (!target) return json({ error: "ইউজার পাওয়া যায়নি" }, 404);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
