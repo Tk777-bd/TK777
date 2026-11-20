@@ -878,3 +878,23 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
 .aviator-stage .flight-chart.graph-crashed{
   opacity:0;
 }
+
+
+/* Keep the live multiplier fixed at the visual center of the flight stage. */
+.aviator-stage .multiplier{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:8;
+  width:max-content;
+  margin:0;
+  text-align:center;
+  pointer-events:none;
+}
+/* The graph endpoint is driven by the same coordinates as the aircraft. */
+.aviator-stage .plane-wrap.plane-hover,
+.aviator-stage .plane-wrap.plane-approach{
+  animation:none;
+  transition:none;
+}
