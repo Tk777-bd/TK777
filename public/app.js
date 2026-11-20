@@ -591,7 +591,7 @@ async function depositPage(){
 }
 async function loadDemoDeposits(){
  const box=document.getElementById('demoDepositHistory');if(!box)return;
- try{const d=await api('/demo-deposits');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · ৳'+Number(x.amount)+' (Demo)<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?'Pending':'Deleted')+'</b></div>').join('')||'এখনো কোনো Demo Request নেই';}
+ try{const d=await api('/demo-deposits');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · ৳'+Number(x.amount)+' (Demo)<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?'Pending':x.status==='accepted'?'Accepted':'Cancelled')+'</b></div>').join('')||'এখনো কোনো Demo Request নেই';}
  catch(e){box.textContent=e.message;}
 }
 async function submitDemoDeposit(){
