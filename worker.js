@@ -446,7 +446,7 @@ async function route(req, env) {
       `).run();
 
       // Built-in free virtual-coin mini games; no paid provider/API required.
-      const miniGames = [["gold-mines","Gold Mines","slots",4],["plinko","Plinko","slots",5],["classic-dice","Classic Dice","hot",6],["royal-coinflip","Royal Coinflip","hot",7],["european-roulette","European Roulette","live",8],["blackjack-21","Blackjack 21","poker",9],["baccarat","Baccarat","live",10],["diamond-slots","Diamond Slots","slots",11],["fortune-wheel","Fortune Wheel","lottery",12],["royal-keno","Royal Keno","lottery",13]];
+      const miniGames = [["gold-mines","Gold Mines","slots",4],["plinko","Plinko","slots",5],["classic-dice","Classic Dice","hot",6],["royal-coinflip","Royal Coinflip","hot",7],["european-roulette","European Roulette","live",8],["blackjack-21","Blackjack 21","poker",9],["baccarat","Baccarat","live",10],["diamond-slots","Diamond Slots","slots",11],["fortune-wheel","Fortune Wheel","lottery",12],["royal-keno","Royal Keno","lottery",13],["live-roulette","Live Roulette","live",14],["live-blackjack","Live Blackjack","live",15],["live-baccarat","Live Baccarat","live",16]];
       for (const [id,name,category,order] of miniGames) {
         await env.DB.prepare(`
           INSERT OR IGNORE INTO games
@@ -674,6 +674,26 @@ async function route(req, env) {
         multiplier = selected === drawn ? 8 : 0;
         result = "ড্র নম্বর: " + drawn;
         detail = selected === drawn ? "নম্বর মিলেছে!" : "নম্বর মেলেনি";
+      } else if (gameId === "live-roulette") {
+        if (!["red","black","green"].includes(choice)) return json({error:"রং বাছুন"},400);
+        const n = Math.floor(rand() * 37);
+        const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+        const color = n === 0 ? "green" : red.has(n) ? "red" : "black";
+        multiplier = choice === color ? (color === "green" ? 14 : 1.9) : 0;
+        result = "ডিলারের রুলেট থেমেছে " + n + " · " + color.toUpperCase();
+        detail = "সিমুলেটেড লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
+      } else if (gameId === "live-blackjack") {
+        const player = 15 + Math.floor(rand() * 7);
+        const dealer = 15 + Math.floor(rand() * 7);
+        multiplier = player <= 21 && (dealer > 21 || player > dealer) ? 1.9 : player === dealer ? 1 : 0;
+        result = "PLAYER " + player + " · DEALER " + dealer;
+        detail = "ডিলারের কার্ড খোলা হয়েছে · " + (multiplier === 1.9 ? "আপনি জিতেছেন" : multiplier === 1 ? "টাই" : "ডিলার জিতেছেন");
+      } else if (gameId === "live-baccarat") {
+        if (!["player","banker","tie"].includes(choice)) return json({error:"Player, Banker অথবা Tie বাছুন"},400);
+        const outcome = pick(["player","banker","player","banker","tie"]);
+        multiplier = choice === outcome ? (outcome === "tie" ? 8 : 1.95) : 0;
+        result = "ডিলারের ফলাফল: " + outcome.toUpperCase();
+        detail = "সিমুলেটেড লাইভ টেবিল · আপনার পছন্দ " + choice.toUpperCase();
       } else {
         return json({error:"এই গেমটি সমর্থিত নয়"},400);
       }
