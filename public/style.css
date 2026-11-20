@@ -712,3 +712,53 @@ body{background:#063b39}
 .aviator-cashout-button:disabled{display:none}
 .aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-bet-button{display:none}
 .aviator-bet-card:has(.aviator-cashout-button:not(:disabled)) .aviator-cashout-button{display:block}
+
+/* Fine alignment pass against the supplied mobile reference footage */
+.aviator-app{max-width:720px;background:#101010}
+.aviator-header{height:clamp(42px,10vw,72px);padding:0 clamp(9px,2.2vw,17px);gap:clamp(7px,2vw,14px)}
+.aviator-wordmark{font-size:clamp(22px,4.2vw,32px);letter-spacing:-1.8px}
+.aviator-wordmark span{display:none}
+.aviator-wallet small{display:none}
+.aviator-wallet b{font-size:clamp(12px,3.8vw,25px);letter-spacing:.2px}
+.aviator-menu{flex:0 0 auto;padding:0;background:transparent;color:#777;font-size:clamp(17px,3.4vw,24px);line-height:1}
+.aviator-ticker{height:clamp(25px,6.1vw,44px);gap:clamp(8px,2vw,15px);padding:0 clamp(10px,3vw,23px)}
+.ticker-label{display:none}
+.ticker-values{width:100%;justify-content:space-between;gap:clamp(9px,2.5vw,18px)}
+.ticker-values span{font-size:clamp(10px,2.5vw,17px);font-weight:500}
+.aviator-game-body{padding:clamp(6px,1vw,8px) clamp(5px,1vw,8px) 0}
+.aviator-stage{height:clamp(195px,50.7vw,365px);min-height:195px;border:1px solid #262626;border-radius:clamp(8px,2vw,15px)}
+.aviator-funbar{height:clamp(22px,5.8vw,42px);font-size:clamp(10px,2.6vw,18px);border-radius:10px 10px 0 0}
+.multiplier{font-size:clamp(42px,13vw,94px);letter-spacing:-3px}
+.aviator-promo{width:min(70%,390px);height:66%;max-height:260px;min-height:110px}
+.promo-kicker{font-size:clamp(8px,1.7vw,13px)}
+.promo-title{font-size:clamp(18px,4.5vw,32px)}
+.promo-stamp{font-size:clamp(7px,1.4vw,10px)}
+.promo-plane{font-size:clamp(28px,5vw,38px)}
+.plane-wrap svg{width:clamp(75px,20vw,145px)}
+.aviator-bet-panels{gap:clamp(6px,1.1vw,9px);margin-top:clamp(7px,1.2vw,10px)}
+.aviator-bet-card{padding:clamp(6px,1.8vw,13px);border-radius:clamp(8px,1.6vw,12px)}
+.bet-mode-tabs{height:clamp(22px,5.7vw,41px);gap:4px;margin-bottom:clamp(5px,1.3vw,10px)}
+.mode-tab{font-size:clamp(9px,2.2vw,16px);line-height:clamp(19px,5vw,36px);border-radius:20px}
+.bet-card-main{gap:clamp(4px,1vw,8px)}
+.bet-amount-wrap{height:clamp(29px,6.8vw,49px);gap:4px;border-radius:20px;padding:3px}
+.bet-amount-wrap button{flex-basis:clamp(18px,4vw,29px);height:clamp(22px,5.5vw,40px);border-radius:50%;font-size:clamp(12px,2.7vw,19px)}
+.bet-amount-wrap input{font-size:clamp(11px,3vw,21px)}
+.quick-bets{gap:clamp(3px,.6vw,5px);margin-top:clamp(4px,1vw,7px)}
+.quick-bets button{height:clamp(22px,6vw,43px);font-size:clamp(10px,2.5vw,18px);border-radius:18px}
+.aviator-bet-button,.aviator-cashout-button{height:clamp(62px,20vw,145px);font-size:clamp(17px,4.8vw,34px);line-height:1.25;border-radius:clamp(7px,1.4vw,10px);border:1px solid #777}
+.aviator-bet-button b,.aviator-cashout-button b{font-size:clamp(15px,4.2vw,30px);font-weight:400}
+.aviator-cancel-button{min-height:clamp(22px,4vw,29px);font-size:clamp(9px,1.8vw,13px)}
+.aviator-auto-row{gap:4px;margin-top:clamp(5px,1vw,8px);padding-top:clamp(4px,.8vw,6px);font-size:clamp(7px,1.5vw,11px)}
+.aviator-auto-row input[type=checkbox]{width:clamp(10px,1.8vw,13px);height:clamp(10px,1.8vw,13px)}
+.auto-cash-label input{width:clamp(34px,7vw,50px);font-size:clamp(8px,1.5vw,11px)}
+.aviator-slot-status{font-size:clamp(7px,1.4vw,10px)}
+.aviator-slot-status small{font-size:clamp(7px,1.3vw,9px)}
+.aviator-bottom-feed{margin-top:clamp(8px,1.5vw,11px);padding:clamp(6px,1.5vw,11px);border-radius:clamp(8px,1.6vw,12px)}
+.feed-tabs{gap:clamp(4px,.8vw,6px)}
+.feed-tabs button{height:clamp(24px,6.5vw,47px);font-size:clamp(10px,2.5vw,18px);border-radius:22px}
+.feed-summary{padding:clamp(8px,2vw,14px) 2px 3px;font-size:clamp(10px,2.5vw,18px)}
+.feed-summary span{font-size:clamp(8px,2vw,14px)}
+.aviator-bottom-feed .crash-history{min-height:clamp(35px,7vw,50px);padding:5px 2px 7px}
+.aviator-bottom-feed .crash-history span{min-width:clamp(45px,8vw,58px);padding:clamp(4px,1vw,7px);font-size:clamp(8px,1.7vw,12px)}
+.aviator-footer-note{font-size:8px}
+@media(max-width:380px){.aviator-bet-panels{gap:4px}.aviator-bet-card{padding:5px}.bet-card-main{grid-template-columns:43% 57%}.aviator-auto-row{font-size:6px}}
