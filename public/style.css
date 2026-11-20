@@ -1358,11 +1358,3 @@ body{background:#063b39}
 @keyframes dealerNod{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
 
 
-/* Official JILI demo link card */
-.jili-demo-card{display:flex;align-items:center;gap:12px;padding:10px;border-radius:13px;background:linear-gradient(110deg,#164b37,#0b302c);border:1px solid #b69b3c;color:var(--text);text-decoration:none;min-height:112px;overflow:hidden}
-.jili-demo-card>img{width:82px;height:96px;object-fit:cover;border-radius:9px;flex:0 0 auto}
-.jili-demo-copy{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
-.jili-demo-copy strong{font-size:16px;color:#ffe078}
-.jili-demo-copy small{font-size:11px;color:#d1e4d9}
-.jili-demo-copy b{margin-top:3px;padding:6px 11px;border-radius:18px;background:#f6c94b;color:#30260c;font-size:11px}
-.jili-demo-note{font-size:11px;line-height:1.5;color:#a9c2b9;margin:7px 2px 0}
