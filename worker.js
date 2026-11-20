@@ -379,7 +379,14 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
-    if (p === "/api/home-banners" && method === "GET") {
+    if (p === "/api/support-settings" && method === "GET") {
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url')").all();
+      const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
+      const image = String(values.support_telegram_image_url || '');
+      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : ''});
+    }
+
+  if (p === "/api/home-banners" && method === "GET") {
       const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'home_banner_%' ORDER BY key").all();
       const banners = (rows.results || [])
         .map(r => String(r.value || "").trim())
