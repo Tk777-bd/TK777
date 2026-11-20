@@ -382,7 +382,7 @@ function displaySlotCard(g) {
 
 function homeGamesWithSlots() {
   const list = [...games];
-  const at = list.findIndex(g => /super\\s*ace/i.test(String(g.name || '')));
+  const at = list.findIndex(g => /super\s*ace/i.test(String(g.name || '')));
   list.splice(at < 0 ? list.length : at + 1, 0, ...displaySlotGames);
   return list;
 }
