@@ -919,8 +919,23 @@ function updateFlightCurve(multiplier) {
   dot.setAttribute('cx',x);
   dot.setAttribute('cy',y);
 
-  wrap.style.left = (x/10)+'%';
-  wrap.style.top = (y/4.4)+'%';
+  // Anchor the graph tip to the aircraft's actual nose/propeller point,
+  // not to the center of the plane wrapper. This keeps the red line attached
+  // even while the aircraft bobs up and down.
+  const stage = wrap.closest('.aviator-stage');
+  const planeSvg = wrap.querySelector('svg');
+  if (stage && planeSvg) {
+    const stageRect = stage.getBoundingClientRect();
+    const planeRect = planeSvg.getBoundingClientRect();
+    const tipX = (x/1000)*stageRect.width;
+    const tipY = (y/440)*stageRect.height;
+    const noseOffsetX = (438-280)/340*planeRect.width;
+    const noseOffsetY = (215-195)/200*planeRect.height;
+    const wrapperCenterX = tipX - noseOffsetX;
+    const wrapperCenterY = tipY - noseOffsetY;
+    wrap.style.left = (wrapperCenterX/stageRect.width*100)+'%';
+    wrap.style.top = (wrapperCenterY/stageRect.height*100)+'%';
+  }
   wrap.classList.remove('plane-hover','plane-approach');
 
   path.style.strokeDasharray = 'none';
