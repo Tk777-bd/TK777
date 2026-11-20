@@ -1324,6 +1324,7 @@ async function route(req, env) {
         return json({ error: "Admin access প্রয়োজন" }, 403);
       }
 
+      await env.DB.prepare("UPDATE games SET name='Aviator' WHERE id='aviator' AND name='Aviator Free'").run();
       const rows = await env.DB.prepare(`
         SELECT * FROM games ORDER BY sort_order
       `).all();
