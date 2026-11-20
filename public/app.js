@@ -561,7 +561,7 @@ function showWithdrawDemoIds(kind){
 async function withdrawPage(){
  if(!me)return showAuth();selectedWithdrawMethod='';
  shell(`<div class="page member-subpage"><div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>${esc(withdrawText('pageTitle'))}</h2></div>
- <div class="card coin-request-card"><p class="muted">${esc(withdrawText('safetyNote'))}</p><label for="withdrawWalletNumber" style="display:block;font-size:19px;font-weight:800;margin:16px 0 8px">আপনার বিকাশ / নগদ / রকেট ওয়ালেট নম্বর</label><input id="withdrawWalletNumber" class="field" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="যে নম্বরে Request দিতে চান" style="font-size:20px;min-height:58px;padding:14px"><h3>${esc(withdrawText('methodTitle'))}</h3><div class="demo-payment-methods">
+ <div class="card coin-request-card"><p class="muted">${esc(withdrawText('safetyNote'))}</p><label for="withdrawWalletNumber" style="display:block;font-size:15px;font-weight:700;margin:12px 0 6px">ওয়ালেট নম্বর</label><div style="display:flex;gap:8px;align-items:center"><input id="withdrawWalletNumber" class="field" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="ওয়ালেট নাম্বার দিন" style="flex:1;min-width:0;font-size:15px;min-height:42px;padding:9px"><button id="saveWithdrawWalletBtn" type="button" class="primary" onclick="saveWithdrawWalletNumber()" style="width:auto;min-width:64px;padding:10px 14px;margin:0">সেভ</button></div><small id="withdrawWalletMsg" class="muted"></small><div id="withdrawPasswordSetup" style="margin:14px 0"><label for="withdrawPasswordSet" style="display:block;font-weight:700;margin-bottom:6px">৬ সংখ্যার উইথড্র পাসওয়ার্ড সেট করুন</label><div style="display:flex;gap:8px;align-items:center"><input id="withdrawPasswordSet" class="field" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" placeholder="৬ সংখ্যার পাসওয়ার্ড" style="flex:1;min-width:0;min-height:42px;padding:9px"><button id="saveWithdrawPasswordBtn" type="button" class="primary" onclick="saveWithdrawPassword()" style="width:auto;min-width:64px;padding:10px 14px;margin:0">সেভ</button></div><small id="withdrawPasswordMsg" class="muted"></small></div><div id="withdrawPasswordEntry" hidden><label for="withdrawPassword" style="display:block;font-weight:700;margin:10px 0 6px">উইথড্র পাসওয়ার্ড</label><input id="withdrawPassword" class="field" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="৬ সংখ্যার পাসওয়ার্ড দিন" style="max-width:220px"></div><h3>${esc(withdrawText('methodTitle'))}</h3><div class="demo-payment-methods">
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash');showWithdrawDemoIds('bkash')">${esc(withdrawText('methodBkash'))} <small>${esc(withdrawText('demoBadge'))}</small></button>
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad');showWithdrawDemoIds('nagad')">${esc(withdrawText('methodNagad'))} <small>${esc(withdrawText('demoBadge'))}</small></button>
  <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket');showWithdrawDemoIds('rocket')">${esc(withdrawText('methodRocket'))} <small>${esc(withdrawText('demoBadge'))}</small></button></div>
@@ -570,17 +570,29 @@ async function withdrawPage(){
  <h3>${esc(withdrawText('historyTitle'))}</h3><div id="withdrawRequestHistory" class="card">${esc(withdrawText('loadingText'))}</div><button class="secondary" onclick="page('member')">${esc(withdrawText('backButton'))}</button></div>`);
  loadWithdrawRequests();
  loadWithdrawWalletNumber();
+ loadWithdrawPassword();
 }
 async function loadWithdrawWalletNumber(){
  const input=document.getElementById('withdrawWalletNumber'),btn=document.getElementById('saveWithdrawWalletBtn'),msg=document.getElementById('withdrawWalletMsg');if(!input)return;
- try{const d=await api('/wallet-number');if(d.walletNumber){input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.style.display='none';if(msg)msg.textContent='নম্বর সেট করা আছে। পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।';}}
+ try{const d=await api('/wallet-number');if(d.walletNumber){input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ করা আছে।';}}
  catch(e){if(msg)msg.textContent=e.message;}
 }
 async function saveWithdrawWalletNumber(){
  const input=document.getElementById('withdrawWalletNumber'),msg=document.getElementById('withdrawWalletMsg'),btn=document.getElementById('saveWithdrawWalletBtn'),walletNumber=String(input?.value||'').trim();
  if(!/^[0-9+ -]{8,20}$/.test(walletNumber)){if(msg)msg.textContent='সঠিক ওয়ালেট নম্বর লিখুন।';return;}
- if(!confirm('এই নম্বরটি একবার সেট করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
- try{const d=await api('/wallet-number',{walletNumber});input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.style.display='none';if(msg)msg.textContent='নম্বর সেট হয়েছে। পরিবর্তনের জন্য অ্যাডমিনের সাহায্য নিন।';}catch(e){if(msg)msg.textContent=e.message;}
+ if(!confirm('এই নম্বরটি একবার সেভ করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
+ try{const d=await api('/wallet-number',{walletNumber});input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ হয়েছে।';}catch(e){if(msg)msg.textContent=e.message;}
+}
+async function loadWithdrawPassword(){
+ const setup=document.getElementById('withdrawPasswordSetup'),entry=document.getElementById('withdrawPasswordEntry');if(!setup||!entry)return;
+ try{const d=await api('/withdraw-password/status');if(d.passwordSet){setup.remove();entry.hidden=false;}else{setup.hidden=false;entry.hidden=true;}}
+ catch(e){const msg=document.getElementById('withdrawPasswordMsg');if(msg)msg.textContent=e.message;}
+}
+async function saveWithdrawPassword(){
+ const input=document.getElementById('withdrawPasswordSet'),msg=document.getElementById('withdrawPasswordMsg'),btn=document.getElementById('saveWithdrawPasswordBtn'),password=String(input?.value||'');
+ if(!/^\\d{6}$/.test(password)){if(msg)msg.textContent='ঠিক ৬ সংখ্যার পাসওয়ার্ড দিন।';return;}
+ if(!confirm('এই উইথড্র পাসওয়ার্ডটি একবার সেট করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
+ try{await api('/withdraw-password/set',{password});const setup=document.getElementById('withdrawPasswordSetup'),entry=document.getElementById('withdrawPasswordEntry');if(setup)setup.remove();if(entry)entry.hidden=false;const pass=document.getElementById('withdrawPassword');if(pass)pass.focus();}catch(e){if(msg)msg.textContent=e.message;}
 }
 async function loadWithdrawRequests(){
  const box=document.getElementById('withdrawRequestHistory');if(!box)return;
@@ -595,12 +607,14 @@ async function withdrawRecordPage(){
 async function submitWithdrawRequest(){
  const msg=document.getElementById('withdrawRequestMsg');if(!msg)return;
  const amount=Number(document.getElementById('withdrawCoinAmount')?.value);
- const walletNumber=String(document.getElementById('withdrawWalletNumber')?.value||'').trim();
+ const walletInput=document.getElementById('withdrawWalletNumber');
+ const password=String(document.getElementById('withdrawPassword')?.value||'');
  if(!selectedWithdrawMethod){msg.textContent=withdrawText('chooseMethodError');return;}
- if(!/^[0-9+ -]{8,20}$/.test(walletNumber)||!document.getElementById('withdrawWalletNumber')?.readOnly){msg.textContent='আগে ওয়ালেট নম্বর সেট করুন।';return;}
+ if(!walletInput?.readOnly||!walletInput.value.trim()){msg.textContent='আগে ওয়ালেট নম্বর সেভ করুন।';return;}
+ if(!/^\\d{6}$/.test(password)){msg.textContent='৬ সংখ্যার উইথড্র পাসওয়ার্ড দিন।';return;}
  if(!Number.isSafeInteger(amount)||amount<1){msg.textContent=withdrawText('amountError');return;}
  if(amount>Number(me.balance||0)){msg.textContent=withdrawText('balanceError');return;}
- try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount,walletNumber});msg.textContent=withdrawText('successMessage');await loadWithdrawRequests();await refreshBalance();}
+ try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount,withdrawPassword:password});msg.textContent=withdrawText('successMessage');const pass=document.getElementById('withdrawPassword');if(pass)pass.value='';await loadWithdrawRequests();await refreshBalance();}
  catch(e){msg.textContent=e.message;}
 }
 
