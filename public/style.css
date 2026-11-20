@@ -921,3 +921,44 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
   animation:none;
   transition:none;
 }
+
+
+/* Mobile Aviator: fill the available screen height; keep existing game controls and artwork unchanged. */
+@media(max-width:519px){
+  body:has(.aviator-app),
+  body:has(.aviator-app) #app{
+    height:100dvh;
+    min-height:100dvh;
+  }
+  .aviator-app{
+    height:100dvh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+    box-sizing:border-box;
+  }
+  .aviator-header,
+  .aviator-ticker{
+    flex:0 0 auto;
+  }
+  .aviator-game-body{
+    flex:1 1 auto;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+  }
+  .aviator-stage{
+    flex:1 1 0;
+    height:auto;
+    min-height:clamp(185px, 27dvh, 365px);
+  }
+  .aviator-bet-panels{
+    flex:0 0 auto;
+  }
+  .aviator-footer-note{
+    margin-top:auto;
+    flex:0 0 auto;
+  }
+}
