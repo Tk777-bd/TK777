@@ -449,6 +449,8 @@ function aviator(g) {
       <div class="aviator-ticker">
         <span class="ticker-label">LAST</span>
         <div id="crashHistoryTicker" class="ticker-values"><i>Loading results…</i></div>
+        <button class="history-more-button" type="button" onclick="toggleCrashHistory()" aria-label="Show 15 more multipliers">⋯</button>
+        <div id="crashHistoryMore" class="history-more-popover" hidden></div>
       </div>
 
       <section class="aviator-game-body">
@@ -592,24 +594,42 @@ function startCrashMonitor(gameId) {
   },400);
 }
 
-function updateCrashHistory(previous) {
-  crashHistoryData = Array.isArray(previous) ? previous.slice() : [];
-  const ticker = $('#crashHistoryTicker');
-  if (!previous || !previous.length) {
-    if (ticker) ticker.innerHTML = '<i>No previous rounds yet</i>';
-    return;
-  }
-
-  const chips = previous.map(x => {
-    const n = Number(x.crash_multiplier);
-    const cls = n >= 2 ? 'history-high' : 'history-low';
-    return {n,cls};
-  });
-  if (ticker) ticker.innerHTML = chips.slice(0,12).map(x =>
-    `<span class="${x.cls}">${x.n.toFixed(2)}x</span>`
-  ).join('');
+function multiplierHistoryClass(value) {
+  const n = Number(value);
+  if (n >= 10) return 'history-pink';
+  if (n >= 2) return 'history-purple';
+  return 'history-blue';
 }
 
+function updateCrashHistory(previous) {
+  crashHistoryData = Array.isArray(previous) ? previous.slice(0,25) : [];
+  const ticker = $('#crashHistoryTicker');
+  const more = $('#crashHistoryMore');
+  const renderChip = x => {
+    const n = Number(x.crash_multiplier);
+    return `<span class="${multiplierHistoryClass(n)}">${n.toFixed(2)}x</span>`;
+  };
+  if (ticker) {
+    ticker.innerHTML = crashHistoryData.length
+      ? crashHistoryData.slice(0,10).map(renderChip).join('')
+      : '<i>No previous rounds yet</i>';
+  }
+  if (more) {
+    const extra = crashHistoryData.slice(10,25);
+    more.innerHTML = extra.length
+      ? '<div class="history-more-title">PREVIOUS 15 RESULTS</div><div class="history-more-grid">'+extra.map(renderChip).join('')+'</div>'
+      : '<div class="history-more-title">আরও পুরোনো রাউন্ড নেই</div>';
+  }
+}
+
+function toggleCrashHistory() {
+  const panel = $('#crashHistoryMore');
+  const button = $('.history-more-button');
+  if (!panel) return;
+  const opening = panel.hidden;
+  panel.hidden = !opening;
+  if (button) button.classList.toggle('active',opening);
+}
 function setAviatorFeed(mode) {
   ['all','previous','top'].forEach(key => {
     const button = $('#feed'+key.charAt(0).toUpperCase()+key.slice(1));
