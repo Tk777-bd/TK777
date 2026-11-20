@@ -375,7 +375,27 @@ const displaySlotGames = [
   {id:'slot-display-super-ace-deluxe',name:'Super Ace Deluxe',mark:'♛',tone:'deluxe'},
   {id:'slot-display-dragon-gems',name:'Dragon Gems',mark:'🐉',tone:'dragon'},
   {id:'slot-display-treasures-of-aztec',name:'Treasures of Aztec',mark:'☀',tone:'treasures'},
-  {id:'slot-display-anubis-wrath',name:'Anubis Wrath',mark:'𓃥',tone:'anubis'}
+  {id:'slot-display-anubis-wrath',name:'Anubis Wrath',mark:'𓃥',tone:'anubis'},
+  {id:'slot-display-golden-empire',name:'Golden Empire',mark:'👑',tone:'azteca'},
+  {id:'slot-display-money-coming',name:'Money Coming',mark:'💰',tone:'fortune'},
+  {id:'slot-display-fortune-gems',name:'Fortune Gems',mark:'💎',tone:'fortune'},
+  {id:'slot-display-fortune-gems-2',name:'Fortune Gems 2',mark:'💎',tone:'fortune'},
+  {id:'slot-display-devil-fire-2',name:'Devil Fire 2',mark:'🔥',tone:'flyx'},
+  {id:'slot-display-zeus',name:'Zeus',mark:'⚡',tone:'elements'},
+  {id:'slot-display-wild-ace',name:'Wild Ace',mark:'🂡',tone:'ace2'},
+  {id:'slot-display-golden-bank',name:'Golden Bank',mark:'🏦',tone:'deluxe'},
+  {id:'slot-display-party-night',name:'Party Night',mark:'🎉',tone:'circus'},
+  {id:'slot-display-lucky-goldbricks',name:'Lucky Goldbricks',mark:'🧱',tone:'treasures'},
+  {id:'slot-display-mahjong-ways',name:'Mahjong Ways',mark:'🀄',tone:'elements'},
+  {id:'slot-display-mahjong-ways-2',name:'Mahjong Ways 2',mark:'🀄',tone:'elements'},
+  {id:'slot-display-fortune-tiger',name:'Fortune Tiger',mark:'🐯',tone:'fortune'},
+  {id:'slot-display-fortune-ox',name:'Fortune Ox',mark:'🐂',tone:'azteca'},
+  {id:'slot-display-fortune-rabbit',name:'Fortune Rabbit',mark:'🐇',tone:'magic'},
+  {id:'slot-display-lucky-neko',name:'Lucky Neko',mark:'🐱',tone:'fortune'},
+  {id:'slot-display-dragon-hatch',name:'Dragon Hatch',mark:'🐉',tone:'dragon'},
+  {id:'slot-display-ganesha-fortune',name:'Ganesha Fortune',mark:'🐘',tone:'treasures'},
+  {id:'slot-display-wild-bandito',name:'Wild Bandito',mark:'🤠',tone:'flyx'},
+  {id:'slot-display-ways-of-the-qilin',name:'Ways of the Qilin',mark:'🐉',tone:'anubis'}
 ];
 
 function displaySlotCard(g) {
