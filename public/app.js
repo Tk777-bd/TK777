@@ -529,11 +529,69 @@ function authMode(m) {
 /* MEMBER AND PAGES */
 
 
+
+let selectedWithdrawMethod = '';
+function selectWithdrawMethod(method){
+  selectedWithdrawMethod=method;
+  document.querySelectorAll('.withdraw-method').forEach(el=>{
+    const on=el.dataset.method===method;
+    el.classList.toggle('selected',on);
+    el.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+async function withdrawPage(){
+  if(!me)return showAuth();
+  selectedWithdrawMethod='';
+  shell(`<div class="page member-subpage">
+    <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Demo Withdrawal</h2></div>
+    <div class="card coin-request-card">
+      <p class="muted">শুধু নগদমূল্যহীন Virtual Coin-এর Demo Request। বিকাশ/নগদ/রকেট বাটনগুলো কেবল পদ্ধতি বাছাইয়ের জন্য—কোনো ওয়ালেট নম্বর, টাকা পাঠানো বা নগদ উত্তোলন নেই।</p>
+      <h3>পদ্ধতি নির্বাচন করুন</h3>
+      <div class="demo-payment-methods">
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash')">bKash <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad')">Nagad <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket')">Rocket <small>DEMO</small></button>
+      </div>
+      <label for="withdrawCoinAmount">কয়েনের পরিমাণ</label>
+      <input id="withdrawCoinAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="কত Virtual Coin ফেরত চান">
+      <small class="muted">বর্তমান ব্যালেন্স: <b>${Number(me.balance||0).toLocaleString('en-US')} Coin</b></small>
+      <button class="primary" onclick="submitWithdrawRequest()">Submit Demo Withdrawal</button>
+      <p id="withdrawRequestMsg" class="muted"></p>
+    </div>
+    <h3>আমার Withdrawal Requests</h3><div id="withdrawRequestHistory" class="card">লোড হচ্ছে…</div>
+    <button class="secondary" onclick="page('member')">Member Center</button>
+  </div>`);
+  loadWithdrawRequests();
+}
+async function loadWithdrawRequests(){
+ const box=document.getElementById('withdrawRequestHistory');if(!box)return;
+ try{const d=await api('/withdraw-requests');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · '+Number(x.amount)+' Virtual Coin<small>'+esc(x.created_at)+'</small></span><b>'+esc(x.status==='approved'?'Approved':x.status==='rejected'?'Rejected':'Pending')+'</b></div>').join('')||'এখনো কোনো Request নেই';}
+ catch(e){box.textContent=e.message;}
+}
+async function withdrawRecordPage(){
+ if(!me)return showAuth();
+ shell('<div class="page member-subpage"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>Withdrawal Record</h2></div><div id="withdrawRecordList" class="card">লোড হচ্ছে…</div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+ const box=document.getElementById('withdrawRecordList');
+ try{const d=await api('/withdraw-requests');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · '+Number(x.amount)+' Virtual Coin<small>'+esc(x.created_at)+'</small></span><b>'+esc(x.status==='approved'?'Approved':x.status==='rejected'?'Rejected':'Pending')+'</b></div>').join('')||'কোনো Withdrawal Record নেই';}catch(e){box.textContent=e.message;}
+}
+async function submitWithdrawRequest(){
+ const msg=document.getElementById('withdrawRequestMsg');if(!msg)return;
+ const amount=Number(document.getElementById('withdrawCoinAmount')?.value);
+ if(!selectedWithdrawMethod){msg.textContent='বিকাশ, নগদ অথবা রকেট নির্বাচন করুন।';return;}
+ if(!Number.isSafeInteger(amount)||amount<1){msg.textContent='সঠিক কয়েনের পরিমাণ লিখুন।';return;}
+ if(amount>Number(me.balance||0)){msg.textContent='আপনার ব্যালেন্সে পর্যাপ্ত Virtual Coin নেই।';return;}
+ try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount});msg.textContent='Demo Withdrawal Request জমা হয়েছে। Admin অনুমোদন করলে Virtual Coin ব্যালেন্স থেকে কমবে; কোনো টাকা পাঠানো হবে না।';await loadWithdrawRequests();}
+ catch(e){msg.textContent=e.message;}
+}
+
+
 function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
   if (name === 'member') return memberCenter();
   if (name === 'deposit') return depositPage();
+  if (name === 'withdraw') return withdrawPage();
+  if (name === 'withdrawRecord') return withdrawRecordPage();
   if (name === 'history') return historyPage();
   if (name === 'profitloss') return profitLossPage();
 
