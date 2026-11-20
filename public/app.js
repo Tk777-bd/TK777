@@ -1234,7 +1234,7 @@ async function cashout(index) {
     }
     if (r.status === 'cashed_out') {
       showAviatorCashoutPopup(
-        `${Number(r.multiplier).toFixed(2)}x  ·  লাভ BDT ${profitAmount.toFixed(2)}`
+        `${Number(r.multiplier).toFixed(2)}x  ·  WIN BDT ${profitAmount.toFixed(2)}`
       );
     }
 
