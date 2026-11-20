@@ -151,27 +151,34 @@ const enc = new TextEncoder();
 async function ensureReferralSchema(env) {
   await env.DB.batch([
     env.DB.prepare("CREATE TABLE IF NOT EXISTS referral_codes (code TEXT PRIMARY KEY,user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE)"),
-    env.DB.prepare("CREATE TABLE IF NOT EXISTS referrals (referred_user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,referrer_user_id TEXT NOT NULL REFERENCES users(id),reward_paid INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
-    env.DB.prepare("INSERT OR IGNORE INTO settings(key,value) VALUES('referral_threshold','200'),('referral_bonus','108')")
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS referrals (referred_user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,referrer_user_id TEXT NOT NULL REFERENCES users(id),reward_paid INTEGER NOT NULL DEFAULT 0,turnover INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
+    env.DB.prepare("INSERT OR IGNORE INTO settings(key,value) VALUES('referral_threshold','2000'),('referral_bonus','108')")
   ]);
+  try { await env.DB.prepare("ALTER TABLE referrals ADD COLUMN turnover INTEGER NOT NULL DEFAULT 0").run(); } catch (e) {}
+  await env.DB.prepare("UPDATE settings SET value='2000' WHERE key='referral_threshold' AND value='200'").run();
+  await env.DB.prepare("DROP TRIGGER IF EXISTS referral_reward_on_balance").run();
   await env.DB.prepare(`
-    CREATE TRIGGER IF NOT EXISTS referral_reward_on_balance
-    AFTER UPDATE OF balance ON users
-    WHEN NEW.balance >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER)
-      AND OLD.balance < CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER)
-      AND EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.id AND reward_paid=0)
+    CREATE TRIGGER IF NOT EXISTS referral_reward_on_turnover
+    AFTER INSERT ON game_rounds
+    WHEN EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.user_id AND reward_paid=0)
     BEGIN
-      UPDATE referrals SET reward_paid=1 WHERE referred_user_id=NEW.id AND reward_paid=0;
+      UPDATE referrals SET turnover=turnover + MAX(0,NEW.bet_amount)
+      WHERE referred_user_id=NEW.user_id AND reward_paid=0;
+      UPDATE referrals SET reward_paid=1
+      WHERE referred_user_id=NEW.user_id AND reward_paid=0
+        AND turnover >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER);
       UPDATE users SET balance=balance + CAST((SELECT value FROM settings WHERE key='referral_bonus') AS INTEGER)
-        WHERE id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.id);
+      WHERE id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.user_id
+        AND reward_paid=1 AND turnover >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER));
       INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
-        SELECT lower(hex(randomblob(16))),u.id,'referral_bonus',
-          CAST((SELECT value FROM settings WHERE key='referral_bonus') AS INTEGER),u.balance,
-          'Referral reward: referred player reached coin threshold'
-        FROM users u WHERE u.id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.id);
+      SELECT lower(hex(randomblob(16))),u.id,'referral_bonus',
+        CAST((SELECT value FROM settings WHERE key='referral_bonus') AS INTEGER),
+        u.balance,'Referral reward: referred player completed game turnover'
+      FROM users u WHERE u.id=(SELECT referrer_user_id FROM referrals WHERE referred_user_id=NEW.user_id
+        AND reward_paid=1 AND turnover >= CAST((SELECT value FROM settings WHERE key='referral_threshold') AS INTEGER));
       INSERT INTO transactions(id,user_id,type,amount,balance_after,note)
-        SELECT lower(hex(randomblob(16))),NEW.id,'referral_qualified',0,NEW.balance,'Referral qualification reached'
-        WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.id AND reward_paid=1);
+      SELECT lower(hex(randomblob(16))),NEW.user_id,'referral_qualified',0,0,'Referral qualification: game turnover completed'
+      WHERE EXISTS (SELECT 1 FROM referrals WHERE referred_user_id=NEW.user_id AND reward_paid=1);
     END
   `).run();
 }
@@ -549,14 +556,15 @@ async function route(req, env) {
       const rewards=await env.DB.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND type='referral_bonus'").bind(user.id).first();
       const config=await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('referral_threshold','referral_bonus')").all();
       const values=Object.fromEntries((config.results||[]).map(x=>[x.key,Number(x.value)]));
-      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),threshold:values.referral_threshold||200,bonus:values.referral_bonus||108});
+      const progress=await env.DB.prepare("SELECT COALESCE(SUM(turnover),0) AS turnover FROM referrals WHERE referrer_user_id=?").bind(user.id).first();
+      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),turnover:Number(progress?.turnover||0),threshold:values.referral_threshold||2000,bonus:values.referral_bonus||108});
     }
     if (p === "/api/admin/referral-settings" && method === "GET") {
       if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
       await ensureReferralSchema(env);
       const rows=await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('referral_threshold','referral_bonus')").all();
       const values=Object.fromEntries((rows.results||[]).map(x=>[x.key,Number(x.value)]));
-      return json({threshold:values.referral_threshold||200,bonus:values.referral_bonus||108});
+      return json({threshold:values.referral_threshold||2000,bonus:values.referral_bonus||108});
     }
     if (p === "/api/admin/referral-settings" && method === "POST") {
       if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
