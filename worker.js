@@ -1268,18 +1268,62 @@ async function route(req, env) {
     /* ADMIN USERS */
 
     if (p === "/api/admin/users") {
-      if (!await admin()) {
-        return json({ error: "Admin access প্রয়োজন" }, 403);
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const q = String(url.searchParams.get("q") || "").trim().slice(0,40);
+      const rows = q
+        ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%"+q+"%","%"+q+"%").all()
+        : await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users ORDER BY created_at DESC LIMIT 100").all();
+      return json({ users: rows.results || [] });
+    }
+
+    if (p.startsWith("/api/admin/users/") && method === "GET") {
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const userId = decodeURIComponent(p.slice("/api/admin/users/".length));
+      const target = await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE id=?").bind(userId).first();
+      if (!target) return json({ error: "ইউজার পাওয়া যায়নি" }, 404);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      const [transactions, rounds, crashRounds, deposits, withdrawals, coinRequests] = await Promise.all([
+        env.DB.prepare("SELECT id,type,amount,balance_after,note,created_at FROM transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(userId).all(),
+        env.DB.prepare("SELECT id,game_id,game_type,bet_amount,multiplier,payout,created_at FROM game_rounds WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(userId).all(),
+        env.DB.prepare("SELECT id,game_id,bet_amount,crash_multiplier,status,cashout_multiplier,payout,created_at FROM crash_rounds WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(userId).all(),
+        env.DB.prepare("SELECT id,method,amount,demo_reference,status,created_at FROM demo_deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 50").bind(userId).all(),
+        env.DB.prepare("SELECT id,method,amount,status,created_at,reviewed_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 50").bind(userId).all(),
+        env.DB.prepare("SELECT id,amount,status,created_at,reviewed_at FROM coin_requests WHERE user_id=? ORDER BY created_at DESC LIMIT 50").bind(userId).all()
+      ]);
+      return json({
+        user: target,
+        documents: {
+          transactions: transactions.results || [],
+          gameRounds: rounds.results || [],
+          crashRounds: crashRounds.results || [],
+          demoDeposits: deposits.results || [],
+          demoWithdrawals: withdrawals.results || [],
+          coinRequests: coinRequests.results || []
+        }
+      });
+    }
+
+    if (p === "/api/admin/user-balance-set" && method === "POST") {
+      const adminUser = await admin();
+      if (!adminUser) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const userId = String(body.userId || "");
+      const nextBalance = Number(body.balance);
+      if (!userId || !Number.isSafeInteger(nextBalance) || nextBalance < 0 || nextBalance > 1000000000) {
+        return json({ error: "০ থেকে ১০০ কোটি পর্যন্ত সঠিক পূর্ণসংখ্যা দিন" }, 400);
       }
-
-      const rows = await env.DB.prepare(`
-        SELECT id,username,email,balance,role,created_at
-        FROM users
-        ORDER BY created_at DESC
-        LIMIT 300
-      `).all();
-
-      return json({ users: rows.results });
+      const current = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(userId).first();
+      if (!current) return json({ error: "ইউজার পাওয়া যায়নি" }, 404);
+      const delta = nextBalance - Number(current.balance);
+      const updated = await env.DB.prepare("UPDATE users SET balance=? WHERE id=? AND balance=?").bind(nextBalance,userId,current.balance).run();
+      if (!updated.meta?.changes) return json({ error: "ব্যালেন্স অন্য অনুরোধে পরিবর্তিত হয়েছে। আবার চেষ্টা করুন।" }, 409);
+      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(
+        uid(), userId, "admin_balance_set", delta, nextBalance,
+        String(body.note || "Admin directly set virtual coin balance").slice(0,160)
+      ).run();
+      return json({ ok: true, balance: nextBalance, previousBalance: Number(current.balance) });
     }
 
     /* ADMIN BALANCE */
