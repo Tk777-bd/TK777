@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -188,6 +188,23 @@ async function saveHomeBanners(){
 }
 
 
+
+
+async function withdrawRequests(){
+ const d=await api('/admin/withdraw-requests');
+ $('#view').innerHTML='<div class="card"><h3>Demo Virtual Coin Withdrawal Requests</h3><p class="muted">Accept করলে শুধু Virtual Coin ইউজারের ব্যালেন্স থেকে কমবে। কোনো টাকা পাঠানো হয় না।</p><div id="withdrawAdminList"></div></div>';
+ renderWithdrawRequests(d.requests||[]);
+}
+function renderWithdrawRequests(rows){
+ const box=$('#withdrawAdminList');if(!box)return;
+ box.innerHTML=rows.map(x=>'<div class="card"><b>'+esc(x.username||x.email||'User')+'</b><p>'+esc(x.method)+' · '+Number(x.amount)+' Virtual Coin</p><p>Balance: '+Number(x.balance||0)+' Coin</p><p>Status: '+esc(x.status)+' · '+esc(x.created_at)+'</p>'+(x.status==='pending'?'<button class="primary" onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'approved\')">Accept</button> <button onclick="reviewWithdrawRequest(\''+esc(x.id)+'\',\'rejected\')">Reject</button>':'')+'</div>').join('')||'কোনো Withdrawal Request নেই';
+}
+async function reviewWithdrawRequest(id,status){
+ const action=status==='approved'?'Accept':'Reject';
+ if(!confirm('এই Demo Withdrawal Request '+action+' করবেন?'))return;
+ try{await api('/admin/withdraw-requests/review',{id,status});await withdrawRequests();}
+ catch(e){alert(e.message);}
+}
 
 async function demoDepositRequests(){
  const d=await api('/admin/demo-deposits');
