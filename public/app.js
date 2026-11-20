@@ -1115,6 +1115,21 @@ async function startCrash(index) {
    CASH OUT
 ========================================== */
 
+function showAviatorCashoutPopup(message) {
+  const previous = document.getElementById('aviatorCashoutPopup');
+  if (previous) previous.remove();
+  const popup = document.createElement('div');
+  popup.id = 'aviatorCashoutPopup';
+  popup.className = 'aviator-cashout-popup';
+  popup.textContent = message;
+  document.body.appendChild(popup);
+  window.clearTimeout(window.aviatorCashoutPopupTimer);
+  window.aviatorCashoutPopupTimer = window.setTimeout(() => {
+    popup.classList.add('is-hiding');
+    window.setTimeout(() => popup.remove(), 350);
+  }, 4200);
+}
+
 async function cashout(index) {
   const slot = crashSlots[index];
 
@@ -1157,9 +1172,12 @@ async function cashout(index) {
     const result = $('#result'+index);
 
     if (result) {
-      result.textContent = r.status === 'cashed_out'
-        ? `আপনি পেয়েছেন BDT ${payoutAmount.toFixed(2)} · লাভ BDT ${profitAmount.toFixed(2)} · ${Number(r.multiplier).toFixed(2)}x · ব্যালেন্স ${money(r.balance)}`
-        : 'Cash Out-এর আগেই ক্র্যাশ হয়েছে। পেআউট ০।';
+      result.textContent = r.status === 'cashed_out' ? 'Cash Out সফল হয়েছে' : 'Cash Out-এর আগেই ক্র্যাশ হয়েছে।';
+    }
+    if (r.status === 'cashed_out') {
+      showAviatorCashoutPopup(
+        `ক্যাশ আউট সফল!\nপেআউট: BDT ${payoutAmount.toFixed(2)}\nলাভ: BDT ${profitAmount.toFixed(2)}\nমাল্টিপ্লায়ার: ${Number(r.multiplier).toFixed(2)}x\nবর্তমান ব্যালেন্স: ${money(r.balance)}`
+      );
     }
 
   } catch (e) {
