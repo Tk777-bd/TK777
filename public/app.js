@@ -706,7 +706,7 @@ function miniGame(g) {
     : '';
   shell(`
     <div class="page mini-game-page">
-      <div class="mini-game-top"><button class="secondary" onclick="home()">‹ BACK</button><b>${esc(g.name)}</b><span id="miniBalance">${money(me.balance)}</span></div>
+      <div class="mini-game-top"><button class="secondary" onclick="home()">‹ BACK</button><b>${esc(g.name)}</b><span id="miniBalance">${Number(me.balance).toLocaleString("en-US")} Coin</span></div>
       <section class="card mini-game-board">
         <div class="mini-game-icon" id="miniIcon">${info.icon}</div>
         <h2>${esc(g.name)}</h2><p class="muted">${esc(info.subtitle)}</p>
@@ -740,7 +740,7 @@ async function playMiniGame(gameId) {
     const r = await api('/mini-play',{gameId,betAmount:bet,choice});
     me.balance = r.balance;
     const bal = document.getElementById('miniBalance');
-    if (bal) bal.textContent = money(r.balance);
+    if (bal) bal.textContent = Number(r.balance).toLocaleString('en-US')+' Coin';
     const result = document.getElementById('miniResult');
     if (result) result.textContent = r.result;
     const detail = document.getElementById('miniDetail');
