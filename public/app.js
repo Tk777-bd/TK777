@@ -594,7 +594,7 @@ async function submitWithdrawRequest(){
 
 async function inviteFriendsPage() {
   if(!me)return showAuth();
-  shell('<div class="page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Invite Friends</h2></div><div class="card"><h3>আপনার Referral Link</h3><p id="refRuleText">রেফার করুন এবং ১০৮ টাকা বোনাস পান</p><input class="field" id="referralLink" readonly value="লোড হচ্ছে..."><button class="primary" id="copyReferralLink" type="button">Copy Invite Link</button><div id="referralMsg" class="muted"></div></div><div class="card"><h3>Referral Summary</h3><p>মোট Invite: <b id="refTotal">—</b></p><p>টার্নওভার পূরণ করেছে: <b id="refQualified">—</b></p><p>মোট Referral Bonus: <b id="refEarned">—</b> Virtual Coin</p></div></div>');
+  shell('<div class="page invite-page"><div class="member-subpage-heading"><button onclick="page(\\'member\\')" aria-label="Back">‹</button><h2>Invite Friends</h2></div><div class="card"><h3>আপনার Referral Link</h3><p id="refRuleText">রেফার করুন এবং ১০৮ টাকা বোনাস পান</p><input class="field" id="referralLink" readonly value="লোড হচ্ছে..."><button class="primary" id="copyReferralLink" type="button">Copy Invite Link</button><div id="referralMsg" class="muted"></div></div><div class="card"><h3>Referral Summary</h3><p>মোট Invite: <b id="refTotal">—</b></p><p>সফল রেফার: <b id="refQualified">—</b></p><p>মোট Referral Bonus: <b id="refEarned">—</b> Virtual Coin</p><small class="muted">প্রতি সফল রেফারে ২,০০০ Virtual Coin গেম টার্নওভার পূরণ হলে ১০৮ Virtual Coin স্বয়ংক্রিয়ভাবে পাবেন। নিচের অতিরিক্ত বোনাসগুলো আলাদাভাবে ক্লেইম করতে পারবেন।</small></div><div class="card referral-milestones"><h3>অতিরিক্ত Referral Bonus</h3><p class="muted">প্রতিটি ধাপের বোনাস একবার করে ক্লেইম করা যাবে।</p><div id="referralMilestoneList" class="milestone-list">লোড হচ্ছে...</div></div></div>');
   try{
     const d=await api('/referral'),link=window.location.origin+'/?ref='+encodeURIComponent(d.code),input=document.getElementById('referralLink');
     if(input)input.value=link;
@@ -602,11 +602,22 @@ async function inviteFriendsPage() {
     document.getElementById('refTotal').textContent=d.total;
     document.getElementById('refQualified').textContent=d.qualified;
     document.getElementById('refEarned').textContent=d.earned;
+    const list=document.getElementById('referralMilestoneList');
+    if(list)list.innerHTML=(d.milestones||[]).map(x=>'<div class="milestone-row"><div class="milestone-count"><b>'+x.milestone+' জন রেফার</b><small>'+x.amount+' Virtual Coin বোনাস</small></div>'+(x.claimed?'<span class="milestone-done">ক্লেইম হয়েছে ✓</span>':x.available?'<button class="milestone-claim" type="button" onclick="claimReferralMilestone('+x.milestone+')">ক্লেইম নিন</button>':'<span class="milestone-locked">'+x.milestone+' জন পূর্ণ করুন</span>')+'</div>').join('');
     document.getElementById('copyReferralLink').onclick=async()=>{
       try{await navigator.clipboard.writeText(link);document.getElementById('referralMsg').textContent='Referral Link কপি হয়েছে।';}
       catch{input.select();document.execCommand('copy');document.getElementById('referralMsg').textContent='Referral Link কপি হয়েছে।';}
     };
   }catch(e){const m=document.getElementById('referralMsg');if(m)m.textContent=e.message;}
+}
+
+async function claimReferralMilestone(milestone){
+  try{
+    const result=await api('/referral/claim',{milestone});
+    toast(result.message+' ('+result.amount+' Virtual Coin)');
+    await refreshBalance();
+    await inviteFriendsPage();
+  }catch(e){toast(e.message);}
 }
 
 function page(name) {
