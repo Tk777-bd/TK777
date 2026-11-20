@@ -77,6 +77,34 @@ async function games(){
  <input class="field" name="sort_order" id="gameSort" type="number" placeholder="Sort order">
  <button class="primary">Save Game</button></form></div>
  <div class="card"><h3>আগের গেমগুলো</h3>${d.games.map(g=>`<div class="row" style="justify-content:space-between;margin:8px 0"><span>${esc(g.name)} · ${esc(g.game_type)}</span><span><button type="button" onclick="editGame('${esc(g.id)}')">Edit</button> <button type="button" onclick="delGame('${esc(g.id)}')">Disable</button></span></div>`).join('')}</div>`;
+
+ const slotPosterItems=[
+  ['slot-display-super-elements','Super Elements'],['slot-display-azteca-legacy','Azteca Legacy'],['slot-display-flyx','FlyX'],
+  ['slot-display-magic-ace','Magic Ace'],['slot-display-circus-joker','Circus Joker'],['slot-display-fortune-gems-3','Fortune Gems 3'],
+  ['slot-display-super-ace-ii','Super Ace II'],['slot-display-boxing-king','Boxing King'],['slot-display-super-ace-deluxe','Super Ace Deluxe'],
+  ['slot-display-dragon-gems','Dragon Gems'],['slot-display-treasures-of-aztec','Treasures of Aztec'],['slot-display-anubis-wrath','Anubis Wrath']
+ ];
+ const settingData=await api('/admin/settings');
+ const settingValues=Object.fromEntries((settingData.settings||[]).map(x=>[x.key,x.value]));
+ $('#view').insertAdjacentHTML('afterbegin',`<div class="card"><h3>নতুন Slot গেমের ছবি (Image URL)</h3>
+ <p class="muted">Super Ace-এর মতো প্রতিটি Slot গেমের জন্য সরাসরি HTTPS Image URL দিন। Save করলে ইউজার সাইটের গেম কার্ডে ছবিটি দেখা যাবে। খালি রাখলে নামসহ ডিফল্ট পোস্টার দেখাবে।</p>
+ ${slotPosterItems.map(([id,name])=>'<div style="margin:12px 0"><label>'+esc(name)+' — Image URL</label><input class="field slot-display-image-url" data-slot-id="'+id+'" type="url" maxlength="1000" placeholder="https://example.com/'+id+'.jpg" value="'+esc(settingValues['slot_display_image_'+id]||'')+'"><img class="slot-display-image-preview" data-preview-id="'+id+'" src="'+esc(settingValues['slot_display_image_'+id]||'')+'" alt="'+esc(name)+' preview" style="max-width:110px;max-height:145px;object-fit:cover;border-radius:8px;'+(settingValues['slot_display_image_'+id]?'':'display:none')+'"></div>').join('')}
+ <button type="button" class="primary" id="saveSlotDisplayImages">Save Slot Images</button><div id="slotImageSaveMsg" class="muted"></div></div>`);
+ document.querySelectorAll('.slot-display-image-url').forEach(input=>input.addEventListener('input',()=>{
+   const img=document.querySelector('[data-preview-id="'+input.dataset.slotId+'"]');
+   img.src=input.value;img.style.display=input.value?'block':'none';
+ }));
+ $('#saveSlotDisplayImages').onclick=async()=>{
+   const msg=$('#slotImageSaveMsg');msg.textContent='Saving…';
+   try{
+     for(const input of document.querySelectorAll('.slot-display-image-url')){
+       const value=input.value.trim();
+       if(value&&!/^https:\/\//i.test(value))throw Error( input.dataset.slotId+': HTTPS Image URL দিন');
+       await api('/admin/settings',{key:'slot_display_image_'+input.dataset.slotId,value});
+     }
+     msg.textContent='সব Slot ছবির URL সংরক্ষণ হয়েছে। User Site রিফ্রেশ করলে ছবি দেখা যাবে।';
+   }catch(err){msg.textContent=err.message;}
+ };
  window.adminGameRows=d.games;
  const preview=()=>{const url=$('#gameImageUrl').value.trim(),box=$('#gameImagePreview');box.innerHTML=url?`<img src="${esc(url)}" alt="Image preview" style="max-width:100%;max-height:150px;border-radius:8px" onerror="this.outerHTML='<span class=\\'muted\\'>ছবিটি লোড করা যায়নি। URL পরীক্ষা করুন।</span>'">`:'ছবির লিংক দিলে এখানে প্রিভিউ দেখা যাবে।';};
  $('#gameImageUrl').oninput=preview;
