@@ -702,10 +702,7 @@ function updateSlotButtons(i) {
 
   const canCancelBet = !!slot.roundId && crashPhase === 'countdown';
   start.disabled = slot.busy || (!canCancelBet && crashPhase !== 'countdown');
-  if (slot.busy) {
-    start.textContent = 'BETTING...';
-    start.classList.remove('is-bet-cancel');
-  } else if (canCancelBet) {
+  if (canCancelBet) {
     start.innerHTML = 'Cancel';
     start.classList.add('is-bet-cancel');
   } else {
@@ -1161,8 +1158,6 @@ async function startCrash(index) {
     slot.autoTarget = target;
     slot.busy = true;
     updateSlotButtons(index);
-    if (result) result.textContent = 'বেট সার্ভারে পাঠানো হচ্ছে...';
-
     const r = await api('/crash/start',{
       gameId:crashGameId,
       betAmount:bet
