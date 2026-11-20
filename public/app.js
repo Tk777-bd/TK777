@@ -3,6 +3,7 @@ let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
+let demoPaymentImages = {bkash:'',nagad:'',rocket:''};
 let slotDisplayImages = {}, slotDisplayHidden = [];
 let isPlayingGame = false;
 let crashTimer = null;
@@ -250,6 +251,7 @@ async function init() {
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
     supportSettings = await api('/support-settings');
+    demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
     const slotDisplayData = await api('/slot-display-images');
     slotDisplayImages = slotDisplayData.images || {};
     slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
@@ -602,9 +604,9 @@ async function depositPage(){
     <div class="card coin-request-card demo-deposit-card">
       <h3>পেমেন্ট পদ্ধতি (ডেমো)</h3>
       <div class="demo-payment-methods">
-        <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">bKash <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">Nagad <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">Rocket <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">${demoPaymentImages.bkash ? '<img src="'+esc(demoPaymentImages.bkash)+'" alt="bKash" style="width:100%;height:34px;object-fit:contain">' : 'bKash'} <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">${demoPaymentImages.nagad ? '<img src="'+esc(demoPaymentImages.nagad)+'" alt="Nagad" style="width:100%;height:34px;object-fit:contain">' : 'Nagad'} <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : 'Rocket'} <small>DEMO</small></button>
       </div>
       <input type="hidden" id="demoPaymentMethod" value="">
       <label>ডেমো পরিমাণ</label>
