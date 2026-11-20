@@ -101,18 +101,18 @@ function chooseAvatar(index) {
   if (panel) panel.hidden = true;
 }
 function shell(content) {
-  $('#app').innerHTML = \`
+  $('#app').innerHTML = `
     <div class="shell">
       <header class="top">
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
-          <span class="pill">\${me ? money(me.balance) : 'Guest'}</span>
-          \${me ? '<button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
+          <span class="pill">${me ? money(me.balance) : 'Guest'}</span>
+          ${me ? '<button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
         </div>
-        \${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
+        ${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
       </header>
 
-      \${content}
+      ${content}
 
       <nav class="bottom">
         <button onclick="home()"><b>⌂</b>Home</button>
