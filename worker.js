@@ -269,25 +269,29 @@ async function route(req, env) {
     return json({ ok: true, site: "TK777" });
   }
 
-  /* REGISTER */
+  /* REGISTER: new accounts use mobile number + password; existing email accounts remain unchanged */
 
   if (p === "/api/register" && method === "POST") {
     const body = await req.json();
-
     const username = String(body.username || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
+    let phone = String(body.phone || "").trim();
     const password = String(body.password || "");
+
+    const bnDigits = "০১২৩৪৫৬৭৮৯";
+    phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
+    phone = phone.replace(/[\s()-]/g, "");
+    if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
+    else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
 
     if (
       username.length < 2 ||
       username.length > 40 ||
-      !/^\S+@\S+\.\S+$/.test(email) ||
-      email.length > 190 ||
+      !/^01[3-9]\d{8}$/.test(phone) ||
       password.length < 8 ||
       password.length > 128
     ) {
       return json({
-        error: "সঠিক নাম, ইমেইল এবং ৮–১২৮ অক্ষরের পাসওয়ার্ড দিন"
+        error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর এবং ৮–১২৮ অক্ষরের পাসওয়ার্ড দিন"
       }, 400);
     }
 
@@ -296,28 +300,33 @@ async function route(req, env) {
     const ph = await passHash(password, salt);
 
     try {
-      await env.DB.prepare(`
-        INSERT INTO users
-        (id,username,email,password_hash,password_salt,balance)
-        VALUES(?,?,?,?,?,0)
-      `).bind(id, username, email, ph, salt).run();
-
+      await env.DB.prepare("INSERT INTO users (id,username,email,password_hash,password_salt,balance) VALUES(?,?,?,?,?,0)")
+        .bind(id, username, phone, ph, salt).run();
       return await loginUser(id, env);
     } catch (e) {
       return json({
-        error: "এই ইউজারনেম বা ইমেইল আগে ব্যবহার হয়েছে"
+        error: "এই মোবাইল নম্বর বা ইউজারনেম আগে ব্যবহার হয়েছে"
       }, 409);
     }
   }
 
-  /* LOGIN */
+  /* LOGIN: new mobile accounts and legacy email accounts */
 
   if (p === "/api/login" && method === "POST") {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const password = body.password;
+    let identity = String(body.phone || body.email || "").trim().toLowerCase();
 
-    const u = await env.DB.prepare(`
-      SELECT * FROM users WHERE email=?
-    `).bind(String(email || "").trim().toLowerCase()).first();
+    if (!identity.includes("@")) {
+      const bnDigits = "০১২৩৪৫৬৭৮৯";
+      identity = identity.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
+      identity = identity.replace(/[\s()-]/g, "");
+      if (identity.startsWith("+880")) identity = "0" + identity.slice(4);
+      else if (identity.startsWith("880")) identity = "0" + identity.slice(3);
+    }
+
+    const u = await env.DB.prepare("SELECT * FROM users WHERE email=?")
+      .bind(identity).first();
 
     if (
       !u ||
