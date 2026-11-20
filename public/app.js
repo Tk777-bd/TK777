@@ -3,6 +3,7 @@ let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
+let slotDisplayImages = {};
 let isPlayingGame = false;
 let crashTimer = null;
 let crashGameId = null;
@@ -249,6 +250,7 @@ async function init() {
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
     supportSettings = await api('/support-settings');
+    slotDisplayImages = (await api('/slot-display-images')).images || {};
   } catch (e) {
     toast(e.message);
   }
@@ -377,7 +379,8 @@ const displaySlotGames = [
 ];
 
 function displaySlotCard(g) {
-  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '"><div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span><strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div></div>';
+  const image = slotDisplayImages[g.id] || '';
+  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '">' + (image ? '<img class="slot-admin-image" src="' + esc(image) + '" alt="' + esc(g.name) + '" loading="lazy">' : '<div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span><strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div>') + '</div>';
 }
 
 function homeGamesWithSlots() {
