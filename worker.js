@@ -278,10 +278,10 @@ async function route(req, env) {
     const confirmPassword = String(body.confirmPassword || "");
     const bnDigits = "০১২৩৪৫৬৭৮৯";
     phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
-    phone = phone.replace(/[\\s()-]/g, "");
+    phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
-    if (!/^01[3-9]\\d{8}$/.test(phone)) return json({ error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন" }, 400);
+    if (!/^01[3-9]\d{8}$/.test(phone)) return json({ error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন" }, 400);
     if (password.length < 8 || password.length > 128) return json({ error: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে" }, 400);
     if (password !== confirmPassword) return json({ error: "পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না" }, 400);
     const id = uid(), salt = uid(), ph = await passHash(password, salt);
@@ -297,10 +297,10 @@ async function route(req, env) {
     const password = body.password;
     const bnDigits = "০১২৩৪৫৬৭৮৯";
     phone = phone.replace(/[০-৯]/g, d => String(bnDigits.indexOf(d)));
-    phone = phone.replace(/[\\s()-]/g, "");
+    phone = phone.replace(/[\s()-]/g, "");
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
-    if (!/^01[3-9]\\d{8}$/.test(phone)) return json({ error: "সঠিক মোবাইল নম্বর দিন" }, 400);
+    if (!/^01[3-9]\d{8}$/.test(phone)) return json({ error: "সঠিক মোবাইল নম্বর দিন" }, 400);
     const u = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(phone).first();
     if (!u || typeof password !== "string" || password.length > 128 || await passHash(password, u.password_salt) !== u.password_hash) {
       return json({ error: "লগইন তথ্য সঠিক নয়" }, 401);
