@@ -1211,3 +1211,11 @@ body{background:#063b39}
  .sa-spin{width:76px;height:76px}
  .sa-control-icon{width:32px;height:32px}
 }
+
+/* Floating Telegram support */
+.telegram-support-float{position:fixed;z-index:12;right:max(12px,calc((100vw - 520px)/2 + 12px));top:92px;width:43px;height:43px;min-width:43px;padding:0;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#28b8ee,#087bb9);border:2px solid #b8efff;box-shadow:0 4px 14px #001d2c88;color:#fff}
+.telegram-support-float img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.telegram-support-float span{font-size:21px;transform:translateX(-1px)}
+.coin-contact-number{margin-top:14px;padding:13px;border-radius:10px;text-align:center;background:#073b3a;border:1px solid #258b7b}
+.coin-contact-number small{display:block;color:#a9d9ce;font-size:11px}
+.coin-contact-number strong{display:block;margin:5px 0;color:#ffd45a;font-size:22px;letter-spacing:1px}
