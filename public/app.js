@@ -899,17 +899,20 @@ function updateFlightCurve(multiplier) {
 
   if (!path || !dot || !wrap) return;
 
-  // Match the reference: the curve only grows from the lower-left to the
-  // aircraft. It never stretches across the whole game screen.
-  const m = Math.max(1,Number(multiplier)||1);
-  const progress = Math.max(0,Math.min(1,Math.log(m)/Math.log(1.6)));
+  // The plane and the graph endpoint share the exact same coordinates.
+  // The plane reaches its reference stopping point gradually, then both hold.
+  const elapsed = crashPhase === 'active' && crashVisualStartMs !== null
+    ? Math.max(0,Date.now()-crashVisualStartMs)
+    : 0;
+  const progress = crashPhase === 'active'
+    ? Math.max(0,Math.min(1,elapsed/4500))
+    : 0;
   const x = 35 + 530*progress;
   const y = 405 - 320*progress;
   const c1x = 35 + (x-35)*0.34;
-  const c1y = 405;
   const c2x = 35 + (x-35)*0.72;
   const c2y = y + (405-y)*0.16;
-  const curve = `M35 405 C${c1x} ${c1y} ${c2x} ${c2y} ${x} ${y}`;
+  const curve = `M35 405 C${c1x} 405 ${c2x} ${c2y} ${x} ${y}`;
 
   path.setAttribute('d',curve);
   area.setAttribute('d',curve+` L${x} 440 L35 440 Z`);
@@ -918,13 +921,12 @@ function updateFlightCurve(multiplier) {
 
   wrap.style.left = (x/10)+'%';
   wrap.style.top = (y/4.4)+'%';
-  wrap.classList.toggle('plane-hover',crashPhase === 'active' && progress >= 0.98);
-  wrap.classList.toggle('plane-approach',crashPhase === 'active' && progress < 0.98);
+  wrap.classList.remove('plane-hover','plane-approach');
 
   path.style.strokeDasharray = 'none';
   path.style.strokeDashoffset = '0';
-
   if (area) area.style.opacity = progress > 0 ? '.82' : '0';
+
   if (trail) {
     trail.style.left = (x/10)+'%';
     trail.style.top = (y/4.4)+'%';
