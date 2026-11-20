@@ -101,13 +101,107 @@ function chooseAvatar(index) {
   const panel = document.getElementById('avatarPicker');
   if (panel) panel.hidden = true;
 }
+
+async function refreshBalance(button) {
+  if (!me || !token) return showAuth();
+  if (button) button.classList.add('is-refreshing');
+  try {
+    const data = await api('/me');
+    me = data.user;
+    const amount = money(me.balance);
+    const top = document.getElementById('topBalanceValue');
+    const member = document.getElementById('memberBalanceValue');
+    const game = document.getElementById('gameBalance');
+    if (top) top.textContent = amount;
+    if (member) member.textContent = amount;
+    if (game) game.textContent = amount;
+    toast('ব্যালেন্স আপডেট হয়েছে');
+  } catch (e) {
+    toast(e.message || 'ব্যালেন্স রিফ্রেশ করা যায়নি');
+  } finally {
+    if (button) button.classList.remove('is-refreshing');
+  }
+}
+
+function memberCenter() {
+  shell(`
+    <div class="member-page">
+      <section class="member-profile-card">
+        <div class="member-profile-main">
+          <button class="member-avatar-button" onclick="toggleAvatarPicker()" aria-label="প্রোফাইল ছবি পরিবর্তন">
+            ${avatarImage(selectedAvatar(),'member-large-avatar').replace('<img ','<img id="memberProfileAvatar" ')}
+          </button>
+          <div class="member-identity">
+            <span class="member-level">✦ TK777 MEMBER</span>
+            <h2>${esc(me.username || 'Member')}</h2>
+            <p>${esc(me.email || '')}</p>
+          </div>
+        </div>
+        <div class="member-balance">
+          <div><small>AVAILABLE BALANCE</small><strong id="memberBalanceValue">${money(me.balance)}</strong></div>
+          <button type="button" onclick="refreshBalance(this)" aria-label="Refresh balance">↻</button>
+        </div>
+        <div class="member-shortcuts">
+          <button onclick="page('deposit')">Deposit</button>
+          <button onclick="page('withdraw')">Withdrawal</button>
+          <button onclick="page('bank')">Bank Account</button>
+        </div>
+      </section>
+      <div class="member-section-title"><span>Member Center</span></div>
+      <div class="member-menu-grid">
+        <button onclick="page('reward')"><i>🏆</i><span>My Rewards</span></button>
+        <button onclick="page('history')"><i>✥</i><span>Bet History</span></button>
+        <button onclick="page('profitloss')"><i>▤</i><span>Profit And Loss</span></button>
+        <button onclick="page('depositRecord')"><i>📋</i><span>Deposit Record</span></button>
+        <button onclick="page('withdrawRecord')"><i>📥</i><span>Withdrawal Record</span></button>
+        <button onclick="page('history')"><i>▣</i><span>Transaction History</span></button>
+        <button onclick="page('account')"><i>♙</i><span>My Account</span></button>
+        <button onclick="page('security')"><i>♢</i><span>Security Center</span></button>
+        <button onclick="page('invite')"><i>♧</i><span>Invite Friends</span></button>
+        <button onclick="page('mission')"><i>🎁</i><span>Mission</span></button>
+        <button onclick="page('rebate')"><i>◉</i><span>Rebate</span></button>
+        <button onclick="page('messages')"><i>✉</i><span>Internal Message</span></button>
+        <button onclick="page('suggestion')"><i>☏</i><span>Suggestion</span></button>
+        <button onclick="page('download')"><i>⇩</i><span>Download App</span></button>
+        <button onclick="page('service')"><i>◷</i><span>Customer Service</span></button>
+        <button onclick="logout()"><i>⇥</i><span>Logout</span></button>
+      </div>
+    </div>
+  `);
+}
+
+async function profitLossPage() {
+  if (!me) return showAuth();
+  try {
+    const d = await api('/history');
+    const rounds = d.rounds || [];
+    const wagered = rounds.reduce((sum,r)=>sum+Number(r.bet_amount||0),0);
+    const returned = rounds.reduce((sum,r)=>sum+Number(r.payout||0),0);
+    const net = returned - wagered;
+    shell(`
+      <div class="page">
+        <h3>Profit And Loss</h3>
+        <div class="card profit-summary">
+          <small>Total Bet</small><strong>${money(wagered)}</strong>
+          <small>Total Payout</small><strong>${money(returned)}</strong>
+          <small>Net ${net >= 0 ? 'Profit' : 'Loss'}</small><strong class="${net >= 0 ? 'gold' : 'loss'}">${net >= 0 ? '+' : ''}${money(net)}</strong>
+        </div>
+        <div class="card">
+          ${rounds.map(r=>'<div class="history-row"><span>'+esc(r.game_id)+'<small>Bet '+Number(r.bet_amount||0)+' · '+Number(r.multiplier||0)+'x</small></span><b>'+money(r.payout||0)+'</b></div>').join('') || 'এখনো কোনো গেম রেকর্ড নেই'}
+        </div>
+        <button class="secondary" onclick="page('member')">Member Center</button>
+      </div>
+    `);
+  } catch(e) { toast(e.message); }
+}
+
 function shell(content) {
   $('#app').innerHTML = `
     <div class="shell">
       <header class="top">
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
-          <span class="pill">${me ? money(me.balance) : 'Guest'}</span>
+          <div class="balance-chip"><span id="topBalanceValue">${me ? money(me.balance) : 'Guest'}</span>${me ? '<button class="balance-refresh" type="button" onclick="refreshBalance(this)" aria-label="Refresh balance">↻</button>' : ''}</div>
           ${me ? '<button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
         </div>
         ${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
@@ -341,46 +435,39 @@ function authMode(m) {
 
 /* MEMBER AND PAGES */
 
+
 function page(name) {
   stopCrashMonitor();
+  if (name === 'member') return memberCenter();
+  if (name === 'history') return historyPage();
+  if (name === 'profitloss') return profitLossPage();
 
-  if (name === 'member') {
-    if (!me) return showAuth();
-
-    shell(`
-      <div class="page">
-        <div class="card profile-card">
-          <h2>Member Center</h2>
-          <div class="avatar">${avatarImage(selectedAvatar(),'member-profile-avatar').replace('<img ','<img id="memberProfileAvatar" ')}</div>
-          <h3>${esc(me.username)}</h3>
-          <p>${esc(me.email)}</p>
-          <div class="balance-panel">
-            <small>AVAILABLE BALANCE</small>
-            <strong>${money(me.balance)}</strong>
-          </div>
-          <button class="secondary" onclick="page('history')">Transaction History</button>
-          <button class="danger" onclick="logout()">Logout</button>
-        </div>
-      </div>
-    `);
-
-  } else if (name === 'history') {
-    historyPage();
-
-  } else {
-    shell(`
-      <div class="page">
-        <div class="card">
-          <h3>${name === 'deposit' ? 'Deposit Information' : name === 'withdraw' ? 'Withdraw Information' : name === 'reward' ? 'Reward Center' : name === 'invite' ? 'Invite Friends' : 'Promotion'}</h3>
-          <p>
-            ${name === 'invite'
-              ? 'এই ডেমোতে রেফারেল বোনাস চালু নেই।'
-              : name === 'deposit' || name === 'withdraw' ? 'TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা বা উত্তোলন করা যায় না।' : 'এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট বা উত্তোলন নেই।'}
-          </p>
-        </div>
-      </div>
-    `);
-  }
+  const pages = {
+    deposit: ['Deposit Information','TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা করা যায় না।'],
+    withdraw: ['Withdrawal Information','TK777-তে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা উত্তোলন করা যায় না।'],
+    bank: ['Bank Account','এই ডেমোতে কোনো ব্যাংক অ্যাকাউন্ট বা বাস্তব অর্থের লেনদেন সংরক্ষণ করা হয় না।'],
+    depositRecord: ['Deposit Record','এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট নেই, তাই Deposit Record প্রযোজ্য নয়।'],
+    withdrawRecord: ['Withdrawal Record','এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের উত্তোলন নেই, তাই Withdrawal Record প্রযোজ্য নয়।'],
+    account: ['My Account','আপনার প্রোফাইল ছবি পরিবর্তন করতে উপরের প্রোফাইল আইকনে চাপ দিন।'],
+    security: ['Security Center','আপনার অ্যাকাউন্ট নিরাপদ রাখতে লগইন তথ্য গোপন রাখুন এবং নিজের ডিভাইস থেকে লগআউট করতে ভুলবেন না।'],
+    invite: ['Invite Friends','এই ডেমোতে রেফারেল বোনাস চালু নেই।'],
+    mission: ['Mission','বর্তমানে কোনো মিশন চালু নেই।'],
+    rebate: ['Rebate','এই ডেমোতে রিবেট সুবিধা চালু নেই।'],
+    messages: ['Internal Message','আপনার জন্য নতুন কোনো বার্তা নেই।'],
+    suggestion: ['Suggestion','পরামর্শ জমা দেওয়ার সুবিধা শিগগিরই যুক্ত করা হবে।'],
+    download: ['Download App','TK777-এর অ্যাপ ডাউনলোড বর্তমানে উপলব্ধ নয়।'],
+    service: ['Customer Service','কাস্টমার সার্ভিসের যোগাযোগের তথ্য বর্তমানে যুক্ত করা হয়নি।'],
+    reward: ['Reward Center','বর্তমানে কোনো নতুন রিওয়ার্ড নেই।'],
+    promotion: ['Promotion','বর্তমানে কোনো নতুন প্রমোশন নেই।']
+  };
+  const item = pages[name] || ['TK777','এই পেজটি বর্তমানে উপলব্ধ নয়।'];
+  shell(`
+    <div class="page member-subpage">
+      <div class="member-subpage-heading"><button onclick="page('member')" aria-label="Back">‹</button><h2>${esc(item[0])}</h2></div>
+      <div class="card"><p>${esc(item[1])}</p></div>
+      <button class="secondary" onclick="page('member')">Member Center</button>
+    </div>
+  `);
 }
 
 async function historyPage() {
