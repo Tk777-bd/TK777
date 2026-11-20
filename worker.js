@@ -247,10 +247,9 @@ async function crashState(env, gameId) {
     status: phase,
     multiplier,
     countdownMs,
-    crashMultiplier: s.status === "crashed"
-      ? Number(s.crash_multiplier)
-      : null,
+    crashMultiplier: Number(s.crash_multiplier),
     startMs,
+    serverNow: Date.now(),
     previous: history.results || []
   };
 }
