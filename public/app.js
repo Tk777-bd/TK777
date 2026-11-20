@@ -380,7 +380,10 @@ const displaySlotGames = [
 
 function displaySlotCard(g) {
   const image = slotDisplayImages[g.id] || '';
-  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '">' + (image ? '<img class="slot-admin-image" src="' + esc(image) + '" alt="' + esc(g.name) + '" loading="lazy">' : '<div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span><strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div>') + '</div>';
+  const art = image
+    ? '<img class="slot-admin-image" src="' + esc(image) + '" alt="' + esc(g.name) + '" loading="lazy">'
+    : '<div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span></div>';
+  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '">' + art + '<strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div>';
 }
 
 function homeGamesWithSlots() {
