@@ -684,6 +684,60 @@ async function route(req, env) {
       });
     }
 
+    /* CRASH: CANCEL BET DURING COUNTDOWN */
+    if (p === "/api/crash/cancel" && method === "POST") {
+      const { roundId } = await req.json();
+      if (!roundId) return json({ error: "roundId প্রয়োজন" }, 400);
+
+      const round = await env.DB.prepare(`
+        SELECT * FROM crash_rounds
+        WHERE id=? AND user_id=? AND status='active'
+      `).bind(roundId, user.id).first();
+
+      if (!round) return json({ error: "বাতিল করার মতো সক্রিয় বেট নেই" }, 404);
+
+      const session = await env.DB.prepare(`
+        SELECT * FROM crash_sessions
+        WHERE id=? AND status='active'
+      `).bind(round.session_id).first();
+
+      if (!session || Date.now() >= Number(session.start_ms)) {
+        return json({ error: "কাউন্টডাউন শেষ, এখন বেট বাতিল করা যাবে না" }, 409);
+      }
+
+      const cancelled = await env.DB.prepare(`
+        UPDATE crash_rounds SET status='cancelled', payout=0
+        WHERE id=? AND user_id=? AND status='active'
+          AND EXISTS (
+            SELECT 1 FROM crash_sessions
+            WHERE id=crash_rounds.session_id AND status='active' AND start_ms>?
+          )
+      `).bind(roundId, user.id, Date.now()).run();
+
+      if (!cancelled.meta.changes) {
+        return json({ error: "কাউন্টডাউন শেষ, বেট বাতিল করা যায়নি" }, 409);
+      }
+
+      await env.DB.prepare(`
+        UPDATE users SET balance=balance+? WHERE id=?
+      `).bind(Number(round.bet_amount), user.id).run();
+
+      const bal = await env.DB.prepare(`
+        SELECT balance FROM users WHERE id=?
+      `).bind(user.id).first();
+
+      await env.DB.prepare(`
+        INSERT INTO transactions
+        (id,user_id,type,amount,balance_after,note)
+        VALUES(?,?,?,?,?,?)
+      `).bind(
+        uid(), user.id, "refund", Number(round.bet_amount),
+        bal.balance, "Aviator বেট বাতিলের রিফান্ড"
+      ).run();
+
+      return json({ ok: true, balance: bal.balance });
+    }
+
     /* CRASH: UPDATE BET STATUS */
 
     if (p === "/api/crash/tick" && method === "POST") {
