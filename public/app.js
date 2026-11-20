@@ -737,7 +737,7 @@ async function submitDemoDeposit(){
  if(!method){msg.textContent=depositText('chooseMethodError');return;}
  if(!Number.isFinite(amount)||amount<=0||!Number.isInteger(amount)){msg.textContent=depositText('amountError');return;}
  if(!demo_reference){msg.textContent=depositText('referenceError');return;}
- try{await api('/demo-deposits',{method,amount,demo_reference});msg.textContent=depositText('successMessage');await loadDemoDeposits();}
+ try{const requestMethod=String(method).replace(/^Demo\\s+/,'');await api('/demo-deposits',{method:requestMethod,amount,demo_reference});msg.textContent=depositText('successMessage');await loadDemoDeposits();}
  catch(e){msg.textContent=e.message;}
 }
 
