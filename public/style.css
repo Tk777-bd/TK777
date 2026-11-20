@@ -1358,3 +1358,13 @@ body{background:#063b39}
 @keyframes dealerNod{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
 
 
+
+
+/* Clearly labelled, non-payment demo deposit screen */
+.demo-deposit-warning{display:flex;flex-direction:column;gap:7px;margin:12px 0;padding:14px;border:2px solid #f0b84b;border-radius:12px;background:linear-gradient(145deg,#3b2b12,#241e16);color:#ffe7a4;font-weight:900;text-align:center}
+.demo-deposit-warning span{font-size:12px;line-height:1.55;font-weight:600;color:#fff0c9}
+.demo-deposit-card h3{margin:4px 0;color:#f7d77e}
+.demo-payment-methods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.demo-payment-method{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 5px;border:1px solid #b88b45;border-radius:10px;background:linear-gradient(145deg,#153f3b,#092b30);color:#fff;font-weight:900}
+.demo-payment-method small{font-size:9px;color:#ffe08a;letter-spacing:1px}
+#demoReference{letter-spacing:1px;font-weight:900;color:#f8d779}
