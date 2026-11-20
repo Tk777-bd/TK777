@@ -397,8 +397,7 @@ async function route(req, env) {
         : json({ error: "লগইন করুন" }, 401);
     }
 
-    if (p === "/api/logout" && method === "POST") {
-      const token = (req.headers.get("Authorization") || "")
+    if (p === "/api/logout" && method === "POST") {      const token = (req.headers.get("Authorization") || "")
         .replace(/^Bearer /, "");
 
       if (token) {
@@ -430,11 +429,12 @@ async function route(req, env) {
     }
 
     if (p === "/api/support-settings" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket')").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('support_telegram_username','support_telegram_image_url','demo_payment_image_bkash','demo_payment_image_nagad','demo_payment_image_rocket','demo_display_number')").all();
       const values = Object.fromEntries((rows.results || []).map(r => [r.key,r.value]));
       const image = String(values.support_telegram_image_url || '');
       const validImage = key => /^https:\/\//i.test(String(values[key] || '')) ? String(values[key]) : '';
-      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')}});
+      const demoNumber = /^01[3-9][0-9]{8}$/.test(String(values.demo_display_number || '')) ? String(values.demo_display_number) : '01790365006';
+      return json({telegram_username:String(values.support_telegram_username || ''),telegram_image_url:/^https:\/\//i.test(image) ? image : '',demo_display_number:demoNumber,demo_payment_images:{bkash:validImage('demo_payment_image_bkash'),nagad:validImage('demo_payment_image_nagad'),rocket:validImage('demo_payment_image_rocket')}});
     }
 
   if (p === "/api/home-banners" && method === "GET") {
@@ -797,7 +797,6 @@ async function route(req, env) {
       if (!session) {
         return json({ error: "Crash গেম বা রাউন্ড পাওয়া যায়নি" }, 404);
       }
-
       const now = Date.now();
       if (now >= Number(session.start_ms)) {
         return json({
@@ -1197,8 +1196,7 @@ async function route(req, env) {
 
       const [u, g, c, t] = await Promise.all([
         env.DB.prepare("SELECT COUNT(*) n FROM users").first(),
-        env.DB.prepare("SELECT COUNT(*) n FROM games").first(),
-        env.DB.prepare("SELECT COUNT(*) n FROM categories").first(),
+        env.DB.prepare("SELECT COUNT(*) n FROM games").first(),        env.DB.prepare("SELECT COUNT(*) n FROM categories").first(),
         env.DB.prepare("SELECT COUNT(*) n FROM game_rounds").first()
       ]);
 
@@ -1497,6 +1495,10 @@ async function route(req, env) {
       }
 
       const { key, value } = await req.json();
+
+      if (key === 'demo_display_number' && !/^01[3-9][0-9]{8}$/.test(String(value || ''))) {
+        return json({ error: "সঠিক ১১ সংখ্যার Demo নম্বর দিন" }, 400);
+      }
 
       if (!key || String(key).length > 80) {
         return json({ error: "Key প্রয়োজন" }, 400);
