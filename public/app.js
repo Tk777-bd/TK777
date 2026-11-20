@@ -518,11 +518,11 @@ function aviator(g) {
                 <div class="bet-amount-side">
                   <div class="bet-amount-wrap">
                     <button type="button" onclick="adjustQuickBet(${i},-1)" aria-label="Decrease bet">−</button>
-                    <input id="crashBet${i}" type="number" min="1" max="1000000" step="1" value="10" aria-label="Bet amount">
+                    <input id="crashBet${i}" type="number" min="1" max="1000000" step="1" value="10" aria-label="Bet amount" oninput="syncBetButton(${i})" onchange="syncBetButton(${i})">
                     <button type="button" onclick="adjustQuickBet(${i},1)" aria-label="Increase bet">+</button>
                   </div>
                   <div class="quick-bets">
-                    ${[1,2,5,10].map(v => `<button type="button" onclick="setQuickBet(${i},${v})">${v}</button>`).join('')}
+                    ${[1,10,50,100].map(v => `<button type="button" onclick="setQuickBet(${i},${v})">${v}</button>`).join('')}
                   </div>
                 </div>
                 <div class="bet-action-side">
@@ -551,23 +551,29 @@ function aviator(g) {
   startCrashMonitor(g.id);
 }
 
+function syncBetButton(index) {
+  const input = $('#crashBet'+index);
+  const btn = $('#startCrash'+index);
+  if (!input || !btn) return;
+  const amount = Number(input.value);
+  const shown = Number.isFinite(amount) && amount >= 0 ? amount : 0;
+  btn.innerHTML = 'Bet<br><b>BDT '+shown.toFixed(2)+'</b>';
+}
+
 function setQuickBet(index, amount) {
   const input = $('#crashBet'+index);
   if (!input) return;
   input.value = String(amount);
-  input.dispatchEvent(new Event('change', {bubbles:true}));
-  const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>BDT '+Number(amount).toFixed(2)+'</b>';
+  syncBetButton(index);
 }
 
 function adjustQuickBet(index, direction) {
   const input = $('#crashBet'+index);
   if (!input) return;
   const current = Math.max(1,Number(input.value)||1);
-  const next = Math.max(1,Math.min(1000000,current + direction));
+  const next = Math.max(1,Math.min(1000000,current + direction*10));
   input.value = String(next);
-  const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>BDT '+next.toFixed(2)+'</b>';
+  syncBetButton(index);
 }
 
 function setAviatorMode(index, mode) {
@@ -596,6 +602,7 @@ function startCrashMonitor(gameId) {
 
 function multiplierHistoryClass(value) {
   const n = Number(value);
+  if (n >= 15) return 'history-red';
   if (n >= 10) return 'history-pink';
   if (n >= 2) return 'history-purple';
   return 'history-blue';
