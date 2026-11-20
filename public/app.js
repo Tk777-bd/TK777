@@ -1099,8 +1099,12 @@ async function startCrash(index) {
     }
 
   } catch (e) {
-    toast(e.message);
-    if (result) result.textContent = e.message;
+    const errorText = String(e?.message || '');
+    const displayMessage = /পর্যাপ্ত ফ্রি কয়েন নেই|insufficient.*(coin|balance)|not enough.*(coin|balance)/i.test(errorText)
+      ? 'ব্যালেন্স কম!'
+      : errorText;
+    toast(displayMessage);
+    if (result) result.textContent = displayMessage;
   } finally {
     slot.busy = false;
     updateSlotButtons(index);
