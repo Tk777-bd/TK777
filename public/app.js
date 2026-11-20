@@ -253,6 +253,8 @@ async function init() {
     const slotDisplayData = await api('/slot-display-images');
     slotDisplayImages = slotDisplayData.images || {};
     slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
+    const slotNameOverrides = slotDisplayData.nameOverrides || {};
+    displaySlotGames.forEach(g => { if (typeof slotNameOverrides[g.id] === 'string' && slotNameOverrides[g.id].trim()) g.name = slotNameOverrides[g.id].trim(); });
   } catch (e) {
     toast(e.message);
   }
