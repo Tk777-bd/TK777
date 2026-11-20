@@ -422,208 +422,167 @@ function aviator(g) {
     {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2},
     {roundId:null,busy:false,status:'ready',auto:false,autoTarget:2}
   ];
-
   crashGameId = g.id;
   crashPhase = 'countdown';
 
-  shell(`
-    <div class="game-top top">
-      <button class="secondary" onclick="home()">‹ BACK</button>
-      <b>TK777 FLIGHT</b>
-      <span id="gameBalance">${money(me.balance)}</span>
-    </div>
+  $('#app').innerHTML = `
+    <main class="aviator-app">
+      <header class="aviator-header">
+        <button class="aviator-back" onclick="home()" aria-label="Back">‹</button>
+        <div class="aviator-wordmark">Aviator<span>TK777</span></div>
+        <div class="aviator-wallet"><small>VIRTUAL BALANCE</small><b id="gameBalance">${money(me.balance)}</b></div>
+      </header>
 
-    <div class="game-screen">
+      <div class="aviator-ticker">
+        <span class="ticker-label">LAST</span>
+        <div id="crashHistoryTicker" class="ticker-values"><i>Loading results…</i></div>
+      </div>
 
-      <div class="aviator-stage countdown" id="aviatorStage">
+      <section class="aviator-game-body">
+        <div class="aviator-stage countdown" id="aviatorStage">
+          <div class="aviator-rays"></div>
+          <div class="aviator-sky"></div>
+          <div class="aviator-stars"></div>
+          <div class="aviator-clouds cloud-back"></div>
+          <div class="aviator-clouds cloud-middle"></div>
+          <div class="aviator-clouds cloud-front"></div>
+          <div class="stage-flash" id="stageFlash"></div>
 
-        <div class="aviator-sky"></div>
-        <div class="aviator-stars"></div>
-        <div class="aviator-clouds cloud-back"></div>
-        <div class="aviator-clouds cloud-middle"></div>
-        <div class="aviator-clouds cloud-front"></div>
-        <div class="aviator-horizon"></div>
-        <div class="flight-grid"></div>
-        <div class="stage-vignette"></div>
-        <div class="stage-flash" id="stageFlash"></div>
+          <div class="aviator-funbar">FUN MODE</div>
+          <div class="aviator-promo" id="aviatorPromo">
+            <div class="promo-kicker">TK777 ORIGINAL GAME</div>
+            <div class="promo-title">READY FOR<br><b>TAKE OFF?</b></div>
+            <div class="promo-plane">✈</div>
+            <div class="promo-stamp">FREE PLAY<br><b>VIRTUAL COINS</b></div>
+          </div>
 
-        <div class="multiplier" id="multi">1.00x</div>
-        <div class="crash-status" id="crashStatus">WAITING FOR NEXT ROUND</div>
+          <div class="multiplier" id="multi">1.00x</div>
+          <div class="crash-status" id="crashStatus">WAITING FOR NEXT ROUND</div>
 
-        <svg class="flight-chart" id="flightChart"
-          viewBox="0 0 1000 440"
-          preserveAspectRatio="none"
-          aria-hidden="true">
-
-          <defs>
-            <linearGradient id="flightLine" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0%" stop-color="#ffd36a"/>
-              <stop offset="45%" stop-color="#ff9a42"/>
-              <stop offset="100%" stop-color="#ff3c40"/>
-            </linearGradient>
-
-            <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ff8538" stop-opacity=".35"/>
-              <stop offset="100%" stop-color="#ff4b37" stop-opacity="0"/>
-            </linearGradient>
-
-            <filter id="flightGlow">
-              <feGaussianBlur stdDeviation="5" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-
-          <path id="flightArea" class="flight-area"
-            d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12 L970 440 L35 440 Z"/>
-
-          <path id="flightPath" class="flight-path"
-            d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12"/>
-
-          <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="6"/>
-        </svg>
-
-        <div class="plane-trail" id="planeTrail"></div>
-
-        <div class="plane-wrap" id="planeWrap">
-          <svg class="plane" id="plane" viewBox="0 0 190 112"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="TK777 airplane">
-
+          <svg class="flight-chart" id="flightChart" viewBox="0 0 1000 440" preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              <linearGradient id="bodyRed" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ff9990"/>
-                <stop offset=".35" stop-color="#f52d38"/>
-                <stop offset="1" stop-color="#99091c"/>
+              <linearGradient id="flightLine" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stop-color="#ff304c"/>
+                <stop offset="100%" stop-color="#ff304c"/>
               </linearGradient>
-
-              <linearGradient id="wingRed" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#ffc1ae"/>
-                <stop offset=".45" stop-color="#f33b43"/>
-                <stop offset="1" stop-color="#97091b"/>
+              <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ed1741" stop-opacity=".48"/>
+                <stop offset="100%" stop-color="#ed1741" stop-opacity="0"/>
               </linearGradient>
-
-              <linearGradient id="glassBlue" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#e3f9ff"/>
-                <stop offset=".55" stop-color="#56a6ce"/>
-                <stop offset="1" stop-color="#163b64"/>
-              </linearGradient>
+              <filter id="flightGlow">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
             </defs>
-
-            <path d="M60 58 L23 27 Q19 23 24 22 L45 24 L91 53 L60 58Z"
-              fill="#a90b1c" stroke="#ff9a8e" stroke-width="1.5"/>
-
-            <path d="M38 59 L17 39 Q14 35 19 34 L32 37 L57 56Z"
-              fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.4"/>
-
-            <path d="M83 56 L118 8 Q122 3 128 7 L132 12 L116 59 L83 65Z"
-              fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.7"/>
-
-            <path d="M91 57 L122 13"
-              stroke="#ffd1c6" stroke-width="2" opacity=".65"/>
-
-            <path d="M39 56 L31 29 Q30 24 35 25 L48 34 L61 55Z"
-              fill="#d7192b" stroke="#ffb0a5" stroke-width="1.5"/>
-
-            <path d="M8 65 Q14 55 43 53 L145 49 Q163 49 178 57 Q185 61 178 66 Q163 74 144 74 L43 72 Q15 73 8 65Z"
-              fill="url(#bodyRed)" stroke="#ffc1b3" stroke-width="1.6"/>
-
-            <path d="M112 53 Q151 50 174 58"
-              fill="none" stroke="#ffd5c8" stroke-width="2" opacity=".65"/>
-
-            <path d="M132 52 Q146 48 157 54 L164 60 L134 60Z"
-              fill="url(#glassBlue)" stroke="#ffe4df" stroke-width="1.2"/>
-
-            <path d="M92 57 L100 57 M105 57 L113 57"
-              stroke="#ffd9cf" stroke-width="2" opacity=".7"/>
-
-            <path d="M78 68 L111 99 Q116 104 121 100 L127 94 L111 66 L78 62Z"
-              fill="url(#wingRed)" stroke="#ff9b91" stroke-width="1.5"/>
-
-            <path d="M87 68 L115 96"
-              stroke="#ffd1c8" stroke-width="1.5" opacity=".55"/>
-
-            <path d="M58 73 L68 82 L87 81 L79 72Z"
-              fill="#8e1020" stroke="#ffb0a5" stroke-width="1.2"/>
-
-            <circle cx="179" cy="62" r="4" fill="#f8e5d5"/>
-
-            <g id="planePropeller" class="plane-propeller">
-              <path d="M179 62 Q184 43 188 48 Q191 56 181 63Z"
-                fill="#e8edf0" opacity=".9"/>
-              <path d="M179 62 Q174 81 170 76 Q167 68 177 61Z"
-                fill="#e8edf0" opacity=".9"/>
-            </g>
+            <path id="flightArea" class="flight-area" d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12 L970 440 L35 440 Z"/>
+            <path id="flightPath" class="flight-path" d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12"/>
+            <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="6"/>
           </svg>
 
-          <div class="plane-fire"></div>
-        </div>
-
-        <div class="round-label">TK777 FLIGHT</div>
-        <div class="stage-bottom-label">GOOD LUCK!</div>
-      </div>
-
-      <div class="card">
-        <div class="crash-history-title">
-          <b>PREVIOUS RESULTS</b>
-          <small>LAST ROUNDS</small>
-        </div>
-        <div id="crashHistory" class="crash-history">
-          <span class="muted">ফলাফল লোড হচ্ছে...</span>
-        </div>
-      </div>
-
-      <div class="crash-panels">
-        ${[0,1].map(i => `
-          <div class="card betbox crash-bet-panel">
-            <div class="crash-panel-head">
-              <b>BET ${i+1}</b>
-              <span id="slotStatus${i}">READY</span>
-            </div>
-
-            <label>BET AMOUNT</label>
-            <input class="field" id="crashBet${i}"
-              type="number" min="1" max="1000000"
-              step="1" value="10">
-
-            <div class="auto-row">
-              <label class="auto-check">
-                <input type="checkbox" id="autoToggle${i}"
-                  onchange="toggleAuto(${i},this.checked)">
-                AUTO CASH OUT
-              </label>
-
-              <label class="auto-target">
-                AT
-                <input id="autoTarget${i}" type="number"
-                  min="1.01" max="1000" step=".01" value="2.00">
-                x
-              </label>
-            </div>
-
-            <div class="bet-actions">
-              <button class="primary" id="startCrash${i}"
-                onclick="startCrash(${i})">BET</button>
-
-              <button class="cashout" id="cashoutBtn${i}"
-                disabled onclick="cashout(${i})">CASH OUT</button>
-
-              <button class="cancel-auto" id="cancelAuto${i}"
-                onclick="cancelAuto(${i})" disabled>CANCEL AUTO</button>
-            </div>
-
-            <div id="result${i}" class="notice">
-              পরবর্তী রাউন্ডের জন্য অপেক্ষা করুন
-            </div>
+          <div class="plane-trail" id="planeTrail"></div>
+          <div class="plane-wrap" id="planeWrap">
+            <svg class="plane" id="plane" viewBox="0 0 190 112" xmlns="http://www.w3.org/2000/svg" aria-label="TK777 red airplane">
+              <defs>
+                <linearGradient id="bodyRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#ffaaa9"/><stop offset=".35" stop-color="#fa173d"/><stop offset="1" stop-color="#8c001d"/>
+                </linearGradient>
+                <linearGradient id="wingRed" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffb8b8"/><stop offset=".45" stop-color="#ed1640"/><stop offset="1" stop-color="#870019"/>
+                </linearGradient>
+                <linearGradient id="glassBlue" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#e3f9ff"/><stop offset=".55" stop-color="#56a6ce"/><stop offset="1" stop-color="#163b64"/>
+                </linearGradient>
+              </defs>
+              <path d="M60 58 L23 27 Q19 23 24 22 L45 24 L91 53 L60 58Z" fill="#a90b1c" stroke="#ff9a8e" stroke-width="1.5"/>
+              <path d="M38 59 L17 39 Q14 35 19 34 L32 37 L57 56Z" fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.4"/>
+              <path d="M83 56 L118 8 Q122 3 128 7 L132 12 L116 59 L83 65Z" fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.7"/>
+              <path d="M91 57 L122 13" stroke="#ffd1c6" stroke-width="2" opacity=".65"/>
+              <path d="M39 56 L31 29 Q30 24 35 25 L48 34 L61 55Z" fill="#d7192b" stroke="#ffb0a5" stroke-width="1.5"/>
+              <path d="M8 65 Q14 55 43 53 L145 49 Q163 49 178 57 Q185 61 178 66 Q163 74 144 74 L43 72 Q15 73 8 65Z" fill="url(#bodyRed)" stroke="#ffc1b3" stroke-width="1.6"/>
+              <path d="M112 53 Q151 50 174 58" fill="none" stroke="#ffd5c8" stroke-width="2" opacity=".65"/>
+              <path d="M132 52 Q146 48 157 54 L164 60 L134 60Z" fill="url(#glassBlue)" stroke="#ffe4df" stroke-width="1.2"/>
+              <path d="M78 68 L111 99 Q116 104 121 100 L127 94 L111 66 L78 62Z" fill="url(#wingRed)" stroke="#ff9b91" stroke-width="1.5"/>
+              <path d="M87 68 L115 96" stroke="#ffd1c8" stroke-width="1.5" opacity=".55"/>
+              <path d="M58 73 L68 82 L87 81 L79 72Z" fill="#8e1020" stroke="#ffb0a5" stroke-width="1.2"/>
+              <circle cx="179" cy="62" r="4" fill="#f8e5d5"/>
+              <g id="planePropeller" class="plane-propeller">
+                <path d="M179 62 Q184 43 188 48 Q191 56 181 63Z" fill="#e8edf0" opacity=".9"/>
+                <path d="M179 62 Q174 81 170 76 Q167 68 177 61Z" fill="#e8edf0" opacity=".9"/>
+              </g>
+            </svg>
+            <div class="plane-fire"></div>
           </div>
-        `).join('')}
-      </div>
-    </div>
-  `);
+          <div class="aviator-stage-note">TK777 • VIRTUAL COIN GAME</div>
+        </div>
+
+        <div class="aviator-bet-panels">
+          ${[0,1].map(i => `
+            <section class="aviator-bet-card">
+              <div class="bet-mode-tabs">
+                <button id="betMode${i}" class="mode-tab active" onclick="setAviatorMode(${i},'bet')">Bet</button>
+                <button id="autoMode${i}" class="mode-tab" onclick="setAviatorMode(${i},'auto')">Auto</button>
+              </div>
+              <div class="bet-card-main">
+                <div class="bet-amount-side">
+                  <div class="bet-amount-wrap">
+                    <span>−</span>
+                    <input id="crashBet${i}" type="number" min="1" max="1000000" step="1" value="10" aria-label="Bet amount">
+                    <span>+</span>
+                  </div>
+                  <div class="quick-bets">
+                    ${[1,2,5,10].map(v => `<button type="button" onclick="setQuickBet(${i},${v})">${v}</button>`).join('')}
+                  </div>
+                </div>
+                <div class="bet-action-side">
+                  <button class="aviator-bet-button" id="startCrash${i}" onclick="startCrash(${i})">Bet<br><b>10.00 USD</b></button>
+                  <button class="aviator-cashout-button" id="cashoutBtn${i}" disabled onclick="cashout(${i})">Cash Out<br><b>0.00 USD</b></button>
+                  <button class="aviator-cancel-button" id="cancelAuto${i}" onclick="cancelAuto(${i})" disabled>Cancel</button>
+                </div>
+              </div>
+              <div class="aviator-auto-row" id="autoOptions${i}">
+                <label><input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)"> Auto Bet</label>
+                <label class="auto-cash-label">Auto Cash Out
+                  <input type="number" id="autoTarget${i}" min="1.01" max="1000" step=".01" value="2.00"><span>x</span>
+                </label>
+              </div>
+              <div class="aviator-slot-status"><span id="slotStatus${i}">READY</span><small id="result${i}">Waiting for next round</small></div>
+            </section>
+          `).join('')}
+        </div>
+
+        <section class="aviator-bottom-feed">
+          <div class="feed-tabs">
+            <button class="active" type="button">All Bets</button>
+            <button type="button">Previous</button>
+            <button type="button">Top</button>
+          </div>
+          <div class="feed-summary"><b>Previous rounds</b><span>Virtual coin results</span></div>
+          <div id="crashHistory" class="crash-history"><span class="muted">Loading results…</span></div>
+        </section>
+        <div class="aviator-footer-note">TK777 • FREE VIRTUAL COINS • NO CASH VALUE</div>
+      </section>
+    </main>
+  `;
 
   startCrashMonitor(g.id);
+}
+
+function setQuickBet(index, amount) {
+  const input = $('#crashBet'+index);
+  if (!input) return;
+  input.value = String(amount);
+  input.dispatchEvent(new Event('change', {bubbles:true}));
+  const btn = $('#startCrash'+index);
+  if (btn) btn.innerHTML = 'Bet<br><b>'+Number(amount).toFixed(2)+' USD</b>';
+}
+
+function setAviatorMode(index, mode) {
+  const bet = $('#betMode'+index);
+  const auto = $('#autoMode'+index);
+  const options = $('#autoOptions'+index);
+  if (bet) bet.classList.toggle('active',mode==='bet');
+  if (auto) auto.classList.toggle('active',mode==='auto');
+  if (options) options.classList.toggle('auto-mode-active',mode==='auto');
 }
 
 /* ==========================================
