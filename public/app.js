@@ -218,7 +218,7 @@ function shell(content) {
         <button onclick="page('reward')"><b>★</b>Reward</button>
         <button onclick="page('member')"><b>♙</b>Member</button>
       </nav>
-      ${!isPlayingGame && supportSettings.telegram_username ? `<button class="telegram-support-float" type="button" onclick="openTelegramSupport()" aria-label="Telegram Support">${supportSettings.telegram_image_url ? `<img src="${esc(supportSettings.telegram_image_url)}" alt="Support">` : '<span>➤</span>'}</button>` : ''}
+      ${!isPlayingGame ? `<button class="telegram-support-float" type="button" onclick="openTelegramSupport()" aria-label="Telegram Support">${supportSettings.telegram_image_url ? `<img src="${esc(supportSettings.telegram_image_url)}" alt="Support">` : '<span>➤</span>'}</button>` : ''}
     </div>`;
 }
 
@@ -475,6 +475,7 @@ function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
   if (name === 'member') return memberCenter();
+  if (name === 'deposit') return depositPage();
   if (name === 'history') return historyPage();
   if (name === 'profitloss') return profitLossPage();
 
@@ -504,6 +505,36 @@ function page(name) {
       <button class="secondary" onclick="page('member')">Member Center</button>
     </div>
   `);
+}
+
+
+async function depositPage(){
+  if(!me) return showAuth();
+  shell(`<div class="page member-subpage">
+    <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Virtual Coin Request</h2></div>
+    <div class="card coin-request-card">
+      <p>যোগাযোগ নম্বর</p><div class="coin-contact-number"><strong>01790365006</strong></div>
+      <p class="muted">এটি শুধু যোগাযোগের নম্বর। কোনো টাকা পাঠাবেন না। এখানে বিনামূল্যের, নগদমূল্যহীন Virtual Coin Request করুন।</p>
+      <label for="coinRequestAmount">কত Virtual Coin চান?</label>
+      <select id="coinRequestAmount" class="field"><option value="100">100 Coin</option><option value="200">200 Coin</option><option value="300">300 Coin</option><option value="500">500 Coin</option><option value="1000">1000 Coin</option></select>
+      <button class="primary" onclick="submitCoinRequest()">ফ্রি কয়েন রিকুয়েস্ট পাঠান</button>
+      <p id="coinRequestMsg" class="muted"></p>
+    </div>
+    <h3>আমার Coin Requests</h3><div id="coinRequestHistory" class="card">লোড হচ্ছে…</div>
+    <button class="secondary" onclick="page('member')">Member Center</button>
+  </div>`);
+  loadCoinRequests();
+}
+async function loadCoinRequests(){
+  const box=document.getElementById('coinRequestHistory');if(!box)return;
+  try{const d=await api('/coin-requests');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+Number(x.amount)+' Virtual Coin<small>'+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?'Pending':x.status==='approved'?'Approved':'Rejected')+'</b></div>').join('')||'এখনো কোনো Request নেই';}
+  catch(e){box.textContent=e.message;}
+}
+async function submitCoinRequest(){
+  const amount=Number(document.getElementById('coinRequestAmount')?.value);
+  const msg=document.getElementById('coinRequestMsg');if(!msg)return;
+  try{await api('/coin-requests',{amount});msg.textContent='আপনার ফ্রি Virtual Coin Request Admin-এর কাছে পাঠানো হয়েছে। অনুমোদন না হওয়া পর্যন্ত ব্যালেন্স বাড়বে না।';await loadCoinRequests();}
+  catch(e){msg.textContent=e.message;}
 }
 
 async function historyPage() {
