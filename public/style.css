@@ -1448,3 +1448,16 @@ body{background:#063b39}
 .account-vip-progress b{color:#ffe08a}
 .account-progress-track{height:9px;border-radius:20px;background:#ffffff24;overflow:hidden}
 .account-progress-track i{display:block;height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,#f4d66e,#fff0a8);transition:width .3s}
+
+/* Internal message inbox */
+.internal-message-menu{position:relative}
+.internal-message-badge{position:absolute;top:-5px;right:10px;min-width:15px;height:15px;padding:0 3px;border-radius:10px;background:#ef3434;color:#fff;font-size:9px;font-style:normal;font-weight:900;line-height:15px;text-align:center;box-shadow:0 1px 4px #0005}
+.internal-message-badge[hidden]{display:none}
+.internal-message-list{display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow-y:auto;padding:2px 3px 10px;overscroll-behavior:contain}
+.internal-message-card{padding:13px 14px;border-radius:13px;background:linear-gradient(145deg,#17443d,#102e34);border:1px solid #ffffff20;color:#f2f5ed;box-shadow:0 3px 10px #0002}
+.internal-message-card.is-unread{border-left:3px solid #efc75e;background:linear-gradient(145deg,#1d5147,#14363a)}
+.internal-message-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.internal-message-heading b{font-size:14px;color:#ffe39a}
+.internal-message-heading small{font-size:10px;color:#b9c8c2;white-space:nowrap}
+.internal-message-card p{font-size:12px;line-height:1.55;margin:7px 0 0;color:#edf1eb;overflow-wrap:anywhere}
+.internal-message-empty{text-align:center;color:#b9c8c2;padding:24px}
