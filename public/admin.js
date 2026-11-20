@@ -281,7 +281,8 @@ async function demoNumberSettings(){
  const methodFields=demoMethods.map(([id,label,fallback])=>'<div><label>'+label+' Demo Number</label><input class="field" id="demoMethodNumber-'+id+'" type="tel" inputmode="numeric" maxlength="11" value="'+esc(values['demo_number_'+id]||fallback)+'" placeholder="১১ সংখ্যার কাল্পনিক নম্বর"></div>').join('');
  const bkashIds=readWithdrawDemoIds(values.withdraw_demo_ids_bkash,'DEMO-BKASH-01');
  const nagadIds=readWithdrawDemoIds(values.withdraw_demo_ids_nagad,'DEMO-NAGAD-01');
- $('#view').innerHTML='<div class="card"><h3>Withdrawal Demo পরিচিতি</h3><p class="muted">এগুলো আসল মোবাইল নম্বর নয়; শুধু কাল্পনিক Demo কোড। ＋ দিয়ে নতুন কোড যোগ এবং Remove দিয়ে মুছতে পারবেন।</p><h4>বিকাশ Demo কোড</h4><div id="withdrawDemoBkashList">'+renderWithdrawDemoInputs('bkash',bkashIds)+'</div><button type="button" onclick="addWithdrawDemoInput(\'bkash\')">＋ Add bKash Demo</button><h4>নগদ Demo কোড</h4><div id="withdrawDemoNagadList">'+renderWithdrawDemoInputs('nagad',nagadIds)+'</div><button type="button" onclick="addWithdrawDemoInput(\'nagad\')">＋ Add Nagad Demo</button><button class="primary" onclick="saveWithdrawDemoIds()">Save Withdrawal Demo Codes</button><div id="withdrawDemoIdsMsg" class="muted"></div></div><div class="card"><h3>তিনটি Demo নম্বর পরিবর্তন</h3><p class="muted">নিচের পুরোনো Deposit Demo নম্বর সেটিং আলাদা; Withdrawal Demo কোডের সঙ্গে যুক্ত নয়।</p>'+methodFields+'<button class="primary" onclick="saveDemoMethodNumbers()">Save Three Demo Numbers</button><div id="demoMethodNumbersMsg" class="muted"></div></div><div class="card"><h3>পুরোনো সাধারণ Demo নম্বর</h3><label>Demo Display Number</label><input class="field" id="demoDisplayNumberInput" type="tel" inputmode="numeric" maxlength="11" value="'+esc(current)+'" placeholder="01XXXXXXXXX"><button class="primary" onclick="saveDemoDisplayNumber()">Save Number</button><div id="demoDisplayNumberMsg" class="muted"></div></div>';
+ const rocketIds=readWithdrawDemoIds(values.withdraw_demo_ids_rocket,'DEMO-ROCKET-01');
+ $('#view').innerHTML='<div class="card"><h3>Withdrawal Demo পরিচিতি</h3><p class="muted">এগুলো আসল মোবাইল নম্বর নয়; শুধু কাল্পনিক Demo কোড। ＋ দিয়ে নতুন কোড যোগ এবং Remove দিয়ে মুছতে পারবেন।</p><h4>বিকাশ Demo কোড</h4><div id="withdrawDemoBkashList">'+renderWithdrawDemoInputs('bkash',bkashIds)+'</div><button type="button" onclick="addWithdrawDemoInput(\'bkash\')">＋ Add bKash Demo</button><h4>নগদ Demo কোড</h4><div id="withdrawDemoNagadList">'+renderWithdrawDemoInputs('nagad',nagadIds)+'</div><button type="button" onclick="addWithdrawDemoInput(\'nagad\')">＋ Add Nagad Demo</button><h4>রকেট Demo কোড</h4><div id="withdrawDemoRocketList">'+renderWithdrawDemoInputs('rocket',rocketIds)+'</div><button type="button" onclick="addWithdrawDemoInput(\'rocket\')">＋ Add Rocket Demo</button><button class="primary" onclick="saveWithdrawDemoIds()">Save Withdrawal Demo Codes</button><div id="withdrawDemoIdsMsg" class="muted"></div></div><div class="card"><h3>তিনটি Demo নম্বর পরিবর্তন</h3><p class="muted">নিচের পুরোনো Deposit Demo নম্বর সেটিং আলাদা; Withdrawal Demo কোডের সঙ্গে যুক্ত নয়।</p>'+methodFields+'<button class="primary" onclick="saveDemoMethodNumbers()">Save Three Demo Numbers</button><div id="demoMethodNumbersMsg" class="muted"></div></div><div class="card"><h3>পুরোনো সাধারণ Demo নম্বর</h3><label>Demo Display Number</label><input class="field" id="demoDisplayNumberInput" type="tel" inputmode="numeric" maxlength="11" value="'+esc(current)+'" placeholder="01XXXXXXXXX"><button class="primary" onclick="saveDemoDisplayNumber()">Save Number</button><div id="demoDisplayNumberMsg" class="muted"></div></div>';
 }
 function readWithdrawDemoIds(raw,fallback){
  try{const v=JSON.parse(raw||'null');return Array.isArray(v)?v.filter(x=>/^DEMO-[A-Z0-9-]{1,24}$/.test(String(x))).slice(0,10):[fallback];}catch{return [fallback];}
@@ -290,14 +291,14 @@ function renderWithdrawDemoInputs(kind,items){
  return items.map(v=>'<div class="row" style="gap:8px;align-items:center"><input class="field withdraw-demo-id" data-kind="'+kind+'" maxlength="29" value="'+esc(v)+'" placeholder="DEMO-'+kind.toUpperCase()+'-01"><button type="button" onclick="this.parentElement.remove()">Remove</button></div>').join('');
 }
 function addWithdrawDemoInput(kind){
- const box=$('#withdrawDemo'+(kind==='bkash'?'Bkash':'Nagad')+'List');if(!box)return;
+ const box=$('#withdrawDemo'+(kind==='bkash'?'Bkash':kind==='nagad'?'Nagad':'Rocket')+'List');if(!box)return;
  const count=box.querySelectorAll('.withdraw-demo-id').length;if(count>=10)return alert('সর্বোচ্চ ১০টি Demo কোড যোগ করা যাবে।');
  box.insertAdjacentHTML('beforeend',renderWithdrawDemoInputs(kind,['DEMO-'+kind.toUpperCase()+'-'+String(count+1).padStart(2,'0')]));
 }
 async function saveWithdrawDemoIds(){
  const msg=$('#withdrawDemoIdsMsg');
  try{
-  for(const kind of ['bkash','nagad']){
+  for(const kind of ['bkash','nagad','rocket']){
    const vals=[...document.querySelectorAll('.withdraw-demo-id[data-kind="'+kind+'"]')].map(x=>x.value.trim().toUpperCase());
    if(vals.length>10||vals.some(x=>!/^DEMO-[A-Z0-9-]{1,24}$/.test(x))||new Set(vals).size!==vals.length)throw Error('শুধু DEMO- দিয়ে শুরু কাল্পনিক কোড দিন; একই কোড দুবার নয়, সর্বোচ্চ ১০টি।');
    await api('/admin/settings',{key:'withdraw_demo_ids_'+kind,value:JSON.stringify(vals)});
