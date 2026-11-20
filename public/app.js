@@ -463,7 +463,6 @@ function aviator(g) {
           <div class="aviator-clouds cloud-front"></div>
           <div class="stage-flash" id="stageFlash"></div>
 
-          <div class="aviator-funbar">FUN MODE</div>
           <div class="aviator-promo" id="aviatorPromo">
             <div class="promo-partners"><b>UFC</b><i></i><strong>Aviator</strong></div>
             <div class="promo-official">OFFICIAL PARTNERS</div>
