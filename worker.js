@@ -445,6 +445,16 @@ async function route(req, env) {
         WHERE id='super-ace' AND sort_order=2
       `).run();
 
+      // Built-in free virtual-coin mini games; no paid provider/API required.
+      const miniGames = [["gold-mines","Gold Mines","slots",4],["plinko","Plinko","slots",5],["classic-dice","Classic Dice","hot",6],["royal-coinflip","Royal Coinflip","hot",7],["european-roulette","European Roulette","live",8],["blackjack-21","Blackjack 21","poker",9],["baccarat","Baccarat","live",10],["diamond-slots","Diamond Slots","slots",11],["fortune-wheel","Fortune Wheel","lottery",12],["royal-keno","Royal Keno","lottery",13]];
+      for (const [id,name,category,order] of miniGames) {
+        await env.DB.prepare(`
+          INSERT OR IGNORE INTO games
+          (id,name,category_id,image_url,game_type,sort_order)
+          VALUES(?,?,?,'','minigame',?)
+        `).bind(id,name,category,order).run();
+      }
+
       const rows = await env.DB.prepare(`
         SELECT id,name,category_id,image_url,game_type,
                html_content,active,sort_order
@@ -581,6 +591,116 @@ async function route(req, env) {
           UPDATE users SET balance=balance+? WHERE id=?
         `).bind(bet - payout, user.id).run();
 
+        throw e;
+      }
+    }
+
+    /* FREE VIRTUAL-COIN MINI GAMES: outcomes are generated on the server. */
+    if (p === "/api/mini-play" && method === "POST") {
+      const body = await req.json();
+      const gameId = String(body.gameId || "");
+      const bet = Number(body.betAmount);
+      const choice = String(body.choice || "");
+      if (!Number.isSafeInteger(bet) || bet < 1 || bet > 1000000) {
+        return json({ error: "১ থেকে ১০,০০,০০০ ফ্রি কয়েনের মধ্যে বেট দিন" }, 400);
+      }
+      const game = await env.DB.prepare(
+        "SELECT id,name,game_type FROM games WHERE id=? AND active=1"
+      ).bind(gameId).first();
+      if (!game || game.game_type !== "minigame") {
+        return json({ error: "গেমটি পাওয়া যায়নি" }, 404);
+      }
+
+      let multiplier = 0, result = "", detail = "";
+      const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+      if (gameId === "gold-mines") {
+        const mine = 1 + Math.floor(rand() * 5);
+        const selected = Number(choice);
+        if (!Number.isInteger(selected) || selected < 1 || selected > 5) return json({error:"১ থেকে ৫-এর একটি ঘর বাছুন"},400);
+        multiplier = selected === mine ? 0 : 1.8;
+        result = selected === mine ? "💣 মাইন! বেট হারিয়েছেন" : "💎 নিরাপদ ঘর! জয়";
+        detail = "আপনার ঘর: " + selected + " · মাইন: " + mine;
+      } else if (gameId === "plinko") {
+        multiplier = pick([0,0,0.5,0.5,1,1,1.5,2,3,5]);
+        result = multiplier > 0 ? "বলটি জিতেছে!" : "বলটি শূন্য ঘরে পড়েছে";
+        detail = "মাল্টিপ্লায়ার " + multiplier + "x";
+      } else if (gameId === "classic-dice") {
+        if (!["high","low"].includes(choice)) return json({error:"High অথবা Low বাছুন"},400);
+        const roll = 1 + Math.floor(rand() * 6);
+        multiplier = (choice === "high" ? roll >= 4 : roll <= 3) ? 1.9 : 0;
+        result = "ডাইস: " + roll + " · " + (multiplier ? "আপনি জিতেছেন" : "আপনি হেরেছেন");
+        detail = choice === "high" ? "High (৪–৬)" : "Low (১–৩)";
+      } else if (gameId === "royal-coinflip") {
+        if (!["heads","tails"].includes(choice)) return json({error:"Heads অথবা Tails বাছুন"},400);
+        const side = pick(["heads","tails"]);
+        multiplier = choice === side ? 1.9 : 0;
+        result = side === "heads" ? "🪙 HEADS" : "🪙 TAILS";
+        detail = multiplier ? "সঠিক অনুমান!" : "ভুল অনুমান";
+      } else if (gameId === "european-roulette") {
+        if (!["red","black","green"].includes(choice)) return json({error:"Roulette-এর রং বাছুন"},400);
+        const n = Math.floor(rand() * 37);
+        const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+        const color = n === 0 ? "green" : red.has(n) ? "red" : "black";
+        multiplier = choice === color ? (color === "green" ? 14 : 1.9) : 0;
+        result = "বল পড়েছে " + n + " · " + color.toUpperCase();
+        detail = "আপনার পছন্দ: " + choice.toUpperCase();
+      } else if (gameId === "blackjack-21") {
+        const total = 4 + Math.floor(rand() * 18);
+        multiplier = total >= 18 ? 1.8 : 0;
+        result = "আপনার কার্ডের মোট: " + total;
+        detail = total >= 18 ? "২১-এর কাছাকাছি! জয়" : "১৮-এর কম · হার";
+      } else if (gameId === "baccarat") {
+        if (!["player","banker","tie"].includes(choice)) return json({error:"Player, Banker অথবা Tie বাছুন"},400);
+        const outcome = pick(["player","banker","player","banker","tie"]);
+        multiplier = choice === outcome ? (outcome === "tie" ? 8 : 1.95) : 0;
+        result = "ফলাফল: " + outcome.toUpperCase();
+        detail = "আপনার পছন্দ: " + choice.toUpperCase();
+      } else if (gameId === "diamond-slots") {
+        const symbols = ["💎","7️⃣","🔔","🍀","👑"];
+        const reels = [pick(symbols),pick(symbols),pick(symbols)];
+        const counts = Object.fromEntries(reels.map(x => [x,(reels.filter(y=>y===x).length)]));
+        const max = Math.max(...Object.values(counts));
+        multiplier = max === 3 ? 5 : max === 2 ? 1.5 : 0;
+        result = reels.join("  ");
+        detail = max === 3 ? "জ্যাকপট!" : max === 2 ? "দুটি মিলেছে!" : "মিল পাওয়া যায়নি";
+      } else if (gameId === "fortune-wheel") {
+        multiplier = pick([0,0,0.5,1,1,1.5,2,3,5,10]);
+        result = "চাকা থেমেছে " + multiplier + "x-এ";
+        detail = multiplier > 0 ? "আপনার পেআউট তৈরি হয়েছে" : "এইবার জয় হয়নি";
+      } else if (gameId === "royal-keno") {
+        const selected = Number(choice);
+        if (!Number.isInteger(selected) || selected < 1 || selected > 10) return json({error:"১ থেকে ১০-এর মধ্যে একটি নম্বর বাছুন"},400);
+        const drawn = 1 + Math.floor(rand() * 10);
+        multiplier = selected === drawn ? 8 : 0;
+        result = "ড্র নম্বর: " + drawn;
+        detail = selected === drawn ? "নম্বর মিলেছে!" : "নম্বর মেলেনি";
+      } else {
+        return json({error:"এই গেমটি সমর্থিত নয়"},400);
+      }
+
+      const payout = Math.floor(bet * multiplier);
+      const debit = await env.DB.prepare(
+        "UPDATE users SET balance=balance-? WHERE id=? AND balance>=?"
+      ).bind(bet,user.id,bet).run();
+      if (!debit.meta.changes) return json({error:"পর্যাপ্ত ফ্রি Virtual Coin নেই"},400);
+
+      try {
+        if (payout) await env.DB.prepare(
+          "UPDATE users SET balance=balance+? WHERE id=?"
+        ).bind(payout,user.id).run();
+        const bal = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+        const roundId = uid();
+        await env.DB.batch([
+          env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)")
+            .bind(roundId,user.id,gameId,"minigame",bet,multiplier,payout),
+          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
+            .bind(uid(),user.id,"game",-bet,bal.balance-payout,game.name+" বেট"),
+          ...(payout ? [env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
+            .bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়")] : [])
+        ]);
+        return json({ok:true,multiplier,payout,balance:bal.balance,result,detail,roundId});
+      } catch (e) {
+        await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(bet-payout,user.id).run();
         throw e;
       }
     }
