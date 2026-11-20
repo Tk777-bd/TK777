@@ -371,11 +371,11 @@ function page(name) {
     shell(`
       <div class="page">
         <div class="card">
-          <h3>${name === 'reward' ? 'Reward Center' : name === 'invite' ? 'Invite Friends' : 'Promotion'}</h3>
+          <h3>${name === 'deposit' ? 'Deposit Information' : name === 'withdraw' ? 'Withdraw Information' : name === 'reward' ? 'Reward Center' : name === 'invite' ? 'Invite Friends' : 'Promotion'}</h3>
           <p>
             ${name === 'invite'
               ? 'এই ডেমোতে রেফারেল বোনাস চালু নেই।'
-              : 'এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট বা উত্তোলন নেই।'}
+              : name === 'deposit' || name === 'withdraw' ? 'TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা বা উত্তোলন করা যায় না।' : 'এই ফ্রি-প্লে ডেমোতে বাস্তব অর্থের ডিপোজিট বা উত্তোলন নেই।'}
           </p>
         </div>
       </div>
