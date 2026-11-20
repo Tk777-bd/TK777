@@ -1378,3 +1378,52 @@ body{background:#063b39}
 .demo-deposit-card input[type=number],.demo-deposit-card input[type=text]{width:100%;box-sizing:border-box}
 .demo-deposit-card input::placeholder{font-size:12px;opacity:.8}
 @media(max-width:360px){.demo-amount-buttons{gap:4px}.demo-amount-button{font-size:11px;padding:10px 1px}}
+
+
+/* Scrollable invite page and referral milestone rewards */
+.invite-page{
+  max-height:calc(100dvh - 126px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:24px;
+}
+.invite-page .referral-milestones{
+  margin-bottom:18px;
+  background:linear-gradient(145deg,#104b43,#102f3b);
+  border-color:#b68a35;
+}
+.milestone-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.milestone-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:11px 10px;
+  border:1px solid #477568;
+  border-radius:10px;
+  background:linear-gradient(100deg,#0b3935,#173c43);
+}
+.milestone-count{display:flex;flex-direction:column;gap:3px}
+.milestone-count b{color:#ffe08a;font-size:14px}
+.milestone-count small{color:#d7e7df;font-size:12px}
+.milestone-claim{
+  flex-shrink:0;
+  background:linear-gradient(90deg,#f8d65b,#f2aa38);
+  color:#39270b;
+  border-radius:7px;
+  padding:8px 12px;
+  font-weight:700;
+}
+.milestone-done,.milestone-locked{
+  flex-shrink:0;
+  font-size:11px;
+  text-align:right;
+}
+.milestone-done{color:#8fe4a8}
+.milestone-locked{color:#aebdb8}
+@media(max-width:380px){
+  .milestone-row{padding:9px 7px;gap:6px}
+  .milestone-count b{font-size:12px}
+  .milestone-claim{padding:7px 8px;font-size:11px}
+}
