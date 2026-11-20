@@ -648,7 +648,7 @@ async function route(req, env) {
       if(!passRow?.withdraw_password_hash)return json({error:"আগে ৬ সংখ্যার উইথড্র পাসওয়ার্ড সেট করুন"},400);
       if(Number(passRow.withdraw_password_locked_until||0)>Date.now())return json({error:"অনেকবার ভুল পাসওয়ার্ড দেওয়া হয়েছে। ১৫ মিনিট পর আবার চেষ্টা করুন।"},429);
       const withdrawPassword=String(body.withdrawPassword||"");
-      if(!/^\\d{6}$/.test(withdrawPassword))return json({error:"সঠিক ৬ সংখ্যার উইথড্র পাসওয়ার্ড দিন"},400);
+      if(!/^\d{6}$/.test(withdrawPassword))return json({error:"সঠিক ৬ সংখ্যার উইথড্র পাসওয়ার্ড দিন"},400);
       const candidateHash=await passHash(withdrawPassword,String(passRow.withdraw_password_salt||""));
       if(candidateHash!==String(passRow.withdraw_password_hash)){
         await env.DB.prepare("UPDATE users SET withdraw_password_attempts=withdraw_password_attempts+1,withdraw_password_locked_until=CASE WHEN withdraw_password_attempts+1>=5 THEN ? ELSE withdraw_password_locked_until END WHERE id=?").bind(Date.now()+15*60*1000,user.id).run();
@@ -732,7 +732,7 @@ async function route(req, env) {
       await env.DB.prepare("ALTER TABLE users ADD COLUMN withdraw_password_attempts INTEGER NOT NULL DEFAULT 0").run().catch(() => {});
       await env.DB.prepare("ALTER TABLE users ADD COLUMN withdraw_password_locked_until INTEGER NOT NULL DEFAULT 0").run().catch(() => {});
       const body=await req.json(),password=String(body.password||"");
-      if(!/^\\d{6}$/.test(password))return json({error:"ঠিক ৬ সংখ্যার পাসওয়ার্ড দিন"},400);
+      if(!/^\d{6}$/.test(password))return json({error:"ঠিক ৬ সংখ্যার পাসওয়ার্ড দিন"},400);
       const salt=uid(),passwordHash=await passHash(password,salt);
       const saved=await env.DB.prepare("UPDATE users SET withdraw_password_hash=?,withdraw_password_salt=? WHERE id=? AND (withdraw_password_hash IS NULL OR withdraw_password_hash='')").bind(passwordHash,salt,user.id).run();
       if(!saved.meta?.changes)return json({error:"উইথড্র পাসওয়ার্ড আগে থেকেই সেট করা আছে।"},409);
