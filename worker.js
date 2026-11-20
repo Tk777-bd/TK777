@@ -360,6 +360,23 @@ async function route(req, env) {
     const user = await currentUser(req, env);
     const admin = () => requireAdmin(req, env);
 
+
+    if (p === "/api/coin-requests" && method === "GET" && user) {
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      const rows=await env.DB.prepare("SELECT id,amount,status,created_at FROM coin_requests WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      return json({requests:rows.results||[]});
+    }
+    if (p === "/api/coin-requests" && method === "POST") {
+      if(!user)return json({error:"লগইন করুন"},401);
+      const body=await req.json();const amount=Number(body.amount);
+      if(![100,200,300,500,1000].includes(amount))return json({error:"সঠিক কয়েন পরিমাণ নির্বাচন করুন"},400);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      const pending=await env.DB.prepare("SELECT id FROM coin_requests WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
+      if(pending)return json({error:"আপনার একটি Request এখনো Pending আছে"},409);
+      await env.DB.prepare("INSERT INTO coin_requests(id,user_id,amount,status) VALUES(?,?,?,'pending')").bind(uid(),user.id,amount).run();
+      return json({ok:true});
+    }
+
     if (p === "/api/me") {
       return user
         ? json({ user })
@@ -1195,6 +1212,33 @@ async function route(req, env) {
       `).bind(p.split("/").pop()).run();
 
       return json({ ok: true });
+    }
+
+
+    if (p === "/api/admin/coin-requests" && method === "GET") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      const q=String(url.searchParams.get("q")||"").trim();
+      const rows=q
+        ? await env.DB.prepare("SELECT cr.id,cr.user_id,cr.amount,cr.status,cr.created_at,u.username,u.email FROM coin_requests cr JOIN users u ON u.id=cr.user_id WHERE u.username LIKE ? OR u.email LIKE ? ORDER BY cr.created_at DESC LIMIT 200").bind('%'+q+'%','%'+q+'%').all()
+        : await env.DB.prepare("SELECT cr.id,cr.user_id,cr.amount,cr.status,cr.created_at,u.username,u.email FROM coin_requests cr JOIN users u ON u.id=cr.user_id ORDER BY cr.created_at DESC LIMIT 200").all();
+      return json({requests:rows.results||[]});
+    }
+    if (p === "/api/admin/coin-requests/review" && method === "POST") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      const body=await req.json();const status=String(body.status||'');
+      if(!['approved','rejected'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS coin_requests (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
+      const cr=await env.DB.prepare("SELECT * FROM coin_requests WHERE id=? AND status='pending'").bind(String(body.id||'')).first();
+      if(!cr)return json({error:"Request পাওয়া যায়নি অথবা আগেই Review হয়েছে"},404);
+      if(status==='approved'){
+        await env.DB.batch([
+          env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(cr.amount,cr.user_id),
+          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,id,'free_coin',?,balance,'Admin approved free virtual coin request' FROM users WHERE id=?").bind(uid(),cr.amount,cr.user_id)
+        ]);
+      }
+      await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,cr.id).run();
+      return json({ok:true});
     }
 
     /* ADMIN SETTINGS */
