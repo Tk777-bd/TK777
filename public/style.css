@@ -1368,3 +1368,13 @@ body{background:#063b39}
 .demo-payment-method{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 5px;border:1px solid #b88b45;border-radius:10px;background:linear-gradient(145deg,#153f3b,#092b30);color:#fff;font-weight:900}
 .demo-payment-method small{font-size:9px;color:#ffe08a;letter-spacing:1px}
 #demoReference{letter-spacing:1px;font-weight:900;color:#f8d779}
+
+/* Demo deposit selection and editable demo inputs */
+.demo-payment-method{width:100%;min-width:0;cursor:pointer;position:relative;border:1px solid #b88b45;border-bottom:3px solid transparent;transition:border-color .18s,background .18s,transform .18s}
+.demo-payment-method.selected{border-color:#ef4444;border-bottom:4px solid #ef3333;background:linear-gradient(145deg,#3c252b,#172f35);box-shadow:0 0 0 1px #ef444455,0 5px 12px #0004;transform:translateY(-1px)}
+.demo-amount-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:4px 0 2px}
+.demo-amount-button{min-width:0;padding:11px 3px;border:1px solid #b88b45;border-radius:9px;background:linear-gradient(145deg,#153f3b,#092b30);color:#fff;font-weight:900;font-size:13px}
+.demo-amount-button.selected{border-color:#ef3333;background:linear-gradient(145deg,#54252b,#2c2028);box-shadow:inset 0 -3px #ef3333,0 0 0 1px #ef444455;color:#ffe3e3}
+.demo-deposit-card input[type=number],.demo-deposit-card input[type=text]{width:100%;box-sizing:border-box}
+.demo-deposit-card input::placeholder{font-size:12px;opacity:.8}
+@media(max-width:360px){.demo-amount-buttons{gap:4px}.demo-amount-button{font-size:11px;padding:10px 1px}}
