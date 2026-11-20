@@ -910,7 +910,7 @@ function updateFlightCurve(multiplier) {
   const x = 35 + 530*progress;
   // Gentle vertical bob; graph endpoint receives the identical offset.
   const bob = crashPhase === 'active' ? Math.sin(elapsed/520)*7 : 0;
-  const y = 405 - 320*progress + bob;
+  const y = 405 - 300*progress + bob;
   const c1x = 35 + (x-35)*0.34;
   const c2x = 35 + (x-35)*0.72;
   const c2y = y + (405-y)*0.16;
