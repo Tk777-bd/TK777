@@ -593,7 +593,7 @@ async function submitWithdrawRequest(){
  if(!selectedWithdrawMethod){msg.textContent='বিকাশ, নগদ অথবা রকেট নির্বাচন করুন।';return;}
  if(!Number.isSafeInteger(amount)||amount<1){msg.textContent='সঠিক কয়েনের পরিমাণ লিখুন।';return;}
  if(amount>Number(me.balance||0)){msg.textContent='আপনার ব্যালেন্সে পর্যাপ্ত Virtual Coin নেই।';return;}
- try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount});msg.textContent='Demo Withdrawal Request জমা হয়েছে। Admin অনুমোদন করলে Virtual Coin ব্যালেন্স থেকে কমবে; কোনো টাকা পাঠানো হবে না।';await loadWithdrawRequests();}
+ try{await api('/withdraw-requests',{method:selectedWithdrawMethod,amount});msg.textContent='Request জমা হয়েছে। নির্ধারিত Virtual Coin সঙ্গে সঙ্গে ব্যালেন্স থেকে কেটে Pending থাকবে; Admin বাতিল করলে কয়েন ফেরত আসবে। কোনো টাকা পাঠানো হবে না।';await loadWithdrawRequests();await refreshBalance();}
  catch(e){msg.textContent=e.message;}
 }
 
