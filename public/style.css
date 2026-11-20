@@ -913,3 +913,19 @@ body{background:#063b39}
 }
 
 
+
+
+/* Mobile Aviator: stack both bet rounds and give the reference splash room. */
+@media(max-width:519px){
+  .aviator-bet-panels{
+    grid-template-columns:minmax(0,1fr);
+    gap:9px;
+  }
+  .aviator-bet-card{
+    padding:9px;
+  }
+  .aviator-stage{
+    height:clamp(220px,56vw,390px);
+    min-height:220px;
+  }
+}
