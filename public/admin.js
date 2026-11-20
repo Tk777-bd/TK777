@@ -217,8 +217,23 @@ async function demoNumberSettings(){
  const d=await api('/admin/settings');
  const values=Object.fromEntries((d.settings||[]).map(s=>[s.key,s.value]));
  const current=values.demo_display_number||'01790365006';
- $('#view').innerHTML='<div class="card"><h3>Demo Number পরিবর্তন</h3><p class="muted">এখানে দেওয়া নম্বরটি শুধু Demo Deposit পেজে প্রদর্শিত হবে এবং Copy করা যাবে। এটি কোনো পেমেন্ট নম্বর নয়। কোনো টাকা পাঠানো বা কয়েন যোগ করার কাজে ব্যবহার হবে না।</p><label>Demo Display Number</label><input class="field" id="demoDisplayNumberInput" type="tel" inputmode="numeric" maxlength="11" value="'+esc(current)+'" placeholder="01XXXXXXXXX"><button class="primary" onclick="saveDemoDisplayNumber()">Save Number</button><div id="demoDisplayNumberMsg" class="muted"></div></div>';
+ const demoMethods=[['bkash','বিকাশ','12345678912'],['nagad','নগদ','55555555555'],['rocket','রকেট','33333333333']];
+ const methodFields=demoMethods.map(([id,label,fallback])=>'<div><label>'+label+' Demo Number</label><input class="field" id="demoMethodNumber-'+id+'" type="tel" inputmode="numeric" maxlength="11" value="'+esc(values['demo_number_'+id]||fallback)+'" placeholder="১১ সংখ্যার কাল্পনিক নম্বর"></div>').join('');
+ $('#view').innerHTML='<div class="card"><h3>তিনটি Demo নম্বর পরিবর্তন</h3><p class="muted">বিকাশ, নগদ ও রকেট বাটনে ক্লিক করলে সংশ্লিষ্ট কাল্পনিক নম্বর দেখাবে। এগুলো শুধু Demo প্রদর্শন ও Copy করার জন্য—কোনো টাকা পাঠাবেন না, কয়েনও যোগ হবে না।</p>'+methodFields+'<button class="primary" onclick="saveDemoMethodNumbers()">Save Three Demo Numbers</button><div id="demoMethodNumbersMsg" class="muted"></div></div><div class="card"><h3>পুরোনো সাধারণ Demo নম্বর</h3><label>Demo Display Number</label><input class="field" id="demoDisplayNumberInput" type="tel" inputmode="numeric" maxlength="11" value="'+esc(current)+'" placeholder="01XXXXXXXXX"><button class="primary" onclick="saveDemoDisplayNumber()">Save Number</button><div id="demoDisplayNumberMsg" class="muted"></div></div>';
 }
+async function saveDemoMethodNumbers(){
+ const msg=$('#demoMethodNumbersMsg');
+ const fields=[['bkash','বিকাশ'],['nagad','নগদ'],['rocket','রকেট']];
+ try{
+  for(const [id,label] of fields){
+   const value=$('#demoMethodNumber-'+id).value.trim();
+   if(!/^\\d{11}$/.test(value))throw Error(label+' নম্বরটি ঠিক ১১ সংখ্যার হতে হবে।');
+  }
+  for(const [id] of fields) await api('/admin/settings',{key:'demo_number_'+id,value:$('#demoMethodNumber-'+id).value.trim()});
+  msg.textContent='তিনটি Demo নম্বর সংরক্ষণ হয়েছে।';
+ }catch(e){msg.textContent=e.message;}
+}
+
 async function saveDemoDisplayNumber(){
  const input=$('#demoDisplayNumberInput');
  const msg=$('#demoDisplayNumberMsg');
