@@ -413,11 +413,20 @@ async function route(req, env) {
       const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);
       if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||!Number.isSafeInteger(amount)||amount<1||amount>10000000)return json({error:"সঠিক Demo Withdrawal তথ্য দিন"},400);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
-      if(amount>Number(user.balance||0))return json({error:"পর্যাপ্ত Virtual Coin নেই"},400);
-      const pending=await env.DB.prepare("SELECT id FROM demo_withdrawals WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
-      if(pending)return json({error:"আপনার একটি Withdrawal Request এখনো Pending আছে"},409);
-      await env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status) VALUES(?,?,?,?,'pending')").bind(uid(),user.id,methodName,amount).run();
-      return json({ok:true});
+      const requestId=uid();
+      const reserved=await env.DB.batch([
+        env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=? AND NOT EXISTS (SELECT 1 FROM demo_withdrawals WHERE user_id=? AND status='pending')").bind(amount,user.id,amount,user.id),
+        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status) SELECT ?,?,?,?,'pending' WHERE changes()=1").bind(requestId,user.id,methodName,amount),
+        env.DB.prepare("SELECT changes() AS inserted")
+      ]);
+      if(Number(reserved[2]?.results?.[0]?.inserted)!==1){
+        const pending=await env.DB.prepare("SELECT id FROM demo_withdrawals WHERE user_id=? AND status='pending' LIMIT 1").bind(user.id).first();
+        if(pending)return json({error:"আপনার একটি Withdrawal Request এখনো Pending আছে"},409);
+        return json({error:"পর্যাপ্ত Virtual Coin নেই"},400);
+      }
+      const after=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+      await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"demo_withdrawal_hold",-amount,after.balance,"Demo virtual coin reserved on withdrawal request").run();
+      return json({ok:true,balance:after.balance});
     }
 
     if (p === "/api/coin-requests" && method === "GET" && user) {
@@ -1508,14 +1517,14 @@ async function route(req, env) {
       if(!['approved','rejected'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
       const request=await env.DB.prepare("SELECT * FROM demo_withdrawals WHERE id=? AND status='pending'").bind(id).first();
       if(!request)return json({error:"Request পাওয়া যায়নি অথবা আগেই Review হয়েছে"},404);
-      if(status==='approved'){
-        const result=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(request.amount,request.user_id,request.amount).run();
-        if(!result.meta?.changes)return json({error:"ইউজারের Virtual Coin ব্যালেন্স অপর্যাপ্ত; Request Reject করুন"},400);
-        const u=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
-        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),request.user_id,"demo_withdrawal",-request.amount,u.balance,"Demo virtual coin withdrawal approved").run();
-      }
       const updated=await env.DB.prepare("UPDATE demo_withdrawals SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,id).run();
       if(!updated.meta?.changes)return json({error:"Request ইতিমধ্যে Review হয়েছে"},409);
+      if(status==='rejected'){
+        const refunded=await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(request.amount,request.user_id).run();
+        if(!refunded.meta?.changes)return json({error:"কয়েন ফেরত দেওয়া যায়নি; Admin লগ পরীক্ষা করুন"},500);
+        const u=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(request.user_id).first();
+        await env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),request.user_id,"demo_withdrawal_refund",request.amount,u.balance,"Demo virtual coin refunded after withdrawal rejection").run();
+      }
       return json({ok:true,status});
     }
 
