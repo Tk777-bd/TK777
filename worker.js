@@ -1434,6 +1434,15 @@ async function route(req, env) {
       const rows=await env.DB.prepare("SELECT d.id,d.method,d.amount,d.demo_reference,d.status,d.created_at,u.username,u.email FROM demo_deposits d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
       return json({requests:rows.results||[]});
     }
+    if (p === "/api/admin/demo-deposits/review" && method === "POST") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      const body=await req.json();
+      const status=String(body.status||'');
+      if(!['accepted','cancelled'].includes(status))return json({error:"সঠিক সিদ্ধান্ত দিন"},400);
+      const result=await env.DB.prepare("UPDATE demo_deposits SET status=? WHERE id=? AND status='pending'").bind(status,String(body.id||'')).run();
+      if(!result.meta?.changes)return json({error:"Request পাওয়া যায়নি অথবা আগেই সিদ্ধান্ত নেওয়া হয়েছে"},404);
+      return json({ok:true,status});
+    }
     if (p.startsWith("/api/admin/demo-deposits/") && method === "DELETE") {
       if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
       const id=decodeURIComponent(p.split("/").pop());
