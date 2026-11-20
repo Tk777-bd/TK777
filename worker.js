@@ -152,6 +152,7 @@ async function ensureReferralSchema(env) {
   await env.DB.batch([
     env.DB.prepare("CREATE TABLE IF NOT EXISTS referral_codes (code TEXT PRIMARY KEY,user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE)"),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS referrals (referred_user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,referrer_user_id TEXT NOT NULL REFERENCES users(id),reward_paid INTEGER NOT NULL DEFAULT 0,turnover INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS referral_milestone_claims (user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,milestone INTEGER NOT NULL,amount INTEGER NOT NULL,claimed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(user_id,milestone))"),
     env.DB.prepare("INSERT OR IGNORE INTO settings(key,value) VALUES('referral_threshold','2000'),('referral_bonus','108')")
   ]);
   try { await env.DB.prepare("ALTER TABLE referrals ADD COLUMN turnover INTEGER NOT NULL DEFAULT 0").run(); } catch (e) {}
@@ -553,11 +554,31 @@ async function route(req, env) {
       await ensureReferralSchema(env);
       const code=await makeReferralCode(env,user.id);
       const stats=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN reward_paid=1 THEN 1 ELSE 0 END) AS qualified FROM referrals WHERE referrer_user_id=?").bind(user.id).first();
-      const rewards=await env.DB.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND type='referral_bonus'").bind(user.id).first();
+      const rewards=await env.DB.prepare("SELECT COALESCE(SUM(amount),0) AS total FROM transactions WHERE user_id=? AND type IN ('referral_bonus','referral_milestone_bonus')").bind(user.id).first();
       const config=await env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('referral_threshold','referral_bonus')").all();
       const values=Object.fromEntries((config.results||[]).map(x=>[x.key,Number(x.value)]));
       const progress=await env.DB.prepare("SELECT COALESCE(SUM(turnover),0) AS turnover FROM referrals WHERE referrer_user_id=?").bind(user.id).first();
-      return json({code,total:Number(stats?.total||0),qualified:Number(stats?.qualified||0),earned:Number(rewards?.total||0),turnover:Number(progress?.turnover||0),threshold:values.referral_threshold||2000,bonus:values.referral_bonus||108});
+      const claimed=await env.DB.prepare("SELECT milestone FROM referral_milestone_claims WHERE user_id=?").bind(user.id).all();
+      const claimedSet=new Set((claimed.results||[]).map(x=>Number(x.milestone)));
+      const qualified=Number(stats?.qualified||0);
+      const milestones=Array.from({length:12},(_,i)=>({milestone:i+1,amount:108+i*200,claimed:claimedSet.has(i+1),available:qualified>=i+1}));
+      return json({code,total:Number(stats?.total||0),qualified,earned:Number(rewards?.total||0),turnover:Number(progress?.turnover||0),threshold:values.referral_threshold||2000,bonus:values.referral_bonus||108,milestones});
+    }
+    if (p === "/api/referral/claim" && method === "POST") {
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      await ensureReferralSchema(env);
+      const body=await req.json(),milestone=Number(body.milestone);
+      if(!Number.isInteger(milestone)||milestone<1||milestone>12)return json({error:"সঠিক বোনাস ধাপ নির্বাচন করুন"},400);
+      const amount=108+(milestone-1)*200;
+      const result=await env.DB.batch([
+        env.DB.prepare("INSERT OR IGNORE INTO referral_milestone_claims(user_id,milestone,amount) SELECT ?,?,? WHERE (SELECT COUNT(*) FROM referrals WHERE referrer_user_id=? AND reward_paid=1)>=?").bind(user.id,milestone,amount,user.id,milestone),
+        env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=? AND changes()=1").bind(amount,user.id),
+        env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT lower(hex(randomblob(16))),?, 'referral_milestone_bonus', ?, balance, ? FROM users WHERE id=? AND changes()=1").bind(user.id,amount,"Referral milestone "+milestone+" bonus",user.id)
+      ]);
+      const claimed=await env.DB.prepare("SELECT amount FROM referral_milestone_claims WHERE user_id=? AND milestone=?").bind(user.id,milestone).first();
+      if(!claimed)return json({error:"এই বোনাস পাওয়ার জন্য আরও সফল রেফার প্রয়োজন"},400);
+      const inserted=Number(result?.[0]?.meta?.changes||0)===1;
+      return json({ok:true,claimed:inserted,amount:Number(claimed.amount),message:inserted?"বোনাস সফলভাবে যোগ হয়েছে":"এই বোনাস আগেই ক্লেইম করা হয়েছে"});
     }
     if (p === "/api/admin/referral-settings" && method === "GET") {
       if (!await admin()) return json({error:"Admin access প্রয়োজন"},403);
