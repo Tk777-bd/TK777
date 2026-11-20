@@ -499,35 +499,7 @@ function aviator(g) {
 
           <div class="plane-trail" id="planeTrail"></div>
           <div class="plane-wrap" id="planeWrap">
-            <svg class="plane" id="plane" viewBox="0 0 190 112" xmlns="http://www.w3.org/2000/svg" aria-label="TK777 red airplane">
-              <defs>
-                <linearGradient id="bodyRed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#ffaaa9"/><stop offset=".35" stop-color="#fa173d"/><stop offset="1" stop-color="#8c001d"/>
-                </linearGradient>
-                <linearGradient id="wingRed" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#ffb8b8"/><stop offset=".45" stop-color="#ed1640"/><stop offset="1" stop-color="#870019"/>
-                </linearGradient>
-                <linearGradient id="glassBlue" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#e3f9ff"/><stop offset=".55" stop-color="#56a6ce"/><stop offset="1" stop-color="#163b64"/>
-                </linearGradient>
-              </defs>
-              <path d="M60 58 L23 27 Q19 23 24 22 L45 24 L91 53 L60 58Z" fill="#a90b1c" stroke="#ff9a8e" stroke-width="1.5"/>
-              <path d="M38 59 L17 39 Q14 35 19 34 L32 37 L57 56Z" fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.4"/>
-              <path d="M83 56 L118 8 Q122 3 128 7 L132 12 L116 59 L83 65Z" fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.7"/>
-              <path d="M91 57 L122 13" stroke="#ffd1c6" stroke-width="2" opacity=".65"/>
-              <path d="M39 56 L31 29 Q30 24 35 25 L48 34 L61 55Z" fill="#d7192b" stroke="#ffb0a5" stroke-width="1.5"/>
-              <path d="M8 65 Q14 55 43 53 L145 49 Q163 49 178 57 Q185 61 178 66 Q163 74 144 74 L43 72 Q15 73 8 65Z" fill="url(#bodyRed)" stroke="#ffc1b3" stroke-width="1.6"/>
-              <path d="M112 53 Q151 50 174 58" fill="none" stroke="#ffd5c8" stroke-width="2" opacity=".65"/>
-              <path d="M132 52 Q146 48 157 54 L164 60 L134 60Z" fill="url(#glassBlue)" stroke="#ffe4df" stroke-width="1.2"/>
-              <path d="M78 68 L111 99 Q116 104 121 100 L127 94 L111 66 L78 62Z" fill="url(#wingRed)" stroke="#ff9b91" stroke-width="1.5"/>
-              <path d="M87 68 L115 96" stroke="#ffd1c8" stroke-width="1.5" opacity=".55"/>
-              <path d="M58 73 L68 82 L87 81 L79 72Z" fill="#8e1020" stroke="#ffb0a5" stroke-width="1.2"/>
-              <circle cx="179" cy="62" r="4" fill="#f8e5d5"/>
-              <g id="planePropeller" class="plane-propeller">
-                <path d="M179 62 Q184 43 188 48 Q191 56 181 63Z" fill="#e8edf0" opacity=".9"/>
-                <path d="M179 62 Q174 81 170 76 Q167 68 177 61Z" fill="#e8edf0" opacity=".9"/>
-              </g>
-            </svg>
+            <svg class="plane user-plane" id="plane" viewBox="110 95 340 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="User-designed red aircraft"><path d="M419,180 L412,187 L418,214 L437,249 L441,250 L442,240 L435,212Z M422,216 L426,219 L440,241 L439,246 L422,220Z M357,187 L349,179 L312,193 L311,195 L350,203 L357,190Z M371,168 L369,169 L366,178 L364,178 L361,174 L358,174 L358,177 L364,184 L358,200 L362,198 L367,191 L372,194 L374,193 L369,185Z M403,168 L410,184 L414,182 L423,170 L422,168 L412,166 L404,166Z M405,170 L407,168 L417,168 L420,170 L408,175Z M409,194 L398,166 L389,158 L369,160 L337,169 L328,169 L318,164 L310,163 L298,167 L278,178 L271,184 L270,192 L296,195 L301,191 L344,171 L375,162 L384,162 L388,167 L401,199 L397,200 L392,198 L359,215 L344,219 L336,216 L333,213 L335,209 L329,206 L218,188 L206,188 L196,192 L192,197 L205,210 L214,206 L216,210 L213,213 L190,224 L187,228 L186,235 L212,223 L215,223 L218,228 L210,233 L211,235 L238,223 L241,224 L239,227 L183,253 L173,250 L147,230 L138,228 L122,236 L123,239 L133,234 L136,235 L126,242 L118,245 L116,251 L119,252 L130,248 L155,273 L158,273 L159,271 L139,249 L140,246 L144,245 L163,257 L174,259 L174,262 L166,265 L165,268 L169,269 L231,244 L235,244 L240,249 L246,250 L296,233 L318,223 L334,224 L329,228 L227,262 L181,274 L156,276 L149,280 L153,284 L159,284 L160,287 L164,289 L183,282 L322,243 L357,231 L381,221 L403,209 L409,201Z M216,192 L220,191 L275,201 L308,205 L329,209 L330,211 L325,216 L321,217 L226,196Z M310,173 L308,176 L291,184 L282,184 L280,182 L287,176 L298,171 L306,171Z M308,167 L314,166 L328,173 L314,181 L311,181 L310,179 L317,175 L317,172 L309,169Z M381,99 L378,106 L388,138 L402,164 L412,164 L413,161 L403,130Z M382,103 L400,128 L400,133 L385,115 L381,108Z" fill="#f02036" fill-rule="evenodd" stroke="#f02036" stroke-linejoin="round" stroke-width="1"/></svg>
             <div class="plane-fire"></div>
           </div>
           <div class="aviator-stage-note">TK777 • VIRTUAL COIN GAME</div>
