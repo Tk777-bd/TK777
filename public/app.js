@@ -568,6 +568,13 @@ function selectDemoMethod(method){
   const input=document.getElementById('demoPaymentMethod');
   if(!input)return;
   input.value=method;
+  const demoNumbers={
+    'Demo bKash':'12345678912',
+    'Demo Nagad':'55555555555',
+    'Demo Rocket':'33333333333'
+  };
+  const number=document.getElementById('demoDisplayNumber');
+  if(number && demoNumbers[method]) number.textContent=demoNumbers[method];
   document.querySelectorAll('.demo-payment-method').forEach(el=>{
     const selected=el.dataset.method===method;
     el.classList.toggle('selected',selected);
