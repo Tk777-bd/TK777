@@ -908,7 +908,9 @@ function updateFlightCurve(multiplier) {
     ? Math.max(0,Math.min(1,elapsed/4500))
     : 0;
   const x = 35 + 530*progress;
-  const y = 405 - 320*progress;
+  // Gentle vertical bob; graph endpoint receives the identical offset.
+  const bob = crashPhase === 'active' ? Math.sin(elapsed/520)*7 : 0;
+  const y = 405 - 320*progress + bob;
   const c1x = 35 + (x-35)*0.34;
   const c2x = 35 + (x-35)*0.72;
   const c2y = y + (405-y)*0.16;
@@ -929,10 +931,12 @@ function updateFlightCurve(multiplier) {
     const planeRect = planeSvg.getBoundingClientRect();
     const tipX = (x/1000)*stageRect.width;
     const tipY = (y/440)*stageRect.height;
-    const noseOffsetX = (438-280)/340*planeRect.width;
-    const noseOffsetY = (215-195)/200*planeRect.height;
-    const wrapperCenterX = tipX - noseOffsetX;
-    const wrapperCenterY = tipY - noseOffsetY;
+    // Tail/rear tip of this aircraft SVG (leftmost rear point), not the propeller.
+    // SVG viewBox is 110..450 by 95..295; rear tip is approximately (116,251).
+    const rearOffsetX = (116-280)/340*planeRect.width;
+    const rearOffsetY = (251-195)/200*planeRect.height;
+    const wrapperCenterX = tipX - rearOffsetX;
+    const wrapperCenterY = tipY - rearOffsetY;
     wrap.style.left = (wrapperCenterX/stageRect.width*100)+'%';
     wrap.style.top = (wrapperCenterY/stageRect.height*100)+'%';
   }
