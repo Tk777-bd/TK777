@@ -1326,7 +1326,7 @@ async function startCrash(index) {
   } catch (e) {
     const errorText = String(e?.message || '');
     const displayMessage = /পর্যাপ্ত ফ্রি কয়েন নেই|insufficient.*(coin|balance)|not enough.*(coin|balance)/i.test(errorText)
-      ? 'ব্যালেন্স কম!'
+      ? 'পর্যাপ্ত ব্যালেন্স নেই'
       : errorText;
     toast(displayMessage);
     if (result) result.textContent = displayMessage;
