@@ -452,10 +452,15 @@ function aviator(g) {
 
           <div class="aviator-funbar">FUN MODE</div>
           <div class="aviator-promo" id="aviatorPromo">
-            <div class="promo-kicker">TK777 ORIGINAL GAME</div>
-            <div class="promo-title">READY FOR<br><b>TAKE OFF?</b></div>
+            <div class="promo-partners"><b>UFC</b><i></i><strong>Aviator</strong></div>
+            <div class="promo-official">OFFICIAL PARTNERS</div>
+            <div class="promo-progress"><span></span></div>
+            <div class="promo-spribe">
+              <b>✺ SPRIBE</b>
+              <span>Official Game <em>✓</em></span>
+              <small>Since 2019</small>
+            </div>
             <div class="promo-plane">✈</div>
-            <div class="promo-stamp">FREE PLAY<br><b>VIRTUAL COINS</b></div>
           </div>
 
           <div class="multiplier" id="multi">1.00x</div>
