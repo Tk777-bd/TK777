@@ -140,26 +140,48 @@ async function getCrashSession(env, gameId) {
     if (Date.now() < crashAt + 2500) return last;
   }
 
+  const previewRow = await env.DB.prepare(`
+    SELECT value FROM settings WHERE key='aviator_next_crash_multiplier'
+  `).first();
+  const previewValue = Number(previewRow?.value);
+  const generatedMultiplier =
+    Number.isFinite(previewValue) && previewValue >= 1.01 && previewValue <= 1000
+      ? Number(previewValue.toFixed(2))
+      : Number((1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2));
+
   const fresh = {
     id: uid(),
     game_id: gameId,
-    crash_multiplier: Number(
-      (1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2)
-    ),
+    crash_multiplier: generatedMultiplier,
     start_ms: Date.now() + 5000
   };
 
   try {
-    await env.DB.prepare(`
+    const inserted = await env.DB.prepare(`
       INSERT INTO crash_sessions
       (id,game_id,crash_multiplier,start_ms,status)
-      VALUES(?,?,?,?,'active')
+      SELECT ?,?,?,?,'active'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM crash_sessions WHERE game_id=? AND status='active'
+      )
     `).bind(
       fresh.id,
       fresh.game_id,
       fresh.crash_multiplier,
-      fresh.start_ms
+      fresh.start_ms,
+      gameId
     ).run();
+
+    if (inserted.meta.changes) {
+      const nextPreview = Number(
+        (1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2)
+      );
+      await env.DB.prepare(`
+        INSERT INTO settings(key,value)
+        VALUES('aviator_next_crash_multiplier',?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+      `).bind(String(nextPreview)).run();
+    }
   } catch (e) {
     // অন্য অনুরোধ ইতিমধ্যে নতুন রাউন্ড তৈরি করে থাকতে পারে।
   }
@@ -898,6 +920,74 @@ async function route(req, env) {
         payout: f.payout || 0,
         balance: b.balance
       });
+    }
+
+    /* ADMIN AVIATOR ROUND CONTROL */
+
+    if (p === "/api/admin/aviator-control" && method === "GET") {
+      if (!await admin()) {
+        return json({ error: "Admin access প্রয়োজন" }, 403);
+      }
+
+      const game = await env.DB.prepare(`
+        SELECT id FROM games
+        WHERE id='aviator' AND active=1 AND game_type='aviator'
+        LIMIT 1
+      `).first();
+
+      if (!game) return json({ error: "Aviator game পাওয়া যায়নি" }, 404);
+
+      const state = await crashState(env, game.id);
+      const current = await env.DB.prepare(`
+        SELECT crash_multiplier,status,start_ms
+        FROM crash_sessions WHERE id=?
+      `).bind(state.sessionId).first();
+
+      let next = await env.DB.prepare(`
+        SELECT value FROM settings WHERE key='aviator_next_crash_multiplier'
+      `).first();
+
+      if (!next || !Number.isFinite(Number(next.value))) {
+        const value = Number((1.05 + Math.pow(rand(), 2.2) * 8.95).toFixed(2));
+        await env.DB.prepare(`
+          INSERT INTO settings(key,value)
+          VALUES('aviator_next_crash_multiplier',?)
+          ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        `).bind(String(value)).run();
+        next = { value: String(value) };
+      }
+
+      return json({
+        currentRound: current ? {
+          crashMultiplier: Number(current.crash_multiplier),
+          status: state.status,
+          multiplier: Number(state.multiplier || 1),
+          startMs: Number(current.start_ms)
+        } : null,
+        nextCrashMultiplier: Number(next.value)
+      });
+    }
+
+    if (p === "/api/admin/aviator-control" && method === "POST") {
+      if (!await admin()) {
+        return json({ error: "Admin access প্রয়োজন" }, 403);
+      }
+
+      const { multiplier } = await req.json();
+      const value = Number(multiplier);
+
+      if (!Number.isFinite(value) || value < 1.01 || value > 1000) {
+        return json({ error: "Multiplier 1.01x থেকে 1000.00x-এর মধ্যে দিন" }, 400);
+      }
+
+      const normalized = Number(value.toFixed(2));
+      await env.DB.prepare(`
+        INSERT INTO settings(key,value)
+        VALUES('aviator_next_crash_multiplier',?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+      `).bind(String(normalized)).run();
+
+      return json({ ok: true, nextCrashMultiplier: normalized });
     }
 
     /* ADMIN OVERVIEW */
