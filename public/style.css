@@ -792,3 +792,15 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
   padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px));
   box-shadow:none;
 }
+
+
+/* UFC/Aviator promo countdown bar: full red at start, drains over five seconds */
+.promo-progress span{width:100%;}
+.aviator-stage.countdown .promo-progress span{
+  width:100%;
+  animation:aviatorPromoDrain 5s linear forwards;
+}
+@keyframes aviatorPromoDrain{
+  from{width:100%;}
+  to{width:0%;}
+}
