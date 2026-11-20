@@ -316,9 +316,9 @@ function home() {
     <div class="section">
       <div class="section-head">
         <span>🔥 HOT GAMES</span>
-        <small>${games.length} GAMES</small>
+        <small>${games.length + displaySlotGames.length} GAMES</small>
       </div>
-      <div class="games">${games.map(gameCard).join('')}</div>
+      <div class="games">${homeGamesWithSlots().map(g => g.id.startsWith('slot-display-') ? displaySlotCard(g) : gameCard(g)).join('')}</div>
     </div>
 
     <div class="section">
@@ -360,12 +360,39 @@ function gameCard(g) {
     </button>`;
 }
 
+// Display-only Slot cards; no game files or play links yet.
+const displaySlotGames = [
+  {id:'slot-display-super-elements',name:'Super Elements',mark:'⚡',tone:'elements'},
+  {id:'slot-display-azteca-legacy',name:'Azteca Legacy',mark:'☀',tone:'azteca'},
+  {id:'slot-display-flyx',name:'FlyX',mark:'✈',tone:'flyx'},
+  {id:'slot-display-magic-ace',name:'Magic Ace',mark:'♣',tone:'magic'},
+  {id:'slot-display-circus-joker',name:'Circus Joker',mark:'🃏',tone:'circus'},
+  {id:'slot-display-fortune-gems-3',name:'Fortune Gems 3',mark:'💎',tone:'fortune'},
+  {id:'slot-display-super-ace-ii',name:'Super Ace II',mark:'♛',tone:'ace2'},
+  {id:'slot-display-boxing-king',name:'Boxing King',mark:'🥊',tone:'boxing'},
+  {id:'slot-display-super-ace-deluxe',name:'Super Ace Deluxe',mark:'♛',tone:'deluxe'},
+  {id:'slot-display-dragon-gems',name:'Dragon Gems',mark:'🐉',tone:'dragon'},
+  {id:'slot-display-treasures-of-aztec',name:'Treasures of Aztec',mark:'☀',tone:'treasures'},
+  {id:'slot-display-anubis-wrath',name:'Anubis Wrath',mark:'𓃥',tone:'anubis'}
+];
+
+function displaySlotCard(g) {
+  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '"><div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span><strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div></div>';
+}
+
+function homeGamesWithSlots() {
+  const list = [...games];
+  const at = list.findIndex(g => /super\\s*ace/i.test(String(g.name || '')));
+  list.splice(at < 0 ? list.length : at + 1, 0, ...displaySlotGames);
+  return list;
+}
 function filterGames(id) {
   isPlayingGame = false;
   const c = categories.find(x => x.id === id);
+  const isSlotsCategory = /slot/i.test(String(c?.name || ''));
   const list = id === 'favorites'
     ? games.filter(g => favoriteIds().includes(g.id))
-    : games.filter(g => g.category_id === id);
+    : [...games.filter(g => g.category_id === id), ...(isSlotsCategory ? displaySlotGames : [])];
 
   stopCrashMonitor();
 
@@ -376,7 +403,7 @@ function filterGames(id) {
         <small>${list.length} GAMES</small>
       </div>
       <div class="games">
-        ${list.map(gameCard).join('') || '<p class="muted">এই ক্যাটাগরিতে এখনো গেম যোগ করা হয়নি।</p>'}
+        ${list.map(g => g.id.startsWith('slot-display-') ? displaySlotCard(g) : gameCard(g)).join('') || '<p class="muted">এই ক্যাটাগরিতে এখনো গেম যোগ করা হয়নি।</p>'}
       </div>
       <button class="secondary" onclick="home()">ফিরে যান</button>
     </div>
