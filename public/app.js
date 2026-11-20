@@ -248,7 +248,7 @@ async function init() {
     categories = (await api('/categories')).categories;
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
-    supportSettings = await api('/support-settings);
+    supportSettings = await api('/support-settings');
   } catch (e) {
     toast(e.message);
   }
