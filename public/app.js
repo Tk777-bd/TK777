@@ -3,7 +3,7 @@ let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
-let slotDisplayImages = {};
+let slotDisplayImages = {}, slotDisplayHidden = [];
 let isPlayingGame = false;
 let crashTimer = null;
 let crashGameId = null;
@@ -250,7 +250,9 @@ async function init() {
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
     supportSettings = await api('/support-settings');
-    slotDisplayImages = (await api('/slot-display-images')).images || {};
+    const slotDisplayData = await api('/slot-display-images');
+    slotDisplayImages = slotDisplayData.images || {};
+    slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
   } catch (e) {
     toast(e.message);
   }
@@ -409,7 +411,7 @@ function displaySlotCard(g) {
 function homeGamesWithSlots() {
   const list = [...games];
   const at = list.findIndex(g => /super\s*ace/i.test(String(g.name || '')));
-  list.splice(at < 0 ? list.length : at + 1, 0, ...displaySlotGames);
+  list.splice(at < 0 ? list.length : at + 1, 0, ...displaySlotGames.filter(g => !slotDisplayHidden.includes(g.id)));
   return list;
 }
 function filterGames(id) {
@@ -418,7 +420,7 @@ function filterGames(id) {
   const isSlotsCategory = /slot/i.test(String(c?.name || ''));
   const list = id === 'favorites'
     ? games.filter(g => favoriteIds().includes(g.id))
-    : [...games.filter(g => g.category_id === id), ...(isSlotsCategory ? displaySlotGames : [])];
+    : [...games.filter(g => g.category_id === id), ...(isSlotsCategory ? displaySlotGames.filter(g => !slotDisplayHidden.includes(g.id)) : [])];
 
   stopCrashMonitor();
 
