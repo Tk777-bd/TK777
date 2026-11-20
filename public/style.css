@@ -677,7 +677,8 @@ body{background:#063b39}
 .aviator-bet-button:disabled,.aviator-cashout-button:disabled{opacity:.42}
 .aviator-cancel-button{
   min-height:19px;width:100%;padding:1px;border-radius:4px;
-  background:#d50028;color:#fff;font-size:8px;
+  background:#e00024;color:#fff;font-size:8px;font-weight:800;
+  border:1px solid #ff526b;box-shadow:0 0 5px #e0002440;
 }
 .aviator-cancel-button:disabled{display:none}
 .aviator-auto-row{
@@ -947,3 +948,12 @@ body{background:#063b39}
   pointer-events:none;
 }
 .aviator-cashout-popup.is-hiding{opacity:0;transform:translate(-50%,-5px)}
+
+
+.aviator-cashout-popup{position:relative;padding-right:23px}
+.aviator-cashout-close{
+  position:absolute;top:1px;right:3px;width:16px;height:16px;
+  padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);
+  color:#fff;font-size:15px;font-weight:700;line-height:14px;
+  cursor:pointer;text-shadow:0 1px 2px #0008;
+}
