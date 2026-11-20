@@ -492,8 +492,8 @@ function aviator(g) {
                 <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
               </filter>
             </defs>
-            <path id="flightArea" class="flight-area" d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12 L970 440 L35 440 Z"/>
-            <path id="flightPath" class="flight-path" d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12"/>
+            <path id="flightArea" class="flight-area" d="M35 405 L35 440 L35 440 Z"/>
+            <path id="flightPath" class="flight-path" d="M35 405"/>
             <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="6"/>
           </svg>
 
