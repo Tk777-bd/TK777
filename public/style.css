@@ -1137,3 +1137,77 @@ body{background:#063b39}
 .profit-summary small{display:block;color:#9bd8c7;margin-top:8px}
 .profit-summary strong{display:block;font-size:18px;margin:2px 0 8px}
 @media(max-width:360px){.member-menu-grid{gap:10px 2px}.member-menu-grid button{font-size:10px}.member-menu-grid button i{width:48px;height:48px;font-size:22px}.member-avatar-button{width:66px;height:66px;min-width:66px}.member-identity h2{font-size:16px}}
+
+
+/* Super Ace visual-only cabinet redesign */
+.sa-screen{padding:0 0 86px;background:#100b19}
+.sa-cabinet{min-height:calc(100vh - 130px);padding:0 10px 18px;background:
+  radial-gradient(ellipse at 50% 45%,#0b6b65 0,#063e3c 58%,#071d29 100%);overflow:hidden}
+.sa-wood-top{height:215px;position:relative;margin:0 -10px 0;padding:22px 14px 0;
+  background:linear-gradient(180deg,#090b20 0 18%,#26100b 19%,#6c2d15 43%,#2b100a 62%,#090d19 100%);
+  border-bottom:8px ridge #8a4a24;box-shadow:0 8px 18px #0009}
+.sa-brand{position:absolute;left:0;right:0;top:64px;text-align:center;color:#ffe18a;
+  font-family:Georgia,serif;font-size:clamp(28px,8vw,39px);font-weight:900;letter-spacing:-2px;
+  text-shadow:2px 3px 0 #54200c,0 0 9px #ff9e28}
+.sa-buy-bonus{position:absolute;right:16px;top:10px;width:65px;height:65px;border-radius:50%;
+  display:grid;place-content:center;text-align:center;background:radial-gradient(#ffed75,#ef7c13 60%,#8e1b10);
+  border:3px solid #a43a16;color:#fff6a7;font-weight:1000;font-size:13px;line-height:12px;
+  text-shadow:1px 2px 2px #741700;transform:rotate(8deg);box-shadow:0 3px 8px #0009}
+.sa-multipliers{position:absolute;left:8%;right:8%;top:132px;height:54px;border-radius:40px;
+  display:grid;grid-template-columns:repeat(4,1fr);align-items:center;text-align:center;
+  background:linear-gradient(#ffe69a,#d18b28 48%,#7b4517);border:4px solid #4d2111;
+  box-shadow:inset 0 2px 5px #fff9,0 4px 8px #0009;color:#24180b;font-size:clamp(21px,6vw,30px);font-weight:1000}
+.sa-multipliers span.active{color:#fff8a4;text-shadow:0 2px 2px #b22b00}
+.sa-wild-note{position:absolute;bottom:0;left:0;right:0;height:28px;text-align:center;
+  color:#fff0c0;font-size:clamp(10px,3vw,14px);font-weight:700;text-shadow:1px 2px #000}
+.sa-wild-note span{color:#ffe05c}
+.sa-reel-frame{margin:-1px -2px 0;padding:10px 8px 15px;background:
+  radial-gradient(ellipse at 50% 0,#1d8071,#07514c 55%,#062b34);
+  border-left:3px solid #9c9eaa;border-right:3px solid #9c9eaa;
+  box-shadow:inset 0 0 18px #0009}
+.sa-cards{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:0;background:transparent}
+.sa-card{position:relative;aspect-ratio:0.78;min-width:0;overflow:hidden;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#fff 0,#e8edf9 55%,#c8d0e1 100%);
+  border:2px solid #aeb7c8;box-shadow:0 2px 4px #001b28a8;color:#101a30}
+.sa-rank{position:absolute;top:2px;left:4px;font-family:Georgia,serif;font-size:clamp(15px,4.5vw,24px);
+  font-weight:900;color:#101827;text-shadow:0 1px #fff}
+.sa-art{font-family:Georgia,serif;font-size:clamp(34px,11vw,58px);line-height:1;
+  text-shadow:1px 2px 1px #68718a}
+.sa-ace .sa-art,.sa-spade .sa-art{color:#08152f;text-shadow:0 2px 0 #e7c64a,2px 3px 2px #000}
+.sa-king .sa-art{color:#bd7414;text-shadow:0 2px 0 #49220d,1px 4px 2px #000}
+.sa-queen .sa-art{color:#a91f35;text-shadow:0 2px 0 #54101d,1px 4px 2px #000}
+.sa-jack .sa-art{color:#182e78;text-shadow:0 2px 0 #fff,1px 4px 2px #000}
+.sa-win-line{height:49px;display:flex;align-items:center;justify-content:center;gap:18px;
+  color:#ffe16b;font-size:20px;font-weight:900;background:linear-gradient(180deg,#064b49,#092b32);
+  border-bottom:3px solid #8a4a24;text-shadow:0 2px 2px #000}
+.sa-win-line strong{color:#fff;font-family:Arial,sans-serif;font-size:19px}
+.sa-controls{display:grid;grid-template-columns:42px minmax(65px,1fr) 90px 42px;
+  align-items:center;gap:7px;padding:12px 4px 7px;background:linear-gradient(180deg,#3a1b11,#170e19);
+  border-radius:0 0 48% 48%;border-bottom:5px ridge #87451f}
+.sa-control-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#d8a0bd,#713b64);border:3px solid #59334d;color:#fff0c8;
+  font-size:22px;box-shadow:0 2px 5px #0009}
+.sa-bet-control{min-width:0;text-align:center;color:#f6d98b;font-size:11px;font-weight:800}
+.sa-bet-control input{width:100%;min-width:0;margin-top:3px;padding:7px 3px;text-align:center;
+  border-radius:8px;border:1px solid #a77b45;background:#0b2828;color:#fff;font-weight:800}
+.sa-spin{width:88px;height:88px;padding:4px;border-radius:50%;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;background:radial-gradient(circle,#fff9a6 0 24%,#ffdc32 26% 43%,#f68c08 47% 65%,#9a3e00 68% 74%,#ffd44a 78%);
+  border:4px solid #f8cf39;box-shadow:0 0 0 3px #7c390d,0 4px 10px #000b;color:#7c3400}
+.sa-spin span{font-size:27px;line-height:29px}.sa-spin small{font-size:11px;font-weight:1000}
+.sa-spin:disabled{opacity:.65}
+.sa-turbo{background:linear-gradient(145deg,#f4c04b,#8c451c);color:#fff4a6}
+.sa-balance-line{display:flex;justify-content:center;align-items:center;gap:8px;padding:12px 0 2px;
+  color:#ffd65a;font-size:15px;font-weight:700;text-shadow:0 2px #000}
+.sa-balance-line span{font-size:10px;color:#ddd;background:#606778;padding:2px 5px;border-radius:4px}
+.sa-balance-line strong{color:#fff;font-family:Arial,sans-serif}
+.sa-result{min-height:28px;margin:8px 0 0;padding:7px 8px;text-align:center;border-radius:7px;
+  color:#fff1c4;background:#071f25c9;border:1px solid #276a62;font-size:11px}
+@media(max-width:360px){
+ .sa-cabinet{padding-left:6px;padding-right:6px}
+ .sa-wood-top{margin-left:-6px;margin-right:-6px}
+ .sa-reel-frame{padding-left:5px;padding-right:5px}
+ .sa-cards{gap:3px}
+ .sa-controls{grid-template-columns:34px minmax(58px,1fr) 78px 34px;gap:4px}
+ .sa-spin{width:76px;height:76px}
+ .sa-control-icon{width:32px;height:32px}
+}
