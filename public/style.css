@@ -1219,3 +1219,6 @@ body{background:#063b39}
 .coin-contact-number{margin-top:14px;padding:13px;border-radius:10px;text-align:center;background:#073b3a;border:1px solid #258b7b}
 .coin-contact-number small{display:block;color:#a9d9ce;font-size:11px}
 .coin-contact-number strong{display:block;margin:5px 0;color:#ffd45a;font-size:22px;letter-spacing:1px}
+
+.telegram-support-float{display:grid!important;position:fixed!important;z-index:9999!important;right:14px!important;top:88px!important;width:46px!important;height:46px!important;border-radius:50%!important;overflow:hidden!important;box-shadow:0 4px 16px #0008!important}
+.coin-request-card{display:flex;flex-direction:column;gap:12px}.coin-request-card .field{width:100%}
