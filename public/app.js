@@ -894,7 +894,7 @@ function updateCashoutAmounts(multiplier) {
     const input = $('#crashBet'+i);
     if (!button || !slot.roundId || slot.status !== 'active') continue;
     const bet = Math.max(0,Number(input?.value || slot.betAmount || 0));
-    const payout = Math.floor(bet*multiplier);
+    const payout = Math.round(bet*Math.round(multiplier*100)/100*100)/100;
     button.innerHTML = 'Cash Out<br><b>BDT '+payout.toFixed(2)+'</b>';
   }
 }
@@ -1040,6 +1040,7 @@ async function startCrash(index) {
     });
 
     slot.roundId = r.roundId;
+    slot.betAmount = bet;
     slot.status = 'active';
     me.balance = r.balance;
 
@@ -1108,7 +1109,7 @@ async function cashout(index) {
 
     if (result) {
       result.textContent = r.status === 'cashed_out'
-        ? `Cash Out সফল: ${Number(r.multiplier).toFixed(2)}x · পেআউট BDT ${payoutAmount.toFixed(2)} · লাভ BDT ${profitAmount.toFixed(2)} · ব্যালেন্স ${money(r.balance)}`
+        ? `আপনি পেয়েছেন BDT ${payoutAmount.toFixed(2)} · লাভ BDT ${profitAmount.toFixed(2)} · ${Number(r.multiplier).toFixed(2)}x · ব্যালেন্স ${money(r.balance)}`
         : 'Cash Out-এর আগেই ক্র্যাশ হয়েছে। পেআউট ০।';
     }
 
