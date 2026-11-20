@@ -1,159 +1,187 @@
 
 *{box-sizing:border-box}
 :root{
-  --bg:#071018;--panel:#101d29;--panel2:#142432;--line:#263847;
-  --text:#f4f7fb;--muted:#91a4b5;--red:#ed493f;--green:#20d69b;
-  --gold:#ffc85b;--blue:#2479db;
+  --bg:#080b13;--panel:#111722;--panel2:#171f2c;--line:#283344;
+  --text:#f5f7fb;--muted:#8f9bad;--red:#f04442;
+  --green:#20d69b;--gold:#ffc45b;--orange:#ff853d;
 }
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
 body{font-size:14px}
 button,input,select{font:inherit}
 button{cursor:pointer}
-.shell{width:100%;max-width:520px;min-height:100vh;margin:auto;background:#0a141e;padding-bottom:78px;overflow:hidden}
-.top{height:62px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:#101e2a;border-bottom:1px solid #263847;position:sticky;top:0;z-index:20}
-.brand{font-size:23px;font-weight:900;letter-spacing:1px;color:#fff}
+button:disabled{cursor:not-allowed;opacity:.45}
+.shell{width:100%;max-width:520px;min-height:100vh;margin:auto;background:#0a0e17;padding-bottom:76px;overflow:hidden}
+.top{height:60px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:#101621;border-bottom:1px solid #273142;position:sticky;top:0;z-index:20}
+.brand{font-size:23px;font-weight:1000;letter-spacing:1.5px;color:#fff}
+.brand small{display:block;font-size:8px;letter-spacing:3px;color:#f4b84e;margin-top:2px}
 .top-actions{display:flex;align-items:center;gap:7px}
-.pill{border:1px solid #344858;background:#172938;color:#fff;border-radius:8px;padding:9px 11px;font-size:12px;font-weight:700}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;height:65px;background:#101d29;border-top:1px solid #293b4b;display:flex;align-items:center;justify-content:space-around;z-index:30}
-.bottom button{border:0;background:none;color:#9aabba;font-size:11px;padding:8px}
-.bottom button.active{color:#ffca62}
-.hero{margin:13px;padding:17px;border-radius:13px;background:linear-gradient(115deg,#173b4a,#102536 65%,#172b3c);display:flex;justify-content:space-between;align-items:center;min-height:112px}
-.hero-copy{max-width:70%}
-.hero-tag{font-size:11px;color:#ffc65c;font-weight:800;letter-spacing:1px}
-.hero h2,.hero-copy h2{margin:7px 0;font-size:22px}
-.hero p{margin:0;color:#b5c5d1;font-size:12px}
-.hero-mark{font-size:48px}
+.pill{border:1px solid #354153;background:#1a2432;color:#fff;border-radius:7px;padding:9px 10px;font-size:11px;font-weight:800}
+.top-actions button{border:0;background:#f4bd53;color:#161b23;padding:9px 12px;border-radius:7px;font-weight:900}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;height:65px;background:#101621;border-top:1px solid #273142;display:flex;align-items:center;justify-content:space-around;z-index:30}
+.bottom button{border:0;background:none;color:#8491a3;font-size:10px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bottom button b{font-size:19px}
+.bottom button.active{color:#ffc45b}
+.hero{margin:13px;padding:18px;border-radius:13px;background:linear-gradient(115deg,#27243a,#17263a 65%,#352332);display:flex;justify-content:space-between;align-items:center;min-height:120px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff13;border-radius:50%;right:-50px;top:-40px;box-shadow:0 0 0 22px #ffffff08,0 0 0 48px #ffffff05}
+.hero-copy{max-width:70%;z-index:1}
+.hero-tag{font-size:10px;color:#ffc45b;font-weight:900;letter-spacing:2px}
+.hero h2,.hero-copy h2{margin:7px 0;font-size:26px}
+.hero p{margin:0;color:#c1c8d4;font-size:12px}
+.hero-copy small{display:block;margin-top:8px;color:#9da9bb}
+.hero-mark{font-size:48px;font-weight:1000;color:#ffc45b;text-shadow:0 5px 25px #ff9b3c55}
 .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 13px;margin:13px 0}
-.quick button{background:#142534;border:1px solid #293d4d;color:#eaf1f7;border-radius:10px;padding:13px 4px;font-size:12px}
+.quick button{background:#151d2a;border:1px solid #293548;color:#eaf1f7;border-radius:10px;padding:13px 4px;font-size:11px}
+.quick button b{display:block;font-size:20px;color:#ffc45b;margin-bottom:5px}
 .section{padding:10px 13px}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-weight:800;font-size:16px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-weight:900;font-size:14px;letter-spacing:.3px}
+.section-head small{font-size:10px;color:#8996a9}
 .cats{display:flex;gap:8px;overflow:auto;padding-bottom:8px}
-.cat{white-space:nowrap;border:1px solid #344959;background:#132432;color:#b7c6d2;border-radius:20px;padding:8px 14px}
+.cat{white-space:nowrap;border:1px solid #354154;background:#151e2b;color:#c4ceda;border-radius:20px;padding:9px 14px}
 .cat.active{background:#f5bd4e;color:#17212a;border-color:#f5bd4e}
 .games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.game{position:relative;min-width:0;background:#142433;border:1px solid #2a3d4c;border-radius:12px;overflow:hidden;padding:0 0 12px}
+.game{position:relative;min-width:0;background:#151e2b;border:1px solid #2c394b;border-radius:12px;overflow:hidden;padding:0 0 12px;color:#fff;text-align:left}
 .game img{width:100%;display:block;aspect-ratio:1.35;object-fit:cover}
-.game h3{font-size:13px;margin:10px 10px 3px}
-.game p{font-size:11px;color:var(--muted);margin:0 10px}
-.favorite-toggle{position:absolute;right:8px;top:8px;background:#071018c9;border:0;border-radius:50%;width:30px;height:30px;color:#fff}
+.game strong{display:block;font-size:13px;margin:10px 10px 3px}
+.game small{display:block;color:#91a0b3;font-size:10px;margin:0 10px}
+.placeholder{height:125px;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#38435b,#151e2b 70%);font-size:42px}
+.favorite-toggle{position:absolute;right:8px;top:8px;background:#071018d9;border:0;border-radius:50%;width:30px;height:30px;color:#fff;z-index:2}
 .page{padding:14px}
-.card{background:#132330;border:1px solid #293c4b;border-radius:12px;padding:14px;margin-bottom:12px}
+.card{background:#141c29;border:1px solid #2a3547;border-radius:12px;padding:14px;margin-bottom:12px}
+.auth-card h2{text-align:center}
 .tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{flex:1;border:1px solid #344958;background:#142635;color:#c4d0d9;border-radius:8px;padding:10px}
-.tabs button.active,.active{background:#e9b84e;color:#18232b}
-.field{display:block;width:100%;margin:8px 0;padding:12px;border-radius:8px;border:1px solid #344958;background:#0b1721;color:white;outline:none}
+.tabs button{flex:1;border:1px solid #354154;background:#182232;color:#c4d0d9;border-radius:8px;padding:10px}
+.tabs button.active{background:#e9b84e;color:#18212a}
+.field{display:block;width:100%;margin:8px 0;padding:12px;border-radius:8px;border:1px solid #354154;background:#0b111b;color:white;outline:none}
+.field:focus{border-color:#eeb64d;box-shadow:0 0 0 2px #eeb64d22}
+label{color:#b8c3d1;font-size:12px}
 .hidden{display:none!important}
-.muted{color:#91a4b5}
-.primary,.secondary,.danger{border:0;border-radius:8px;padding:12px 15px;font-weight:800}
+.muted{color:#91a0b3}
+.primary,.secondary,.danger{border:0;border-radius:8px;padding:12px 15px;font-weight:900}
 .primary{background:#eebc50;color:#17212a}
-.secondary{background:#253b4c;color:#fff}
+.secondary{background:#29384b;color:#fff}
 .danger{background:#d74740;color:white}
-.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:60;background:#263b4b;color:white;padding:12px 17px;border-radius:9px;box-shadow:0 5px 25px #0008;max-width:90%}
-.profile-card,.balance-panel{background:#142635;border:1px solid #304554;border-radius:12px;padding:15px;margin-bottom:12px}
+#authSubmit{width:100%;margin-top:8px}
+.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);z-index:60;background:#26364b;color:white;padding:12px 17px;border-radius:9px;box-shadow:0 5px 25px #0008;max-width:90%;text-align:center}
+.profile-card,.balance-panel{background:#151f2e;border:1px solid #304056;border-radius:12px;padding:15px;margin-bottom:12px}
 .avatar{width:46px;height:46px;border-radius:50%;background:#e9b84e;color:#15222c;display:grid;place-items:center;font-weight:900}
-.history-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #263847}
+.balance-panel strong{display:block;font-size:25px;color:#ffc45b;margin-top:8px}
+.history-row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #293548}
+.history-row small{display:block;color:#8d9aad;font-size:10px;margin-top:4px}
 .gold{color:#ffc65c}.loss{color:#f16c66}
-.notice{padding:11px;border-radius:8px;background:#172d3a;color:#b8c9d4;font-size:12px}
-
-/* Game shell */
+.notice{padding:11px;border-radius:8px;background:#1b2636;color:#b8c9d4;font-size:12px;line-height:1.5}
 .game-frame{background:#080f17;border:1px solid #263746;border-radius:12px;overflow:hidden}
-.game-top{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#111e2a;border-bottom:1px solid #2a3a48}
-.game-screen{padding:10px;background:#080f17}
 
-/* AVIATOR-inspired flight stage */
+/* GAME HEADER */
+.game-top{height:52px;position:relative;top:auto;background:#111722;border-bottom:1px solid #2a3546;padding:8px 12px}
+.game-top b{font-size:13px;letter-spacing:1px}
+.game-top span{font-size:11px;font-weight:800;color:#ffc45b}
+.game-top .secondary{padding:8px 11px;font-size:12px}
+.game-screen{padding:0;background:#080b12}
+
+/* AVIATOR GAME STAGE */
 .aviator-stage{
-  height:350px;position:relative;overflow:hidden;border-radius:10px;
-  isolation:isolate;background:
-  radial-gradient(ellipse at 50% 85%,#183b4c 0%,#102b3d 35%,#091b2a 72%,#06121e 100%);
-  border:1px solid #294354;
+  height:390px;position:relative;overflow:hidden;isolation:isolate;
+  border:0;border-radius:0;
+  background:
+    radial-gradient(ellipse at 60% 68%,#302239 0%,#171c2c 40%,#0a101c 78%,#070b13 100%);
 }
-.aviator-sky{position:absolute;inset:0;overflow:hidden;z-index:-4;background:
-  radial-gradient(ellipse at 20% 15%,#1d4054aa,transparent 45%),
-  linear-gradient(180deg,#071522 0%,#0b2030 58%,#173548 100%)}
-.aviator-stars{position:absolute;inset:0;opacity:.55;background-image:
- radial-gradient(2px 2px at 12% 20%,#dceaf3 50%,transparent 100%),
- radial-gradient(1px 1px at 29% 12%,#dceaf3 50%,transparent 100%),
- radial-gradient(2px 2px at 54% 24%,#dceaf3 50%,transparent 100%),
+.aviator-sky{position:absolute;inset:0;z-index:-5;background:
+  radial-gradient(ellipse at 78% 18%,#743a3333,transparent 35%),
+  radial-gradient(ellipse at 20% 60%,#293e5633,transparent 48%),
+  linear-gradient(180deg,#090e19 0%,#121b2a 58%,#1b1b2b 100%)}
+.aviator-stars{position:absolute;inset:0;opacity:.5;background-image:
+ radial-gradient(1px 1px at 12% 20%,#fff 50%,transparent 100%),
+ radial-gradient(2px 2px at 29% 12%,#dceaf3 50%,transparent 100%),
+ radial-gradient(1px 1px at 54% 24%,#fff 50%,transparent 100%),
  radial-gradient(1px 1px at 75% 16%,#dceaf3 50%,transparent 100%),
- radial-gradient(1px 1px at 88% 37%,#dceaf3 50%,transparent 100%),
- radial-gradient(2px 2px at 42% 43%,#dceaf3 50%,transparent 100%)}
-.aviator-clouds{position:absolute;left:-15%;width:130%;height:45%;border-radius:50%;filter:blur(24px);opacity:.12;background:#8ba8b8}
+ radial-gradient(2px 2px at 88% 37%,#fff 50%,transparent 100%),
+ radial-gradient(1px 1px at 42% 43%,#dceaf3 50%,transparent 100%)}
+.aviator-clouds{position:absolute;left:-15%;width:130%;height:45%;border-radius:50%;filter:blur(28px);opacity:.13;background:#8395b2}
 .cloud-back{top:22%;transform:translateX(-5%)}
-.cloud-middle{top:48%;opacity:.15;transform:translateX(8%)}
+.cloud-middle{top:48%;opacity:.14;transform:translateX(8%)}
 .cloud-front{top:68%;opacity:.2;transform:translateX(-3%)}
-.aviator-horizon{position:absolute;bottom:0;left:0;right:0;height:27%;background:linear-gradient(0deg,#07121d 0%,#102b3a99 55%,transparent 100%)}
-.flight-grid{position:absolute;inset:0;opacity:.17;background-image:linear-gradient(#86a6b522 1px,transparent 1px),linear-gradient(90deg,#86a6b522 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(transparent,#000 40%,#000)}
-.stage-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse,transparent 35%,#02091177 100%)}
-.stage-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:#ff4b35}
+.aviator-horizon{position:absolute;bottom:0;left:0;right:0;height:30%;background:linear-gradient(0deg,#080b13 0%,#121a2b99 55%,transparent 100%)}
+.flight-grid{position:absolute;inset:0;opacity:.13;background-image:linear-gradient(#a8b6cf22 1px,transparent 1px),linear-gradient(90deg,#a8b6cf22 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(transparent,#000 35%,#000)}
+.stage-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse,transparent 35%,#02050c99 100%)}
+.stage-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:#ff493e;z-index:8}
 .stage-flash.show{animation:crashFlash .65s ease-out}
-@keyframes crashFlash{0%{opacity:.42}100%{opacity:0}}
-.multiplier{position:absolute;z-index:5;top:34%;left:0;right:0;text-align:center;font-size:clamp(40px,12vw,58px);line-height:1;font-weight:900;letter-spacing:-2px;color:#fff;text-shadow:0 3px 18px #000b}
-.crash-status{position:absolute;z-index:6;top:calc(34% + 61px);left:0;right:0;text-align:center;font-size:12px;font-weight:900;letter-spacing:2px;color:#d9e6ed;text-shadow:0 2px 8px #000}
+@keyframes crashFlash{0%{opacity:.48}100%{opacity:0}}
+.multiplier{position:absolute;z-index:5;top:29%;left:0;right:0;text-align:center;font-size:clamp(45px,13vw,66px);line-height:1;font-weight:1000;letter-spacing:-2px;color:#fff;text-shadow:0 3px 24px #000c,0 0 24px #ffffff22}
+.crash-status{position:absolute;z-index:6;top:calc(29% + 70px);left:0;right:0;text-align:center;font-size:11px;font-weight:900;letter-spacing:2px;color:#d9e1ed;text-shadow:0 2px 8px #000}
 .aviator-stage.crashed .multiplier{color:#ff5149;text-shadow:0 0 24px #ff382e88}
 .aviator-stage.crashed .crash-status{color:#ff665c}
 .aviator-stage.countdown .multiplier{color:#fff}
 .flight-chart{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:2}
-.flight-area{fill:url(#flightGradient);opacity:.32}
-.flight-path{fill:none;stroke:#f34c43;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 7px #ff493caa)}
-.flight-dot{fill:#fff;stroke:#ff5549;stroke-width:4;filter:drop-shadow(0 0 8px #ff453b)}
-.plane-wrap{position:absolute;z-index:4;width:84px;height:62px;left:6%;top:76%;transform:translate(-50%,-50%);transition:left .3s linear,top .3s linear;filter:drop-shadow(0 5px 8px #0009)}
+.flight-area{fill:url(#flightFill);opacity:.4}
+.flight-path{fill:none;stroke:url(#flightLine);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 7px #ff7048aa)}
+.flight-dot{fill:#fff;stroke:#ff7048;stroke-width:4;filter:drop-shadow(0 0 9px #ff7048)}
+.plane-wrap{position:absolute;z-index:4;width:90px;height:62px;left:6%;top:76%;transform:translate(-50%,-50%);transition:left .3s linear,top .3s linear;filter:drop-shadow(0 5px 8px #0009)}
 .plane{width:100%;height:100%;overflow:visible}
 .plane-propeller{transform-origin:82% 49%;animation:propeller .09s linear infinite}
 @keyframes propeller{to{transform:rotate(360deg)}}
 .plane-fire{position:absolute;left:-24px;top:35px;width:34px;height:13px;border-radius:50%;background:linear-gradient(90deg,transparent,#ff4c22,#ffd36b);filter:blur(5px);opacity:.9;animation:flame .16s alternate infinite}
 @keyframes flame{to{transform:scaleX(.55);opacity:.55}}
 .plane-trail{position:absolute;left:-40px;top:39px;width:55px;height:4px;background:linear-gradient(90deg,transparent,#ff9b4b);filter:blur(3px)}
-.round-label{position:absolute;bottom:10px;left:12px;color:#9db2c0;font-size:10px;letter-spacing:1px;z-index:5}
-.stage-bottom-label{position:absolute;bottom:10px;right:12px;color:#9db2c0;font-size:10px;z-index:5}
-.aviator-stage.running .plane-wrap{filter:drop-shadow(0 0 10px #ff744c)}
+.round-label{position:absolute;bottom:11px;left:13px;color:#98a5b9;font-size:9px;letter-spacing:1.5px;z-index:5}
+.stage-bottom-label{position:absolute;bottom:11px;right:13px;color:#98a5b9;font-size:9px;letter-spacing:1px;z-index:5}
+.aviator-stage.running .plane-wrap{filter:drop-shadow(0 0 12px #ff744c)}
 .aviator-stage.crashed .plane-wrap{animation:planeCrash .7s ease-in forwards}
 @keyframes planeCrash{to{transform:translate(-50%,30%) rotate(35deg);opacity:0}}
 .aviator-stage.crashed .flight-path{stroke:#ff5147}
 .aviator-stage.countdown .flight-path{opacity:.35}
 .aviator-stage.running .flight-path{animation:pathGlow 1s ease-in-out infinite alternate}
-@keyframes pathGlow{to{filter:drop-shadow(0 0 13px #ff5144)}}
+@keyframes pathGlow{to{filter:drop-shadow(0 0 15px #ff5144)}}
 
-/* Recent crash multipliers */
-.crash-history-title{font-size:12px;font-weight:800;color:#aebdca;margin:13px 0 8px}
-.crash-history{display:flex;gap:7px;overflow-x:auto;padding:2px 0 9px}
-.crash-chip{flex:0 0 auto;padding:7px 10px;border-radius:6px;background:#263541;color:#f0f4f7;font-weight:800;font-size:12px}
+/* PREVIOUS ROUND RESULTS */
+.crash-history-title{font-size:11px;font-weight:900;color:#b7c1d0;margin:0 0 9px;display:flex;justify-content:space-between}
+.crash-history-title small{font-size:9px;color:#758398}
+.game-screen>.card{margin:0;border:0;border-radius:0;border-bottom:1px solid #293244;background:#101722;padding:12px 13px}
+.crash-history{display:flex;gap:7px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:none}
+.crash-history::-webkit-scrollbar{display:none}
+.crash-chip{flex:0 0 auto;padding:7px 10px;border-radius:5px;background:#283344;color:#f0f4f7;font-weight:900;font-size:11px}
 .crash-chip.history-high{background:#164b43;color:#43e0a9}
 .crash-chip.history-low{background:#56302f;color:#ff8178}
 
-/* Bet panels */
-.crash-panels{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-.crash-bet-panel{min-width:0;background:#142330;border:1px solid #304351;border-radius:10px;padding:10px}
-.crash-panel-head{font-size:13px;font-weight:900;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.auto-row{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:8px 0;color:#aebdca;font-size:11px}
-.auto-check{accent-color:#e8b74e}
-.auto-target{width:58px;padding:7px 5px;background:#091722;border:1px solid #3b5060;color:#fff;border-radius:6px;text-align:center}
-.betbox{width:100%;padding:11px 8px;border-radius:7px;background:#091722;border:1px solid #344958;color:#fff;font-size:17px;font-weight:800;text-align:center;margin:5px 0 9px}
+/* BETTING AREA */
+.crash-panels{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0;padding:11px 9px 18px;background:#0a0e17}
+.crash-bet-panel{min-width:0;background:linear-gradient(155deg,#1a2433,#111925);border:1px solid #354153;border-radius:10px;padding:10px}
+.crash-panel-head{font-size:12px;font-weight:1000;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center}
+.crash-panel-head span{font-size:9px;color:#ffc45b;letter-spacing:.5px}
+.crash-bet-panel>label{font-size:10px;color:#9eabbd}
+.crash-bet-panel .field{padding:10px 7px;text-align:center;font-size:17px;font-weight:900;background:#0a111c;border-color:#39475a;margin:6px 0 9px}
+.auto-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:8px 0;color:#aebdca;font-size:9px}
+.auto-check{display:flex;align-items:center;gap:4px;font-size:9px;white-space:nowrap}
+.auto-check input{accent-color:#e8b74e;width:13px;height:13px}
+.auto-target{display:flex;align-items:center;gap:3px;font-size:9px}
+.auto-target input{width:43px;padding:5px 2px;background:#091722;border:1px solid #3b5060;color:#fff;border-radius:5px;text-align:center;font-size:10px}
 .bet-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.bet-actions button{min-width:0;padding:11px 4px;border:0;border-radius:7px;font-weight:900;font-size:12px}
-.bet-actions .cashout{background:#20d69b;color:#06271f}
-.bet-actions .cancel-auto{background:#4b3031;color:#ffaaa3}
-.bet-actions button:disabled{opacity:.45;cursor:not-allowed}
-.crash-bet-panel .primary{width:100%;background:#20d69b;color:#06271f}
-.crash-bet-panel .secondary{width:100%;background:#354b5a;color:#fff}
+.bet-actions button{min-width:0;padding:11px 3px;border:0;border-radius:6px;font-weight:1000;font-size:11px}
+.bet-actions .cashout{background:linear-gradient(135deg,#23e2a2,#0ba979);color:#06271f}
+.bet-actions .cancel-auto{grid-column:1/-1;background:#4b3031;color:#ffaaa3;padding:8px}
+.crash-bet-panel .primary{width:100%;background:linear-gradient(135deg,#ffca61,#e99b35);color:#241807}
+.crash-bet-panel .primary:disabled{background:#4b5260;color:#aab1bd}
+.bet-actions button:disabled{opacity:.4;cursor:not-allowed}
+.crash-bet-panel .notice{margin-top:9px;padding:8px;background:#101a27;color:#9daabd;font-size:10px;min-height:34px}
 
-/* Super Ace */
-.super-board{background:#0d2c2b;border-radius:10px;padding:12px}
-.ace-head{font-size:22px;font-weight:900;text-align:center;color:#f6cf75}
-.ace-sub{text-align:center;color:#b9d6c8;font-size:11px;margin:5px}
+/* SUPER ACE */
+.super-board{background:#101f2b;border:1px solid #314252;border-radius:10px;padding:12px}
+.ace-head{font-size:22px;font-weight:1000;text-align:center;color:#f6cf75}
+.ace-sub{text-align:center;color:#b9c6d5;font-size:11px;margin:5px}
 .cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}
 .playing-card{background:#f8f4e9;color:#17212b;border-radius:7px;min-height:78px;padding:7px;font-weight:900;text-align:center}
 
-/* Responsive */
+/* SMALL SCREENS */
 @media(max-width:380px){
- .aviator-stage{height:315px}
- .crash-panels{gap:6px}
+ .aviator-stage{height:345px}
+ .crash-panels{gap:6px;padding-left:6px;padding-right:6px}
  .crash-bet-panel{padding:8px}
- .multiplier{font-size:43px}
- .plane-wrap{width:72px}
- .bet-actions button{font-size:11px}
+ .multiplier{font-size:45px}
+ .plane-wrap{width:75px}
+ .bet-actions button{font-size:10px}
  .top{padding:0 9px}
  .pill{padding:8px}
+ .auto-target input{width:37px}
 }
 @media(min-width:520px){
- .aviator-stage{height:390px}
+ .aviator-stage{height:430px}
 }
