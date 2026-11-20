@@ -43,7 +43,7 @@ const api = async (path, body = null) => {
 };
 
 const money = n =>
-  Number(n || 0).toLocaleString('en-US') + ' ক্রেডিট';
+  'BDT ' + Number(n || 0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 
 function esc(s = '') {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -552,8 +552,8 @@ function aviator(g) {
                   </div>
                 </div>
                 <div class="bet-action-side">
-                  <button class="aviator-bet-button" id="startCrash${i}" onclick="startCrash(${i})">Bet<br><b>10.00 COINS</b></button>
-                  <button class="aviator-cashout-button" id="cashoutBtn${i}" disabled onclick="cashout(${i})">Cash Out<br><b>0.00 COINS</b></button>
+                  <button class="aviator-bet-button" id="startCrash${i}" onclick="startCrash(${i})">Bet<br><b>BDT 10.00</b></button>
+                  <button class="aviator-cashout-button" id="cashoutBtn${i}" disabled onclick="cashout(${i})">Cash Out<br><b>BDT 0.00</b></button>
                   <button class="aviator-cancel-button" id="cancelAuto${i}" onclick="cancelAuto(${i})" disabled>Cancel</button>
                 </div>
               </div>
@@ -569,7 +569,7 @@ function aviator(g) {
           `).join('')}
         </div>
 
-        <div class="aviator-footer-note">TK777 • FREE VIRTUAL COINS • NO CASH VALUE</div>
+        <div class="aviator-footer-note">TK777 • BDT DISPLAY ONLY • NO CASH VALUE</div>
       </section>
     </main>
   `;
@@ -583,7 +583,7 @@ function setQuickBet(index, amount) {
   input.value = String(amount);
   input.dispatchEvent(new Event('change', {bubbles:true}));
   const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>'+Number(amount).toFixed(2)+' COINS</b>';
+  if (btn) btn.innerHTML = 'Bet<br><b>BDT '+Number(amount).toFixed(2)+'</b>';
 }
 
 function adjustQuickBet(index, direction) {
@@ -593,7 +593,7 @@ function adjustQuickBet(index, direction) {
   const next = Math.max(1,Math.min(1000000,current + direction));
   input.value = String(next);
   const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>'+next.toFixed(2)+' COINS</b>';
+  if (btn) btn.innerHTML = 'Bet<br><b>BDT '+next.toFixed(2)+'</b>';
 }
 
 function setAviatorMode(index, mode) {
@@ -895,7 +895,7 @@ function updateCashoutAmounts(multiplier) {
     if (!button || !slot.roundId || slot.status !== 'active') continue;
     const bet = Math.max(0,Number(input?.value || slot.betAmount || 0));
     const payout = Math.floor(bet*multiplier);
-    button.innerHTML = 'Cash Out<br><b>'+payout.toFixed(2)+' COINS</b>';
+    button.innerHTML = 'Cash Out<br><b>BDT '+payout.toFixed(2)+'</b>';
   }
 }
 
@@ -1108,7 +1108,7 @@ async function cashout(index) {
 
     if (result) {
       result.textContent = r.status === 'cashed_out'
-        ? `Cash Out সফল: ${Number(r.multiplier).toFixed(2)}x · পেআউট ${payoutAmount.toFixed(2)} কয়েন · লাভ ${profitAmount.toFixed(2)} কয়েন · ব্যালেন্স ${money(r.balance)}`
+        ? `Cash Out সফল: ${Number(r.multiplier).toFixed(2)}x · পেআউট BDT ${payoutAmount.toFixed(2)} · লাভ BDT ${profitAmount.toFixed(2)} · ব্যালেন্স ${money(r.balance)}`
         : 'Cash Out-এর আগেই ক্র্যাশ হয়েছে। পেআউট ০।';
     }
 
