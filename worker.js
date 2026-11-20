@@ -442,6 +442,8 @@ async function route(req, env) {
     }
 
     if (p === "/api/games" && method === "GET") {
+      // Normalize the original game's display name once; admin can rename it later.
+      await env.DB.prepare("UPDATE games SET name='Aviator' WHERE id='aviator' AND name='Aviator Free'").run();
       // Hide the duplicate Aviator 2 entry while preserving its historical rounds.
       await env.DB.prepare("UPDATE games SET active=0 WHERE id='aviator-2'").run();
       await env.DB.prepare(`
