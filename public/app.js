@@ -554,9 +554,9 @@ function aviator(g) {
 
         <section class="aviator-bottom-feed">
           <div class="feed-tabs">
-            <button class="active" type="button">All Bets</button>
-            <button type="button">Previous</button>
-            <button type="button">Top</button>
+            <button class="active" id="feedAll" type="button" onclick="setAviatorFeed('all')">All Bets</button>
+            <button id="feedPrevious" type="button" onclick="setAviatorFeed('previous')">Previous</button>
+            <button id="feedTop" type="button" onclick="setAviatorFeed('top')">Top</button>
           </div>
           <div class="feed-summary"><b>Previous rounds</b><span>Virtual coin results</span></div>
           <div id="crashHistory" class="crash-history"><span class="muted">Loading results…</span></div>
@@ -631,6 +631,29 @@ function updateCrashHistory(previous) {
   if (ticker) ticker.innerHTML = chips.slice(0,12).map(x =>
     `<span class="${x.cls}">${x.n.toFixed(2)}x</span>`
   ).join('');
+}
+
+function setAviatorFeed(mode) {
+  ['all','previous','top'].forEach(key => {
+    const button = $('#feed'+key.charAt(0).toUpperCase()+key.slice(1));
+    if (button) button.classList.toggle('active',key===mode);
+  });
+  const summary = $('.feed-summary');
+  const history = $('#crashHistory');
+  if (!summary || !history) return;
+  if (mode === 'previous') {
+    summary.innerHTML = '<b>Previous rounds</b><span>সম্পন্ন রাউন্ডের ফলাফল</span>';
+    history.innerHTML = crashHistoryData.length ? crashHistoryData.map(x => {
+      const n = Number(x.crash_multiplier);
+      return '<span class="'+(n >= 2 ? 'history-high' : 'history-low')+'">'+n.toFixed(2)+'x</span>';
+    }).join('') : '<span class="muted">আগের কোনো রাউন্ড নেই</span>';
+  } else if (mode === 'top') {
+    summary.innerHTML = '<b>Top</b><span>সার্ভারের Top তালিকা অনুপস্থিত</span>';
+    history.innerHTML = '<span class="muted">Top Players তালিকা দেখানোর API এখনো নেই</span>';
+  } else {
+    summary.innerHTML = '<b>All Bets</b><span>লাইভ বেট তালিকা</span>';
+    history.innerHTML = '<span class="muted">All Bets লাইভ তালিকার জন্য সার্ভার API প্রয়োজন</span>';
+  }
 }
 
 function updateSlotStatus(i,text) {
