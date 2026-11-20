@@ -11,6 +11,9 @@ let crashVisualValue = 1;
 let crashVisualSegment = null;
 let crashVisualUpdatedAt = 0;
 let crashVisualStartMs = null;
+let aviatorCrowdSession = null;
+let aviatorCrowdPeak = 1832;
+
 
 let crashSlots = [
   { roundId:null,busy:false,status:'ready',auto:false,autoBet:false,autoTarget:2,lastAutoSessionId:null },
@@ -478,6 +481,12 @@ function aviator(g) {
           <div class="crash-flew-away" aria-hidden="true">FLEW AWAY!</div>
           <div class="multiplier" id="multi">1.00x</div>
           <div class="crash-status" id="crashStatus">WAITING FOR NEXT ROUND</div>
+          <div class="aviator-crowd" id="aviatorCrowd" aria-label="Animated player count">
+            <span class="crowd-avatar crowd-avatar-one"><i></i></span>
+            <span class="crowd-avatar crowd-avatar-two"><i></i></span>
+            <span class="crowd-avatar crowd-avatar-three"><i></i></span>
+            <b id="aviatorCrowdCount">1</b>
+          </div>
 
           <svg class="flight-chart" id="flightChart" viewBox="0 0 1000 440" preserveAspectRatio="none" aria-hidden="true">
             <defs>
@@ -715,6 +724,29 @@ function updateAllSlotButtons() {
   }
 }
 
+function updateAviatorCrowd(state) {
+  const countEl = $('#aviatorCrowdCount');
+  if (!countEl || !state) return;
+  const sessionKey = String(state.sessionId || state.startMs || 'aviator-session');
+  if (sessionKey !== aviatorCrowdSession) {
+    aviatorCrowdSession = sessionKey;
+    aviatorCrowdPeak = 1832 + Math.floor(Math.random() * 269);
+  }
+  let count = 1;
+  if (state.status === 'countdown') {
+    const remaining = Math.max(0, Math.min(5000, Number(state.countdownMs || 0)));
+    const progress = 1 - remaining / 5000;
+    count = Math.round(1 + (aviatorCrowdPeak - 1) * Math.pow(progress, 1.65));
+  } else if (state.status === 'active') {
+    const elapsed = Math.max(0, Date.now() - Number(state.startMs || Date.now()));
+    const progress = Math.min(1, elapsed / 20000);
+    count = Math.round(aviatorCrowdPeak - (aviatorCrowdPeak - 607) * progress);
+  } else {
+    count = Number(countEl.textContent) || 607;
+  }
+  countEl.textContent = count.toLocaleString('en-US');
+}
+
 async function pollCrashState() {
   if (crashPollBusy || !crashGameId) return;
   if (!$('#aviatorStage')) return;
@@ -734,6 +766,7 @@ async function pollCrashState() {
     const stage = $('#aviatorStage');
 
     crashPhase = state.status;
+    updateAviatorCrowd(state);
 
     if (state.status === 'countdown') {
       const seconds = Math.max(0,Number(state.countdownMs || 0)/1000);
