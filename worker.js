@@ -624,7 +624,10 @@ async function route(req, env) {
       try {
         await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
       } catch (e) {}
-      const rows = await env.DB.prepare("SELECT id,method,amount,status,created_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run();
+      } catch (e) {}
+      const rows = await env.DB.prepare("SELECT id,method,amount,wallet_number,status,created_at FROM demo_withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
       return json({ requests: rows.results || [] });
     }
 
@@ -633,6 +636,8 @@ async function route(req, env) {
       const body = await req.json();
       const methodName = String(body.method || "").replace(/^Demo\s+/i, "");
       const amount = Number(body.amount);
+      const walletNumber = String(body.walletNumber || "").trim();
+      if (!/^[0-9+\- ]{8,20}$/.test(walletNumber)) return json({ error: "সঠিক ওয়ালেট নম্বর লিখুন" }, 400);
       if (!["bKash", "Nagad", "Rocket"].includes(methodName) || !Number.isSafeInteger(amount) || amount < 1 || amount > 10000000) {
         return json({ error: "সঠিক Withdrawal তথ্য দিন" }, 400);
       }
@@ -640,10 +645,13 @@ async function route(req, env) {
       try {
         await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
       } catch (e) {}
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run();
+      } catch (e) {}
       const requestId = uid();
       const reserved = await env.DB.batch([
         env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=? AND NOT EXISTS (SELECT 1 FROM demo_withdrawals WHERE user_id=? AND status='pending')").bind(amount, user.id, amount, user.id),
-        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,status,coin_reserved) SELECT ?,?,?,?,'pending',1 WHERE changes()=1").bind(requestId, user.id, methodName, amount),
+        env.DB.prepare("INSERT INTO demo_withdrawals(id,user_id,method,amount,wallet_number,status,coin_reserved) SELECT ?,?,?,?,?, 'pending',1 WHERE changes()=1").bind(requestId, user.id, methodName, amount, walletNumber),
         env.DB.prepare("SELECT changes() AS inserted")
       ]);
       if (Number(reserved[2]?.results?.[0]?.inserted) !== 1) {
@@ -1869,7 +1877,10 @@ async function route(req, env) {
       try {
         await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN coin_reserved INTEGER NOT NULL DEFAULT 0").run();
       } catch (e) {}
-      const rows = await env.DB.prepare("SELECT d.id,d.method,d.amount,d.status,d.created_at,u.username,u.email,u.balance FROM demo_withdrawals d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
+      try {
+        await env.DB.prepare("ALTER TABLE demo_withdrawals ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run();
+      } catch (e) {}
+      const rows = await env.DB.prepare("SELECT d.id,d.method,d.amount,d.wallet_number,d.status,d.created_at,u.username,u.email,u.balance FROM demo_withdrawals d JOIN users u ON u.id=d.user_id ORDER BY d.created_at DESC LIMIT 200").all();
       return json({ requests: rows.results || [] });
     }
 
