@@ -1010,3 +1010,26 @@ body{background:#063b39}
   min-width:48px;color:#f4f4f4;font-size:clamp(15px,3.8vw,20px);
   font-weight:500;line-height:1;text-align:right;letter-spacing:.3px;
 }
+
+
+/* Home page: swipeable single-row categories and larger two-column game cards. */
+.cats{
+  display:flex!important;flex-wrap:nowrap!important;gap:10px;
+  overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;padding:2px 0 7px;
+  scrollbar-width:none;
+}
+.cats::-webkit-scrollbar{display:none}
+.cats .cat{
+  flex:0 0 clamp(132px,30vw,170px);min-height:72px;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:10px;border-radius:16px;scroll-snap-align:start;
+}
+.cats .cat img{width:28px;height:28px;flex:0 0 28px;border-radius:6px}
+.cats .cat .placeholder{width:28px;height:28px;flex:0 0 28px}
+.cats .cat b{white-space:nowrap;font-size:13px}
+.games{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+.game{border-radius:16px}
+.game img,.game .placeholder{height:clamp(145px,38vw,205px)}
+.game strong{font-size:15px;padding:10px 5px}
+.game small{display:block;padding:0 4px 12px;color:#55d5bf;font-size:11px;font-weight:800;letter-spacing:.5px}
