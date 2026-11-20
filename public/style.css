@@ -821,20 +821,31 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
 }
 
 
-/* Aviator plane: center hover during flight, then a single fast exit on crash. */
+/* Aviator: slow shared graph/plane travel, gentle center hover, visible crash exit. */
+.aviator-stage .plane-wrap.plane-approach,
 .aviator-stage .plane-wrap.plane-hover{
-  animation:tkPlaneHover 1.15s ease-in-out infinite;
-  transition:left .42s cubic-bezier(.18,.72,.25,1),top .42s cubic-bezier(.18,.72,.25,1);
+  transition:left .42s cubic-bezier(.22,.65,.28,1),top .42s cubic-bezier(.22,.65,.28,1);
+}
+.aviator-stage .plane-wrap.plane-hover{
+  animation:tkPlaneHover 1.55s ease-in-out infinite;
 }
 @keyframes tkPlaneHover{
-  0%,100%{transform:translate(-50%,-50%) translateY(-8px)}
-  50%{transform:translate(-50%,-50%) translateY(9px)}
+  0%,100%{transform:translate(-50%,-50%) translateY(-7px)}
+  50%{transform:translate(-50%,-50%) translateY(8px)}
+}
+.aviator-stage .user-plane-propeller{
+  transform-box:view-box;
+  transform-origin:438px 235px;
+  animation:tkPlanePropeller 1.6s linear infinite;
+}
+@keyframes tkPlanePropeller{
+  to{transform:rotate(360deg)}
 }
 .aviator-stage .plane-wrap.plane-crashed{
-  animation:tkPlaneCrashExit .42s cubic-bezier(.2,.78,.25,1) forwards;
+  animation:tkPlaneCrashExit .9s cubic-bezier(.2,.72,.24,1) forwards;
   pointer-events:none;
 }
 @keyframes tkPlaneCrashExit{
   0%{transform:translate(-50%,-50%);opacity:1}
-  100%{transform:translate(calc(50vw + 100%),-50%);opacity:0}
+  100%{transform:translate(calc(100vw + 100%),-50%);opacity:1}
 }
