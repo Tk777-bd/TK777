@@ -397,7 +397,7 @@ async function route(req, env) {
     }
 
     if (p === "/api/slot-display-images" && method === "GET") {
-      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'slot_display_image_%' OR key='slot_display_hidden'").all();
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'slot_display_image_%' OR key IN ('slot_display_hidden','game_name_overrides')").all();
       const images = {};
       let hiddenIds = [];
       for (const row of (rows.results || [])) {
@@ -409,7 +409,10 @@ async function route(req, env) {
         const url = String(row.value || "").trim();
         if (/^https:\/\//i.test(url)) images[id] = url;
       }
-      return json({ images, hiddenIds: Array.isArray(hiddenIds) ? hiddenIds.filter(x => typeof x === 'string') : [] });
+      let nameOverrides = {};
+      const nameRow = (rows.results || []).find(r => r.key === 'game_name_overrides');
+      try { nameOverrides = JSON.parse(String(nameRow?.value || '{}')); } catch { nameOverrides = {}; }
+      return json({ images, hiddenIds: Array.isArray(hiddenIds) ? hiddenIds.filter(x => typeof x === 'string') : [], nameOverrides });
     }
 
     if (p === "/api/support-settings" && method === "GET") {
@@ -464,7 +467,15 @@ async function route(req, env) {
         ORDER BY sort_order,id
       `).all();
 
-      return json({ games: rows.results });
+      const nameRow = await env.DB.prepare("SELECT value FROM settings WHERE key='game_name_overrides'").first();
+      let nameOverrides = {};
+      try { nameOverrides = JSON.parse(String(nameRow?.value || '{}')); } catch { nameOverrides = {}; }
+      const games = (rows.results || []).map(g => ({
+        ...g,
+        name: typeof nameOverrides[g.id] === 'string' && nameOverrides[g.id].trim()
+          ? nameOverrides[g.id].trim().slice(0,80) : g.name
+      }));
+      return json({ games });
     }
 
     if (!user) {
@@ -1363,6 +1374,28 @@ async function route(req, env) {
       ).run();
 
       return json({ ok: true });
+    }
+
+    if (p === "/api/admin/game-name" && method === "POST") {
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const { id, name } = await req.json();
+      const gameId = String(id || '').trim();
+      const gameName = String(name || '').trim().slice(0,80);
+      if (!gameId || !gameName) return json({ error: "গেমের ID ও নতুন নাম দিন" }, 400);
+      const row = await env.DB.prepare("SELECT id FROM games WHERE id=?").bind(gameId).first();
+      if (row) {
+        await env.DB.prepare("UPDATE games SET name=? WHERE id=?").bind(gameName,gameId).run();
+      } else if (gameId.startsWith('slot-display-')) {
+        const current = await env.DB.prepare("SELECT value FROM settings WHERE key='game_name_overrides'").first();
+        let overrides = {};
+        try { overrides = JSON.parse(String(current?.value || '{}')); } catch { overrides = {}; }
+        overrides[gameId] = gameName;
+        await env.DB.prepare("INSERT INTO settings(key,value) VALUES('game_name_overrides',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
+          .bind(JSON.stringify(overrides).slice(0,10000)).run();
+      } else {
+        return json({ error: "গেম পাওয়া যায়নি" }, 404);
+      }
+      return json({ ok: true, name: gameName });
     }
 
     if (p.startsWith("/api/admin/games/") && method === "DELETE") {
