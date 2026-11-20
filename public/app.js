@@ -9,7 +9,7 @@ function depositText(key){return String((depositContent.fields||{})[key] ?? (DEF
 function depositExtraCategories(){return (Array.isArray(depositContent.categories)?depositContent.categories:[]).map(c=>'<div class="card"><h3>'+esc(c.title||'')+'</h3><p>'+esc(c.text||'')+'</p></div>').join('');}
 let demoPaymentImages = {bkash:'',nagad:'',rocket:''};
 let demoMethodNumbers = {bkash:'12345678912',nagad:'55555555555',rocket:'33333333333'};
-let withdrawDemoIds = {bkash:['DEMO-BKASH-01'],nagad:['DEMO-NAGAD-01']};
+let withdrawDemoIds = {bkash:['DEMO-BKASH-01'],nagad:['DEMO-NAGAD-01'],rocket:['DEMO-ROCKET-01']};
 let slotDisplayImages = {}, slotDisplayHidden = [];
 let isPlayingGame = false;
 let crashTimer = null;
@@ -562,7 +562,7 @@ async function withdrawPage(){
       <div class="demo-payment-methods">
         <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash');showWithdrawDemoIds('bkash')">bKash <small>DEMO</small></button>
         <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad');showWithdrawDemoIds('nagad')">Nagad <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket');showWithdrawDemoIds('')">Rocket <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket');showWithdrawDemoIds('rocket')">Rocket <small>DEMO</small></button>
       </div>
       <div id="withdrawDemoIdList" class="muted">বিকাশ বা নগদ নির্বাচন করলে Demo পরিচিতি দেখাবে।</div>
       <label for="withdrawCoinAmount">কয়েনের পরিমাণ</label>
