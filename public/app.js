@@ -2,6 +2,8 @@
 let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
+let supportSettings = {telegram_username:'',telegram_image_url:''};
+let isPlayingGame = false;
 let crashTimer = null;
 let crashGameId = null;
 let crashPollBusy = false;
@@ -216,7 +218,14 @@ function shell(content) {
         <button onclick="page('reward')"><b>★</b>Reward</button>
         <button onclick="page('member')"><b>♙</b>Member</button>
       </nav>
+      ${!isPlayingGame && supportSettings.telegram_username ? `<button class="telegram-support-float" type="button" onclick="openTelegramSupport()" aria-label="Telegram Support">${supportSettings.telegram_image_url ? `<img src="${esc(supportSettings.telegram_image_url)}" alt="Support">` : '<span>➤</span>'}</button>` : ''}
     </div>`;
+}
+
+function openTelegramSupport() {
+  const username = String(supportSettings.telegram_username || '').trim().replace(/^@/,'').replace(/[^A-Za-z0-9_]/g,'');
+  if (!username) return toast('Telegram Support এখনো সেট করা হয়নি');
+  window.open('https://t.me/' + username,'_blank','noopener');
 }
 
 function toast(t) {
@@ -239,6 +248,7 @@ async function init() {
     categories = (await api('/categories')).categories;
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
+    supportSettings = await api('/support-settings);
   } catch (e) {
     toast(e.message);
   }
@@ -270,6 +280,7 @@ function setupHomeBanners() {
 /* HOME */
 
 function home() {
+  isPlayingGame = false;
   stopCrashMonitor();
   if (homeBannerTimer) clearInterval(homeBannerTimer);
   homeBannerTimer = null;
@@ -350,6 +361,7 @@ function gameCard(g) {
 }
 
 function filterGames(id) {
+  isPlayingGame = false;
   const c = categories.find(x => x.id === id);
   const list = id === 'favorites'
     ? games.filter(g => favoriteIds().includes(g.id))
@@ -374,6 +386,7 @@ function filterGames(id) {
 /* LOGIN AND REGISTER */
 
 function showAuth() {
+  isPlayingGame = false;
   stopCrashMonitor();
   shell(`
     <div class="page"><div class="card auth-card">
@@ -459,6 +472,7 @@ function authMode(m) {
 
 
 function page(name) {
+  isPlayingGame = false;
   stopCrashMonitor();
   if (name === 'member') return memberCenter();
   if (name === 'history') return historyPage();
@@ -486,7 +500,7 @@ function page(name) {
   shell(`
     <div class="page member-subpage">
       <div class="member-subpage-heading"><button onclick="page('member')" aria-label="Back">‹</button><h2>${esc(item[0])}</h2></div>
-      <div class="card"><p>${esc(item[1])}</p></div>
+      <div class="card"><p>${esc(item[1])}</p>${name === "deposit" ? '<div class="coin-contact-number"><small>কয়েন রিকুয়েস্ট যোগাযোগ নম্বর</small><strong>01790365006</strong><small>শুধু যোগাযোগের তথ্য; কোনো টাকা পাঠাবেন না।</small></div>' : ""}</div>
       <button class="secondary" onclick="page('member')">Member Center</button>
     </div>
   `);
@@ -547,6 +561,7 @@ function logout() {
 /* GAME ROUTING */
 
 function openGame(id) {
+  isPlayingGame = true;
   const g = games.find(x => x.id === id);
   if (!g) return;
 
