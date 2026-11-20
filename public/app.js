@@ -419,58 +419,138 @@ function aviator(g) {
 
     <div class="game-screen">
       <div class="aviator-stage countdown" id="aviatorStage">
+
         <div class="aviator-sky"></div>
         <div class="aviator-stars"></div>
+        <div class="aviator-clouds cloud-back"></div>
+        <div class="aviator-clouds cloud-middle"></div>
+        <div class="aviator-clouds cloud-front"></div>
+        <div class="aviator-horizon"></div>
         <div class="flight-grid"></div>
 
-        <svg class="flight-chart" id="flightChart" viewBox="0 0 1000 440" preserveAspectRatio="none" aria-hidden="true">
+        <div class="stage-vignette"></div>
+        <div class="stage-flash" id="stageFlash"></div>
+
+        <div class="multiplier" id="multi">1.00x</div>
+        <div class="crash-status" id="crashStatus">WAITING FOR NEXT ROUND</div>
+
+        <svg class="flight-chart" id="flightChart"
+          viewBox="0 0 1000 440" preserveAspectRatio="none"
+          aria-hidden="true">
+
           <defs>
-            <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#26e6a2" stop-opacity=".30"/>
-              <stop offset="100%" stop-color="#26e6a2" stop-opacity="0"/>
+            <linearGradient id="flightLine" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0%" stop-color="#ffca65"/>
+              <stop offset="55%" stop-color="#ff8a32"/>
+              <stop offset="100%" stop-color="#ff3e35"/>
             </linearGradient>
+
+            <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff8538" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="#ff4b37" stop-opacity="0"/>
+            </linearGradient>
+
             <filter id="flightGlow">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feGaussianBlur stdDeviation="5" result="blur"/>
               <feMerge>
                 <feMergeNode in="blur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
           </defs>
-          <path id="flightArea" class="flight-area" d="M35 405 C150 402 210 382 300 350 S470 278 570 220 S790 90 970 18 L970 440 L35 440 Z"/>
-          <path id="flightPath" class="flight-path" d="M35 405 C150 402 210 382 300 350 S470 278 570 220 S790 90 970 18"/>
-          <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="7"/>
+
+          <path id="flightArea" class="flight-area"
+            d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12 L970 440 L35 440 Z"/>
+
+          <path id="flightPath" class="flight-path"
+            d="M35 405 C145 405 190 395 250 370 C350 330 390 290 475 260 C590 215 635 155 730 115 C825 75 890 38 970 12"/>
+
+          <circle id="flightDot" class="flight-dot" cx="35" cy="405" r="6"/>
         </svg>
 
+        <div class="plane-trail" id="planeTrail"></div>
+
         <div class="plane-wrap" id="planeWrap">
-          <svg class="plane" id="plane" viewBox="0 0 120 70" aria-label="Airplane">
+          <svg class="plane" id="plane" viewBox="0 0 190 112"
+            xmlns="http://www.w3.org/2000/svg" aria-label="TK777 airplane">
+
             <defs>
-              <linearGradient id="planeRed" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#ff7777"/>
-                <stop offset=".5" stop-color="#ed2634"/>
-                <stop offset="1" stop-color="#970014"/>
+              <linearGradient id="bodyRed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff8580"/>
+                <stop offset=".35" stop-color="#f52d38"/>
+                <stop offset="1" stop-color="#9e0718"/>
+              </linearGradient>
+
+              <linearGradient id="wingRed" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffb0a0"/>
+                <stop offset=".45" stop-color="#f33b43"/>
+                <stop offset="1" stop-color="#9d071b"/>
+              </linearGradient>
+
+              <linearGradient id="glassBlue" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#d8f6ff"/>
+                <stop offset=".55" stop-color="#56a6ce"/>
+                <stop offset="1" stop-color="#163b64"/>
               </linearGradient>
             </defs>
-            <path d="M5 36 L47 29 L75 5 Q80 1 84 5 L78 29 L111 34 Q118 35 118 39 Q118 42 111 43 L78 46 L85 62 Q86 66 81 66 L75 65 L48 47 L7 43 Q1 42 1 39 Q1 37 5 36Z" fill="url(#planeRed)" stroke="#ffd6d6" stroke-width="1.5"/>
-            <path d="M47 31 L75 34 L78 43 L48 44Z" fill="#fff" opacity=".8"/>
-            <path d="M13 38 L48 34" stroke="#fff" stroke-width="2" opacity=".7"/>
+
+            <path d="M60 58 L23 27 Q19 23 24 22 L45 24 L91 53 L60 58Z"
+              fill="#a90b1c" stroke="#ff9a8e" stroke-width="1.5"/>
+
+            <path d="M38 59 L17 39 Q14 35 19 34 L32 37 L57 56Z"
+              fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.4"/>
+
+            <path d="M83 56 L118 8 Q122 3 128 7 L132 12 L116 59 L83 65Z"
+              fill="url(#wingRed)" stroke="#ffb1a4" stroke-width="1.7"/>
+
+            <path d="M91 57 L122 13"
+              stroke="#ffd1c6" stroke-width="2" opacity=".65"/>
+
+            <path d="M39 56 L31 29 Q30 24 35 25 L48 34 L61 55Z"
+              fill="#d7192b" stroke="#ffb0a5" stroke-width="1.5"/>
+
+            <path d="M8 65 Q14 55 43 53 L145 49 Q163 49 178 57 Q185 61 178 66 Q163 74 144 74 L43 72 Q15 73 8 65Z"
+              fill="url(#bodyRed)" stroke="#ffc1b3" stroke-width="1.6"/>
+
+            <path d="M112 53 Q151 50 174 58"
+              fill="none" stroke="#ffd5c8" stroke-width="2" opacity=".65"/>
+
+            <path d="M132 52 Q146 48 157 54 L164 60 L134 60Z"
+              fill="url(#glassBlue)" stroke="#ffe4df" stroke-width="1.2"/>
+
+            <path d="M92 57 L100 57 M105 57 L113 57"
+              stroke="#ffd9cf" stroke-width="2" opacity=".7"/>
+
+            <path d="M78 68 L111 99 Q116 104 121 100 L127 94 L111 66 L78 62Z"
+              fill="url(#wingRed)" stroke="#ff9b91" stroke-width="1.5"/>
+
+            <path d="M87 68 L115 96"
+              stroke="#ffd1c8" stroke-width="1.5" opacity=".55"/>
+
+            <path d="M58 73 L68 82 L87 81 L79 72Z"
+              fill="#8e1020" stroke="#ffb0a5" stroke-width="1.2"/>
+
+            <circle cx="179" cy="62" r="4" fill="#f8e5d5"/>
+
+            <g id="planePropeller" class="plane-propeller">
+              <path d="M179 62 Q184 43 188 48 Q191 56 181 63Z"
+                fill="#e8edf0" opacity=".9"/>
+              <path d="M179 62 Q174 81 170 76 Q167 68 177 61Z"
+                fill="#e8edf0" opacity=".9"/>
+            </g>
           </svg>
+
+          <div class="plane-fire"></div>
         </div>
 
-        <div class="multiplier" id="multi">1.00x</div>
-        <div class="crash-status" id="crashStatus">STARTING...</div>
-        <div class="round-label">TK777 • LIVE FLIGHT</div>
+        <div class="round-label">TK777 FLIGHT</div>
+        <div class="stage-bottom-label">GOOD LUCK!</div>
       </div>
 
       <div class="card">
-        <p class="muted">
-          একটি গ্লোবাল Crash Round। বিমান সবার জন্য একই সময়ে উড়বে।
-          আপনার Cash Out অন্য খেলোয়াড়ের বিমান থামাবে না।
-        </p>
-
         <div class="crash-history-title">
-          <b>PREVIOUS CRASHES</b>
-          <small>সর্বশেষ ১০ রাউন্ড</small>
+          <b>PREVIOUS RESULTS</b>
+          <small>LAST ROUNDS</small>
         </div>
         <div id="crashHistory" class="crash-history">
           <span class="muted">ফলাফল লোড হচ্ছে...</span>
@@ -492,20 +572,28 @@ function aviator(g) {
 
             <div class="auto-row">
               <label class="auto-check">
-                <input type="checkbox" id="autoToggle${i}" onchange="toggleAuto(${i},this.checked)">
+                <input type="checkbox" id="autoToggle${i}"
+                  onchange="toggleAuto(${i},this.checked)">
                 AUTO CASH OUT
               </label>
+
               <label class="auto-target">
                 AT
-                <input id="autoTarget${i}" type="number" min="1.01" max="1000" step=".01" value="2.00">
+                <input id="autoTarget${i}" type="number"
+                  min="1.01" max="1000" step=".01" value="2.00">
                 x
               </label>
             </div>
 
             <div class="bet-actions">
-              <button class="primary" id="startCrash${i}" onclick="startCrash(${i})">BET</button>
-              <button class="cashout" id="cashoutBtn${i}" disabled onclick="cashout(${i})">CASH OUT</button>
-              <button class="cancel-auto" id="cancelAuto${i}" onclick="cancelAuto(${i})" disabled>CANCEL AUTO</button>
+              <button class="primary" id="startCrash${i}"
+                onclick="startCrash(${i})">BET</button>
+
+              <button class="cashout" id="cashoutBtn${i}"
+                disabled onclick="cashout(${i})">CASH OUT</button>
+
+              <button class="cancel-auto" id="cancelAuto${i}"
+                onclick="cancelAuto(${i})" disabled>CANCEL AUTO</button>
             </div>
 
             <div id="result${i}" class="notice">
@@ -606,7 +694,6 @@ async function pollCrashState() {
 
     const multiplier = Number(state.multiplier || 1);
     const multi = $('#multi');
-    const plane = $('#plane');
     const status = $('#crashStatus');
     const stage = $('#aviatorStage');
 
@@ -624,10 +711,6 @@ async function pollCrashState() {
       if (multi) multi.textContent = '1.00x';
 
       updateFlightCurve(1);
-
-      if (plane) {
-        plane.style.transform = 'translate(0px, 0px) rotate(0deg)';
-      }
 
       if (status) {
         status.textContent = `STARTING IN ${Math.ceil(seconds)}s`;
@@ -676,10 +759,13 @@ async function pollCrashState() {
         multi.textContent = Number(state.multiplier).toFixed(2) + 'x';
       }
 
-      if (status) status.textContent = 'CRASHED';
+      if (status) status.textContent = 'FLEW AWAY!';
 
       const wrap = $('#planeWrap');
       if (wrap) wrap.classList.add('plane-crashed');
+
+      const flash = $('#stageFlash');
+      if (flash) flash.classList.add('show');
     }
 
     updateCrashHistory(state.previous || []);
@@ -736,13 +822,14 @@ async function pollCrashState() {
   }
 }
 
-/* ---------------- FLIGHT GRAPH + AUTO CASH OUT ---------------- */
+/* ---------------- FLIGHT GRAPH ---------------- */
 
 function updateFlightCurve(multiplier) {
   const path = $('#flightPath');
   const area = $('#flightArea');
   const dot = $('#flightDot');
   const wrap = $('#planeWrap');
+  const trail = $('#planeTrail');
 
   if (!path || !dot || !wrap) return;
 
@@ -765,11 +852,22 @@ function updateFlightCurve(multiplier) {
   path.style.strokeDashoffset = length - length * progress;
 
   if (area) {
-    area.style.opacity = progress > 0 ? '1' : '.45';
+    area.style.opacity = progress > 0 ? '1' : '.12';
+  }
+
+  if (trail) {
+    trail.style.left = (point.x / 10) + '%';
+    trail.style.top = (point.y / 4.4) + '%';
+    trail.style.opacity = progress > 0 ? '1' : '0';
   }
 
   wrap.classList.remove('plane-crashed');
+
+  const flash = $('#stageFlash');
+  if (flash) flash.classList.remove('show');
 }
+
+/* ---------------- AUTO CASH OUT ---------------- */
 
 function toggleAuto(index, enabled) {
   const slot = crashSlots[index];
