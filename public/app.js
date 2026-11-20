@@ -3,6 +3,10 @@ let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
+const DEFAULT_DEPOSIT_CONTENT = {"fields":{"pageTitle":"Demo Deposit","numberLabel":"DEMO NUMBER · COPY ONLY","copyButton":"Copy","numberNotice":"এটি শুধু কাল্পনিক Demo নম্বর। কোনো টাকা পাঠাবেন না।","paymentTitle":"পেমেন্ট পদ্ধতি (ডেমো)","amountLabel":"পরিমাণ","amountPlaceholder":"অথবা নিজের Demo Amount লিখুন","referenceLabel":"Demo Transaction ID (কাল্পনিক)","referencePlaceholder":"নিজের Demo Transaction ID লিখুন","referenceHint":"শুধু পরীক্ষার জন্য কাল্পনিক ID লিখুন। এটি কোনো আসল লেনদেনের প্রমাণ নয়।","submitButton":"Submit Demo Request","historyTitle":"আমার Demo Requests","loadingText":"লোড হচ্ছে…","backButton":"Member Center","chooseMethodError":"আগে একটি Demo পেমেন্ট পদ্ধতি সিলেক্ট করুন।","amountError":"সঠিক Demo Amount লিখুন।","referenceError":"একটি কাল্পনিক Demo Transaction ID লিখুন।","successMessage":"Demo Request জমা হয়েছে। এটি কোনো আসল পেমেন্ট নয় এবং কোনো কয়েন যোগ হবে না।","emptyHistory":"এখনো কোনো Demo Request নেই","historyDemoSuffix":"(Demo)","statusPending":"Pending","statusAccepted":"Accepted","statusCancelled":"Cancelled","currencyPrefix":"৳"},"categories":[{"id":"deposit-instructions","title":"ডেমো নির্দেশনা","text":"এখানে শুধু কাল্পনিক Demo তথ্য ব্যবহার করুন।"},{"id":"deposit-extra-note","title":"অতিরিক্ত তথ্য","text":"এই পেজে কোনো বাস্তব পেমেন্ট বা কয়েন জমা হয় না।"}]};
+let depositContent = DEFAULT_DEPOSIT_CONTENT;
+function depositText(key){return String((depositContent.fields||{})[key] ?? (DEFAULT_DEPOSIT_CONTENT.fields||{})[key] ?? '');}
+function depositExtraCategories(){return (Array.isArray(depositContent.categories)?depositContent.categories:[]).map(c=>'<div class="card"><h3>'+esc(c.title||'')+'</h3><p>'+esc(c.text||'')+'</p></div>').join('');}
 let demoPaymentImages = {bkash:'',nagad:'',rocket:''};
 let demoMethodNumbers = {bkash:'12345678912',nagad:'55555555555',rocket:'33333333333'};
 let withdrawDemoIds = {bkash:['DEMO-BKASH-01'],nagad:['DEMO-NAGAD-01']};
@@ -256,6 +260,7 @@ async function init() {
     demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
     demoMethodNumbers = supportSettings.demo_numbers || demoMethodNumbers;
     withdrawDemoIds = supportSettings.withdraw_demo_ids || withdrawDemoIds;
+    depositContent = supportSettings.deposit_content || DEFAULT_DEPOSIT_CONTENT;
     const slotDisplayData = await api('/slot-display-images');
     slotDisplayImages = slotDisplayData.images || {};
     slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
@@ -670,8 +675,9 @@ function syncDemoAmountInput(){
 }
 async function depositPage(){
   if(!me) return showAuth();
+  const t=depositText;
   shell(`<div class="page member-subpage">
-    <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>Demo Deposit</h2></div>
+    <div class="member-subpage-heading"><button onclick="page('member')">‹</button><h2>${esc(t('pageTitle'))}</h2></div>
     <style>.demo-number-panel{margin:12px 0;padding:15px 12px;border:1px solid #c9a24e;border-radius:13px;background:linear-gradient(145deg,#173d39,#0b292f);text-align:center;box-shadow:0 5px 14px #0004}
 .demo-number-label{font-size:10px;font-weight:1000;letter-spacing:1.5px;color:#f5d77e}
 .demo-number-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
@@ -679,39 +685,39 @@ async function depositPage(){
 .demo-number-row button{padding:9px 14px;border:1px solid #f3d17c;border-radius:9px;background:linear-gradient(145deg,#ffe58a,#d59a2e);color:#30210c;font-weight:1000}
 .demo-number-panel small{display:block;font-size:11px;color:#ffe6b3;line-height:1.5}</style>
     <div class="demo-number-panel">
-      <div class="demo-number-label">DEMO NUMBER · COPY ONLY</div>
-      <div class="demo-number-row"><strong id="demoDisplayNumber">${esc(supportSettings.demo_display_number || '01790365006')}</strong><button type="button" onclick="copyDemoNumber(this)">Copy</button></div>
-      <small>এটি শুধু কাল্পনিক Demo নম্বর। কোনো টাকা পাঠাবেন না।</small>
+      <div class="demo-number-label">${esc(t('numberLabel'))}</div>
+      <div class="demo-number-row"><strong id="demoDisplayNumber">${esc(supportSettings.demo_display_number || '01790365006')}</strong><button type="button" onclick="copyDemoNumber(this)">${esc(t('copyButton'))}</button></div>
+      <small>${esc(t('numberNotice'))}</small>
     </div>
+    ${depositExtraCategories()}
     <div class="card coin-request-card demo-deposit-card">
-      <h3>পেমেন্ট পদ্ধতি (ডেমো)</h3>
+      <h3>${esc(t('paymentTitle'))}</h3>
       <div class="demo-payment-methods">
         <button type="button" class="demo-payment-method" data-method="Demo bKash" aria-pressed="false" onclick="selectDemoMethod('Demo bKash')">${demoPaymentImages.bkash ? '<img src="'+esc(demoPaymentImages.bkash)+'" alt="bKash" style="width:100%;height:34px;object-fit:contain">' : 'bKash'} <small>DEMO</small></button>
         <button type="button" class="demo-payment-method" data-method="Demo Nagad" aria-pressed="false" onclick="selectDemoMethod('Demo Nagad')">${demoPaymentImages.nagad ? '<img src="'+esc(demoPaymentImages.nagad)+'" alt="Nagad" style="width:100%;height:34px;object-fit:contain">' : 'Nagad'} <small>DEMO</small></button>
         <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : 'Rocket'} <small>DEMO</small></button>
       </div>
       <input type="hidden" id="demoPaymentMethod" value="">
-      <label for="demoAmount">পরিমাণ</label>
-      <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="অথবা নিজের Demo Amount লিখুন" oninput="syncDemoAmountInput()">
+      <label for="demoAmount">${esc(t('amountLabel'))}</label>
+      <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="${esc(t('amountPlaceholder'))}" oninput="syncDemoAmountInput()">
       <div class="demo-amount-buttons">
-        <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">৳100</button>
-        <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">৳200</button>
-        <button type="button" class="demo-amount-button" data-amount="300" onclick="selectDemoAmount(300)">৳300</button>
-        <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">৳500</button>
-        <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">৳1000</button>
+        <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">100</button>
+        <button type="button" class="demo-amount-button" data-amount="200" onclick="selectDemoAmount(200)">200</button>
+        <button type="button" class="demo-amount-button" data-amount="300" onclick="selectDemoAmount(300)">300</button>
+        <button type="button" class="demo-amount-button" data-amount="500" onclick="selectDemoAmount(500)">500</button>
+        <button type="button" class="demo-amount-button" data-amount="1000" onclick="selectDemoAmount(1000)">1000</button>
       </div>
-      <label for="demoReference">Demo Transaction ID (কাল্পনিক)</label>
-      <input id="demoReference" class="field" type="text" maxlength="80" autocomplete="off" placeholder="নিজের Demo Transaction ID লিখুন">
-      <small class="muted">শুধু পরীক্ষার জন্য কাল্পনিক ID লিখুন। এটি কোনো আসল লেনদেনের প্রমাণ নয়।</small>
-      <button class="primary" onclick="submitDemoDeposit()">Submit Demo Request</button>
+      <label for="demoReference">${esc(t('referenceLabel'))}</label>
+      <input id="demoReference" class="field" type="text" maxlength="80" autocomplete="off" placeholder="${esc(t('referencePlaceholder'))}">
+      <small class="muted">${esc(t('referenceHint'))}</small>
+      <button class="primary" onclick="submitDemoDeposit()">${esc(t('submitButton'))}</button>
       <p id="demoDepositMsg" class="muted"></p>
     </div>
-    <h3>আমার Demo Requests</h3><div id="demoDepositHistory" class="card">লোড হচ্ছে…</div>
-    <button class="secondary" onclick="page('member')">Member Center</button>
+    <h3>${esc(t('historyTitle'))}</h3><div id="demoDepositHistory" class="card">${esc(t('loadingText'))}</div>
+    <button class="secondary" onclick="page('member')">${esc(t('backButton'))}</button>
   </div>`);
   loadDemoDeposits();
 }
-
 function copyDemoNumber(button){
   const number=document.getElementById('demoDisplayNumber')?.textContent.trim()||'01790365006';
   const done=()=>{if(button){button.textContent='Copied';setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast('Demo নম্বর কপি হয়েছে');};
@@ -730,7 +736,7 @@ function fallbackCopyDemoNumber(number,done){
 
 async function loadDemoDeposits(){
  const box=document.getElementById('demoDepositHistory');if(!box)return;
- try{const d=await api('/demo-deposits');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · ৳'+Number(x.amount)+' (Demo)<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?'Pending':x.status==='accepted'?'Accepted':'Cancelled')+'</b></div>').join('')||'এখনো কোনো Demo Request নেই';}
+ try{const d=await api('/demo-deposits');box.innerHTML=(d.requests||[]).map(x=>'<div class="history-row"><span>'+esc(x.method)+' · '+esc(depositText('currencyPrefix'))+Number(x.amount)+' '+esc(depositText('historyDemoSuffix'))+'<small>'+esc(x.demo_reference)+' · '+esc(x.created_at)+'</small></span><b>'+esc(x.status==='pending'?depositText('statusPending'):x.status==='accepted'?depositText('statusAccepted'):depositText('statusCancelled'))+'</b></div>').join('')||esc(depositText('emptyHistory'));}
  catch(e){box.textContent=e.message;}
 }
 async function submitDemoDeposit(){
@@ -738,10 +744,10 @@ async function submitDemoDeposit(){
  const amount=Number(document.getElementById('demoAmount')?.value);
  const demo_reference=document.getElementById('demoReference')?.value.trim();
  const msg=document.getElementById('demoDepositMsg');if(!msg)return;
- if(!method){msg.textContent='আগে একটি Demo পেমেন্ট পদ্ধতি সিলেক্ট করুন।';return;}
- if(!Number.isFinite(amount)||amount<=0||!Number.isInteger(amount)){msg.textContent='সঠিক Demo Amount লিখুন।';return;}
- if(!demo_reference){msg.textContent='একটি কাল্পনিক Demo Transaction ID লিখুন।';return;}
- try{await api('/demo-deposits',{method,amount,demo_reference});msg.textContent='Demo Request জমা হয়েছে। এটি কোনো আসল পেমেন্ট নয় এবং কোনো কয়েন যোগ হবে না।';await loadDemoDeposits();}
+ if(!method){msg.textContent=depositText('chooseMethodError');return;}
+ if(!Number.isFinite(amount)||amount<=0||!Number.isInteger(amount)){msg.textContent=depositText('amountError');return;}
+ if(!demo_reference){msg.textContent=depositText('referenceError');return;}
+ try{await api('/demo-deposits',{method,amount,demo_reference});msg.textContent=depositText('successMessage');await loadDemoDeposits();}
  catch(e){msg.textContent=e.message;}
 }
 
