@@ -393,7 +393,7 @@ function showAuth() {
         </div>
         <button class="primary" id="authSubmit">Login</button>
       </form>
-      <p class="muted">নতুন অ্যাকাউন্টের প্রাথমিক ব্যালেন্স: <b>০ ক্রেডিট</b></p>
+      <p class="muted" id="authHint">সঠিক ভাবে লগইন করুন</p>
     </div></div>`);
   authMode('login');
 }
@@ -408,6 +408,7 @@ function authMode(m) {
   $('#loginTab').classList.toggle('active',m === 'login');
   $('#registerTab').classList.toggle('active',m === 'register');
   $('#authSubmit').textContent = m === 'register' ? 'Create Account' : 'Login';
+  $('#authHint').textContent = m === 'register' ? 'সঠিক ভাবে রেজিষ্ট্রেশন করুন' : 'সঠিক ভাবে লগইন করুন';
   f.onsubmit = async e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(f));
