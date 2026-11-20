@@ -1226,3 +1226,22 @@ body{background:#063b39}
 /* Place Telegram support just above the Member button in the bottom navigation */
 .telegram-support-float{top:auto!important;bottom:74px!important;right:calc(12.5vw - 23px)!important;}
 @media(min-width:520px){.telegram-support-float{right:calc((100vw - 520px)/2 + 42px)!important}}
+
+
+/* Display-only Slot posters */
+.display-slot-game{padding:0;min-width:0;overflow:hidden;cursor:default;pointer-events:none;border:1px solid #238879;background:#082f32}
+.display-slot-game .slot-poster{height:100%;min-height:178px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;overflow:hidden;padding:9px 5px 11px;text-align:center;isolation:isolate}
+.display-slot-game .slot-poster:before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(circle at 50% 28%,#fff8,transparent 32%),linear-gradient(155deg,#116d78,#052c36 72%)}
+.display-slot-game .slot-poster:after{content:"";position:absolute;inset:7px;border:1px solid #fff5;border-radius:7px;z-index:-1;box-shadow:inset 0 0 25px #0007}
+.display-slot-game .slot-poster-mark{position:absolute;top:23%;left:0;right:0;font-size:54px;line-height:1.1;text-shadow:0 4px 8px #000b,0 0 14px #ffe27a;filter:drop-shadow(0 2px 2px #0008)}
+.display-slot-game .slot-poster strong{font-family:Georgia,serif;font-size:clamp(12px,3.3vw,17px);line-height:1.05;color:#ffe38b;text-shadow:0 2px 3px #000,0 0 8px #f80;overflow-wrap:anywhere}
+.display-slot-game .slot-poster small{font-size:8px;letter-spacing:1.5px;color:#fff;text-shadow:0 1px 3px #000;margin-top:6px}
+.display-slot-game .slot-azteca:before,.display-slot-game .slot-treasures:before{background:radial-gradient(circle at 50% 35%,#ffe28a,#93632a 35%,#163d39 72%,#062a2b)}
+.display-slot-game .slot-flyx:before{background:linear-gradient(145deg,#17191d,#45434a 48%,#8b3428 49%,#101b26)}
+.display-slot-game .slot-magic:before,.display-slot-game .slot-circus:before{background:radial-gradient(circle at 50% 30%,#fa7dd1,#71328c 52%,#132f58)}
+.display-slot-game .slot-fortune:before,.display-slot-game .slot-deluxe:before{background:radial-gradient(circle at 50% 30%,#fff18a,#e99b18 42%,#5c2908 88%)}
+.display-slot-game .slot-ace2:before{background:radial-gradient(circle at 50% 32%,#f7db51,#248b39 52%,#063c2e)}
+.display-slot-game .slot-boxing:before{background:radial-gradient(circle at 50% 28%,#ff9a66,#79253a 48%,#21122c)}
+.display-slot-game .slot-dragon:before{background:radial-gradient(circle at 50% 30%,#fff19a,#9a4ca4 45%,#271346)}
+.display-slot-game .slot-anubis:before{background:radial-gradient(circle at 50% 28%,#e8c77a,#8b673c 48%,#33241c)}
+.display-slot-game .slot-elements:before{background:radial-gradient(circle at 50% 30%,#ffcf54,#e24c24 42%,#064c68)}
