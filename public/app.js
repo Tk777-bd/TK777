@@ -434,13 +434,19 @@ function authMode(m) {
   });
   f.onsubmit = async e => {
     e.preventDefault();
-    const password = f.querySelector('[name="password"]').value;
-    const confirmPassword = f.querySelector('[name="confirmPassword"]').value;
-    if (currentMode === 'register' && password !== confirmPassword) {
+    const passwordInput = f.querySelector('input[name="password"]');
+    const confirmInput = f.querySelector('input[name="confirmPassword"]');
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+    // Ignore accidental leading/trailing whitespace and equivalent Unicode forms.
+    const normalizedPassword = password.normalize('NFKC').trim();
+    const normalizedConfirm = confirmPassword.normalize('NFKC').trim();
+    if (currentMode === 'register' && normalizedPassword !== normalizedConfirm) {
       toast('পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না');
+      confirmInput.focus();
       return;
     }
-    const data = { phone: f.querySelector('[name="phone"]').value, password };
+    const data = { phone: f.querySelector('input[name="phone"]').value, password: normalizedPassword };
     try {
       const r = await api('/'+currentMode,data);
       token = r.token;
