@@ -625,7 +625,7 @@ async function depositPage(){
         <button type="button" class="demo-payment-method" data-method="Demo Rocket" aria-pressed="false" onclick="selectDemoMethod('Demo Rocket')">${demoPaymentImages.rocket ? '<img src="'+esc(demoPaymentImages.rocket)+'" alt="Rocket" style="width:100%;height:34px;object-fit:contain">' : 'Rocket'} <small>DEMO</small></button>
       </div>
       <input type="hidden" id="demoPaymentMethod" value="">
-      <label for="demoAmount">ডেমো পরিমাণ</label>
+      <label for="demoAmount">এমাউন্ট</label>
       <input id="demoAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="অথবা নিজের Demo Amount লিখুন" oninput="syncDemoAmountInput()">
       <div class="demo-amount-buttons">
         <button type="button" class="demo-amount-button" data-amount="100" onclick="selectDemoAmount(100)">৳100</button>
