@@ -4,6 +4,7 @@ let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
 let demoPaymentImages = {bkash:'',nagad:'',rocket:''};
+let demoMethodNumbers = {bkash:'12345678912',nagad:'55555555555',rocket:'33333333333'};
 let slotDisplayImages = {}, slotDisplayHidden = [];
 let isPlayingGame = false;
 let crashTimer = null;
@@ -252,6 +253,7 @@ async function init() {
     homeBanners = (await api('/home-banners')).banners || [];
     supportSettings = await api('/support-settings');
     demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
+    demoMethodNumbers = supportSettings.demo_numbers || demoMethodNumbers;
     const slotDisplayData = await api('/slot-display-images');
     slotDisplayImages = slotDisplayData.images || {};
     slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
@@ -569,9 +571,9 @@ function selectDemoMethod(method){
   if(!input)return;
   input.value=method;
   const demoNumbers={
-    'Demo bKash':'12345678912',
-    'Demo Nagad':'55555555555',
-    'Demo Rocket':'33333333333'
+    'Demo bKash':demoMethodNumbers.bkash,
+    'Demo Nagad':demoMethodNumbers.nagad,
+    'Demo Rocket':demoMethodNumbers.rocket
   };
   const number=document.getElementById('demoDisplayNumber');
   if(number && demoNumbers[method]) number.textContent=demoNumbers[method];
