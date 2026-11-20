@@ -5,6 +5,7 @@ let homeBanners = [], homeBannerTimer = null;
 let supportSettings = {telegram_username:'',telegram_image_url:''};
 let demoPaymentImages = {bkash:'',nagad:'',rocket:''};
 let demoMethodNumbers = {bkash:'12345678912',nagad:'55555555555',rocket:'33333333333'};
+let withdrawDemoIds = {bkash:['DEMO-BKASH-01'],nagad:['DEMO-NAGAD-01']};
 let slotDisplayImages = {}, slotDisplayHidden = [];
 let isPlayingGame = false;
 let crashTimer = null;
@@ -254,6 +255,7 @@ async function init() {
     supportSettings = await api('/support-settings');
     demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
     demoMethodNumbers = supportSettings.demo_numbers || demoMethodNumbers;
+    withdrawDemoIds = supportSettings.withdraw_demo_ids || withdrawDemoIds;
     const slotDisplayData = await api('/slot-display-images');
     slotDisplayImages = slotDisplayData.images || {};
     slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
@@ -539,6 +541,11 @@ function selectWithdrawMethod(method){
     el.setAttribute('aria-pressed',on?'true':'false');
   });
 }
+function showWithdrawDemoIds(kind){
+ const box=document.getElementById('withdrawDemoIdList');if(!box)return;
+ const ids=kind?(withdrawDemoIds[kind]||[]):[];
+ box.innerHTML=ids.length?'<small>শুধু Demo পরিচিতি: </small>'+ids.map(x=>'<span class="demo-withdraw-code">'+esc(x)+'</span>').join(' '):'<small>এই পদ্ধতিতে কোনো Demo পরিচিতি যোগ করা হয়নি।</small>';
+}
 async function withdrawPage(){
   if(!me)return showAuth();
   selectedWithdrawMethod='';
@@ -548,10 +555,11 @@ async function withdrawPage(){
       <p class="muted">শুধু নগদমূল্যহীন Virtual Coin-এর Demo Request। বিকাশ/নগদ/রকেট বাটনগুলো কেবল পদ্ধতি বাছাইয়ের জন্য—কোনো ওয়ালেট নম্বর, টাকা পাঠানো বা নগদ উত্তোলন নেই।</p>
       <h3>পদ্ধতি নির্বাচন করুন</h3>
       <div class="demo-payment-methods">
-        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash')">bKash <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad')">Nagad <small>DEMO</small></button>
-        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket')">Rocket <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo bKash" onclick="selectWithdrawMethod('Demo bKash');showWithdrawDemoIds('bkash')">bKash <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Nagad" onclick="selectWithdrawMethod('Demo Nagad');showWithdrawDemoIds('nagad')">Nagad <small>DEMO</small></button>
+        <button type="button" class="demo-payment-method withdraw-method" data-method="Demo Rocket" onclick="selectWithdrawMethod('Demo Rocket');showWithdrawDemoIds('')">Rocket <small>DEMO</small></button>
       </div>
+      <div id="withdrawDemoIdList" class="muted">বিকাশ বা নগদ নির্বাচন করলে Demo পরিচিতি দেখাবে।</div>
       <label for="withdrawCoinAmount">কয়েনের পরিমাণ</label>
       <input id="withdrawCoinAmount" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="কত Virtual Coin ফেরত চান">
       <small class="muted">বর্তমান ব্যালেন্স: <b>${Number(me.balance||0).toLocaleString('en-US')} Coin</b></small>
