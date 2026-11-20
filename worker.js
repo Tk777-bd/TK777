@@ -524,7 +524,7 @@ async function route(req, env) {
     if (p === "/api/withdraw-requests" && method === "POST") {
       if (!user) return json({ error: "লগইন করুন" }, 401);
       const body = await req.json();
-      const methodName = String(body.method || "");
+      const methodName = String(body.method || "").replace(/^Demo\s+/i, "");
       const amount = Number(body.amount);
       if (!["bKash", "Nagad", "Rocket"].includes(methodName) || !Number.isSafeInteger(amount) || amount < 1 || amount > 10000000) {
         return json({ error: "সঠিক Withdrawal তথ্য দিন" }, 400);
