@@ -802,16 +802,6 @@ body{background:#063b39}
 .aviator-slot-status small{font-size:10px;color:#d5d5d5;line-height:1.4}
 
 
-/* Aviator: use the full mobile viewport without changing other pages */
-body:has(.aviator-app){margin:0;min-height:100dvh;background:#080808;}
-body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
-.aviator-app{
-  width:100%;max-width:none;min-height:100dvh;margin:0;
-  padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px));
-  box-shadow:none;
-}
-
-
 /* UFC/Aviator promo countdown bar: full red at start, drains over five seconds */
 .promo-progress span{width:100%;}
 .aviator-stage.countdown .promo-progress span{
@@ -923,42 +913,3 @@ body:has(.aviator-app) #app{width:100%;min-height:100dvh;margin:0;padding:0;}
 }
 
 
-/* Mobile Aviator: fill the available screen height; keep existing game controls and artwork unchanged. */
-@media(max-width:519px){
-  body:has(.aviator-app),
-  body:has(.aviator-app) #app{
-    height:100dvh;
-    min-height:100dvh;
-  }
-  .aviator-app{
-    height:100dvh;
-    min-height:100dvh;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-    padding-bottom:env(safe-area-inset-bottom, 0px);
-    box-sizing:border-box;
-  }
-  .aviator-header,
-  .aviator-ticker{
-    flex:0 0 auto;
-  }
-  .aviator-game-body{
-    flex:1 1 auto;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-  }
-  .aviator-stage{
-    flex:1 1 0;
-    height:auto;
-    min-height:clamp(185px, 27dvh, 365px);
-  }
-  .aviator-bet-panels{
-    flex:0 0 auto;
-  }
-  .aviator-footer-note{
-    margin-top:auto;
-    flex:0 0 auto;
-  }
-}
