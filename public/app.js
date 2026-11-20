@@ -127,7 +127,9 @@ function chooseAvatar(index) {
   const current = document.getElementById('topProfileAvatar');
   if (current) current.outerHTML = avatarImage(index,'top-profile-avatar').replace('<img ','<img id="topProfileAvatar" ');
   const member = document.getElementById('memberProfileAvatar');
-  if (member) member.outerHTML = avatarImage(index,'member-profile-avatar').replace('<img ','<img id="memberProfileAvatar" ');
+  if (member) member.outerHTML = avatarImage(index,'member-large-avatar').replace('<img ','<img id="memberProfileAvatar" ');
+  const account = document.getElementById('accountProfileAvatar');
+  if (account) account.outerHTML = avatarImage(index,'account-large-avatar').replace('<img ','<img id="accountProfileAvatar" ');
   const panel = document.getElementById('avatarPicker');
   if (panel) panel.hidden = true;
 }
@@ -691,7 +693,7 @@ async function claimReferralMilestone(milestone){
 }
 
 async function myAccountPage(){
-  shell('<div class="page member-subpage my-account-page"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>My Account</h2></div><div class="account-profile-card"><span class="account-vip-badge" id="accountVipBadge">VIP LEVEL —</span><button class="account-avatar-button" onclick="toggleAvatarPicker()" aria-label="প্রোফাইল ছবি পরিবর্তন">'+avatarImage(selectedAvatar(),'account-large-avatar')+'</button><h2 id="accountDisplayName">লোড হচ্ছে...</h2><p class="account-user-phone" id="accountPhone">ইউজার নাম: —</p><p id="accountGmail">Gmail: ***</p><div class="account-turnover"><span>মোট গেম খেলেছেন</span><b id="accountTurnover">—</b></div><div class="account-vip-progress"><div><span id="accountNextLevel">পরবর্তী VIP Level</span><b id="accountProgressText">—</b></div><div class="account-progress-track"><i id="accountProgressBar"></i></div></div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+  shell('<div class="page member-subpage my-account-page"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>My Account</h2></div><div class="account-profile-card"><span class="account-vip-badge" id="accountVipBadge">VIP LEVEL —</span><button class="account-avatar-button" onclick="toggleAvatarPicker()" aria-label="প্রোফাইল ছবি পরিবর্তন">'+avatarImage(selectedAvatar(),'account-large-avatar').replace('<img ','<img id="accountProfileAvatar" ')+'</button><h2 id="accountDisplayName">লোড হচ্ছে...</h2><p class="account-user-phone" id="accountPhone">ইউজার নাম: —</p><p id="accountGmail">Gmail: ***</p><div class="account-turnover"><span>মোট গেম খেলেছেন</span><b id="accountTurnover">—</b></div><div class="account-vip-progress"><div><span id="accountNextLevel">পরবর্তী VIP Level</span><b id="accountProgressText">—</b></div><div class="account-progress-track"><i id="accountProgressBar"></i></div></div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
   const profile=await loadAccountProfile();
   if(!profile){const n=document.getElementById('accountDisplayName');if(n)n.textContent='প্রোফাইল লোড করা যায়নি';return;}
   const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
