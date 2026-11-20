@@ -281,7 +281,7 @@ async function route(req, env) {
     if (phone.startsWith("+880")) phone = "0" + phone.slice(4);
     else if (phone.startsWith("880")) phone = "0" + phone.slice(3);
     if (!/^01[3-9]\d{8}$/.test(phone)) return json({ error: "সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন" }, 400);
-    if (password.length < 8 || password.length > 128) return json({ error: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে" }, 400);
+    if (password.length < 6 || password.length > 128) return json({ error: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে" }, 400);
     if (password !== confirmPassword) return json({ error: "পাসওয়ার্ড ও কনফার্ম পাসওয়ার্ড মিলছে না" }, 400);
     const id = uid(), salt = uid(), ph = await passHash(password, salt);
     try {
