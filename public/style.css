@@ -545,13 +545,30 @@ body{background:#063b39}
 .aviator-wallet b{font-size:11px;color:#27d84b}
 .aviator-ticker{
   height:25px;display:flex;align-items:center;gap:7px;padding:0 9px;
-  background:#101010;border-bottom:1px solid #242424;overflow:hidden;
+  position:relative;z-index:30;background:#101010;border-bottom:1px solid #242424;
 }
-.ticker-label{font-size:8px;color:#858585;font-weight:800}
-.ticker-values{display:flex;gap:8px;overflow:hidden;white-space:nowrap}
-.ticker-values span{font-size:8px;font-weight:700;color:#17d34c}
-.ticker-values span.low{color:#e84258}
+.ticker-label{font-size:8px;color:#858585;font-weight:800;flex:0 0 auto}
+.ticker-values{display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap;flex:1;min-width:0}
+.ticker-values span{font-size:8px;font-weight:700;flex:0 0 auto}
 .ticker-values i{font-size:8px;color:#777;font-style:normal}
+.ticker-values .history-blue,.history-more-grid .history-blue{color:#4daee8}
+.ticker-values .history-purple,.history-more-grid .history-purple{color:#a855e8}
+.ticker-values .history-pink,.history-more-grid .history-pink{color:#d51aa8}
+.history-more-button{
+  flex:0 0 22px;width:22px;height:22px;padding:0;border:0;border-radius:50%;
+  background:#292929;color:#c9c9c9;font-size:19px;line-height:16px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.history-more-button.active{background:#454545;color:#fff}
+.history-more-popover{
+  position:absolute;top:29px;right:7px;width:min(270px,calc(100vw - 28px));
+  padding:12px;background:#1b1b1b;border:1px solid #343434;border-radius:10px;
+  box-shadow:0 8px 24px #000b;z-index:80;
+}
+.history-more-popover[hidden]{display:none}
+.history-more-title{font-size:9px;color:#999;font-weight:700;letter-spacing:.6px;margin-bottom:9px}
+.history-more-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 7px}
+.history-more-grid span{font-size:11px;font-weight:700;text-align:center;white-space:nowrap}
 .aviator-game-body{padding:7px 6px 0;background:#080808}
 .aviator-stage{
   position:relative;height:clamp(220px,66vw,300px);min-height:220px;overflow:hidden;
