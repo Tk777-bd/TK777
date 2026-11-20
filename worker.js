@@ -706,6 +706,13 @@ async function route(req, env) {
         ? json({ user })
         : json({ error: "লগইন করুন" }, 401);
     }
+    if (p === "/api/account/profile" && user && method === "GET") {
+      for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
+      const profile=await env.DB.prepare("SELECT username,display_name,gmail FROM users WHERE id=?").bind(user.id).first();
+      const totals=await env.DB.prepare("SELECT COALESCE(SUM(bet_amount),0) AS turnover FROM game_rounds WHERE user_id=?").bind(user.id).first();
+      const turnover=Number(totals?.turnover||0),gmail=String(profile?.gmail||"");
+      return json({profile:{phone:profile?.username||"",display_name:profile?.display_name||"",gmail_masked:gmail?"***"+gmail.slice(-3):"",turnover,vip_level:Math.floor(turnover/2000)}});
+    }
     if (p === "/api/security/profile" && user && method === "GET") {
       for (const [c,d] of [["display_name","TEXT NOT NULL DEFAULT ''"],["whatsapp_number","TEXT NOT NULL DEFAULT ''"],["facebook_url","TEXT NOT NULL DEFAULT ''"],["gmail","TEXT NOT NULL DEFAULT ''"]]) await env.DB.prepare("ALTER TABLE users ADD COLUMN "+c+" "+d).run().catch(()=>{});
       const profile=await env.DB.prepare("SELECT display_name,whatsapp_number,facebook_url,gmail FROM users WHERE id=?").bind(user.id).first();
