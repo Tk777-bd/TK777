@@ -980,3 +980,33 @@ body{background:#063b39}
   line-height:1.2;text-shadow:0 2px 8px #000b;pointer-events:none;
 }
 .aviator-stage.crashed .crash-flew-away{display:block}
+
+
+/* Bottom-corner animated crowd badge inspired by the supplied Aviator reference. */
+.aviator-crowd{
+  position:absolute;right:clamp(9px,2.5vw,20px);bottom:clamp(9px,2.5vw,18px);
+  z-index:10;display:flex;align-items:center;min-height:48px;
+  padding:5px 13px 5px 7px;border-radius:28px;
+  background:rgba(24,24,24,.88);box-shadow:0 2px 12px #0008;
+  pointer-events:none;
+}
+.aviator-crowd .crowd-avatar{
+  position:relative;display:block;flex:0 0 42px;width:42px;height:42px;
+  margin-right:-10px;border:2px solid #36c653;border-radius:50%;
+  overflow:hidden;background:linear-gradient(145deg,#b9c5d2,#293b51);
+  box-shadow:0 0 3px #28df55;
+}
+.aviator-crowd .crowd-avatar-two{background:linear-gradient(145deg,#73d5c7,#17556a)}
+.aviator-crowd .crowd-avatar-three{background:linear-gradient(145deg,#a99be9,#3a3278);margin-right:12px}
+.aviator-crowd .crowd-avatar i{
+  position:absolute;left:50%;top:8px;width:13px;height:13px;
+  transform:translateX(-50%);border-radius:50%;background:#18212d;
+}
+.aviator-crowd .crowd-avatar i:after{
+  content:"";position:absolute;left:50%;top:12px;width:25px;height:17px;
+  transform:translateX(-50%);border-radius:14px 14px 5px 5px;background:#18212d;
+}
+.aviator-crowd b{
+  min-width:54px;color:#f4f4f4;font-size:clamp(17px,4.6vw,24px);
+  font-weight:500;line-height:1;text-align:right;letter-spacing:.3px;
+}
