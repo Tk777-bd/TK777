@@ -82,7 +82,27 @@ async function games(){
   ['slot-display-super-elements','Super Elements'],['slot-display-azteca-legacy','Azteca Legacy'],['slot-display-flyx','FlyX'],
   ['slot-display-magic-ace','Magic Ace'],['slot-display-circus-joker','Circus Joker'],['slot-display-fortune-gems-3','Fortune Gems 3'],
   ['slot-display-super-ace-ii','Super Ace II'],['slot-display-boxing-king','Boxing King'],['slot-display-super-ace-deluxe','Super Ace Deluxe'],
-  ['slot-display-dragon-gems','Dragon Gems'],['slot-display-treasures-of-aztec','Treasures of Aztec'],['slot-display-anubis-wrath','Anubis Wrath']
+  ['slot-display-dragon-gems','Dragon Gems'],['slot-display-treasures-of-aztec','Treasures of Aztec'],['slot-display-anubis-wrath','Anubis Wrath'],
+  ['slot-display-golden-empire','Golden Empire'],
+  ['slot-display-money-coming','Money Coming'],
+  ['slot-display-fortune-gems','Fortune Gems'],
+  ['slot-display-fortune-gems-2','Fortune Gems 2'],
+  ['slot-display-devil-fire-2','Devil Fire 2'],
+  ['slot-display-zeus','Zeus'],
+  ['slot-display-wild-ace','Wild Ace'],
+  ['slot-display-golden-bank','Golden Bank'],
+  ['slot-display-party-night','Party Night'],
+  ['slot-display-lucky-goldbricks','Lucky Goldbricks'],
+  ['slot-display-mahjong-ways','Mahjong Ways'],
+  ['slot-display-mahjong-ways-2','Mahjong Ways 2'],
+  ['slot-display-fortune-tiger','Fortune Tiger'],
+  ['slot-display-fortune-ox','Fortune Ox'],
+  ['slot-display-fortune-rabbit','Fortune Rabbit'],
+  ['slot-display-lucky-neko','Lucky Neko'],
+  ['slot-display-dragon-hatch','Dragon Hatch'],
+  ['slot-display-ganesha-fortune','Ganesha Fortune'],
+  ['slot-display-wild-bandito','Wild Bandito'],
+  ['slot-display-ways-of-the-qilin','Ways of the Qilin']
  ];
  const settingData=await api('/admin/settings');
  const settingValues=Object.fromEntries((settingData.settings||[]).map(x=>[x.key,x.value]));
