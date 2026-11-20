@@ -236,7 +236,7 @@ function shell(content) {
         <div class="brand">TK777<small>PLAY • ENJOY</small></div>
         <div class="top-actions">
           ${me ? '<div class="balance-chip"><span id="topBalanceValue">'+money(me.balance)+'</span><button class="balance-refresh" type="button" onclick="refreshBalance(this)" aria-label="Refresh balance">↻</button></div>' : ''}
-          ${me ? '<span class="top-vip-badge" id="topVipBadge" hidden>VIP LEVEL —</span><button class="top-profile-button" id="topProfileAvatar" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar')+'</button>' : '<button onclick="showAuth()">Login</button>'}
+          ${me ? '<span class="top-vip-badge" id="topVipBadge" hidden>VIP LEVEL —</span><button class="top-profile-button" aria-label="Choose profile picture" onclick="toggleAvatarPicker()">'+avatarImage(selectedAvatar(),'top-profile-avatar').replace('<img ','<img id="topProfileAvatar" ')+'</button>' : '<button onclick="showAuth()">Login</button>'}
         </div>
         ${me ? '<div class="avatar-picker" id="avatarPicker" hidden><b>Choose Profile</b><div class="avatar-choices">'+TK777_AVATARS.map((_,i)=>'<button class="avatar-choice '+(i===selectedAvatar()?'selected':'')+'" onclick="chooseAvatar('+i+')">'+avatarImage(i,'')+'</button>').join('')+'</div></div>' : ''}
       </header>
