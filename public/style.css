@@ -1222,3 +1222,7 @@ body{background:#063b39}
 
 .telegram-support-float{display:grid!important;position:fixed!important;z-index:9999!important;right:14px!important;top:88px!important;width:46px!important;height:46px!important;border-radius:50%!important;overflow:hidden!important;box-shadow:0 4px 16px #0008!important}
 .coin-request-card{display:flex;flex-direction:column;gap:12px}.coin-request-card .field{width:100%}
+
+/* Place Telegram support just above the Member button in the bottom navigation */
+.telegram-support-float{top:auto!important;bottom:74px!important;right:calc(12.5vw - 23px)!important;}
+@media(min-width:520px){.telegram-support-float{right:calc((100vw - 520px)/2 + 42px)!important}}
