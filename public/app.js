@@ -6,6 +6,8 @@ let me = null, categories = [], games = [];
 let crashTimer = null;
 let crashGameId = null;
 let crashPollBusy = false;
+let crashPhase = 'countdown';
+
 let crashSlots = [
   { roundId: null, busy: false, status: 'ready' },
   { roundId: null, busy: false, status: 'ready' }
@@ -52,6 +54,7 @@ function stopCrashMonitor() {
   crashTimer = null;
   crashGameId = null;
   crashPollBusy = false;
+  crashPhase = 'countdown';
 }
 
 function shell(content) {
@@ -405,6 +408,7 @@ function aviator(g) {
   ];
 
   crashGameId = g.id;
+  crashPhase = 'countdown';
 
   shell(`
     <div class="top game-top">
@@ -414,11 +418,11 @@ function aviator(g) {
     </div>
 
     <div class="game-screen">
-      <div class="aviator-stage" id="aviatorStage">
+      <div class="aviator-stage countdown" id="aviatorStage">
         <div class="flight-grid"></div>
         <div class="plane" id="plane">✈</div>
         <div class="multiplier" id="multi">1.00x</div>
-        <div class="crash-status" id="crashStatus">CONNECTING...</div>
+        <div class="crash-status" id="crashStatus">STARTING...</div>
       </div>
 
       <div class="card">
@@ -449,11 +453,6 @@ function aviator(g) {
               type="number" min="1" max="1000000"
               step="1" value="10">
 
-            <label>Auto Cash Out (optional)</label>
-            <input class="field" id="autoCashout${i}"
-              type="number" min="1.01" max="100"
-              step="0.01" placeholder="যেমন 2.00">
-
             <div class="bet-actions">
               <button class="primary" id="startCrash${i}"
                 onclick="startCrash(${i})">BET</button>
@@ -462,7 +461,7 @@ function aviator(g) {
             </div>
 
             <div id="result${i}" class="notice">
-              বেট দিয়ে রাউন্ডে যোগ দিন
+              পরবর্তী রাউন্ডের জন্য অপেক্ষা করুন
             </div>
           </div>
         `).join('')}
@@ -515,8 +514,24 @@ function updateSlotButtons(i) {
 
   if (!start || !cash) return;
 
-  start.disabled = !!slot.roundId || slot.busy;
-  cash.disabled = !slot.roundId || slot.busy || slot.status !== 'active';
+  // শুধু কাউন্টডাউনের সময় BET করা যাবে।
+  start.disabled =
+    !!slot.roundId ||
+    slot.busy ||
+    crashPhase !== 'countdown';
+
+  // শুধু প্লেন ওড়ার সময় CASH OUT করা যাবে।
+  cash.disabled =
+    !slot.roundId ||
+    slot.busy ||
+    slot.status !== 'active' ||
+    crashPhase !== 'active';
+}
+
+function updateAllSlotButtons() {
+  for (let i = 0; i < crashSlots.length; i++) {
+    updateSlotButtons(i);
+  }
 }
 
 async function pollCrashState() {
@@ -538,25 +553,65 @@ async function pollCrashState() {
     const status = $('#crashStatus');
     const stage = $('#aviatorStage');
 
-    if (multi) multi.textContent = multiplier.toFixed(2) + 'x';
+    crashPhase = state.status;
 
-    if (plane) {
-      const distance = Math.max(0, multiplier - 1);
-      plane.style.transform =
-        `translate(${Math.min(190, distance * 25)}px, ${-Math.min(120, distance * 18)}px) rotate(-15deg)`;
+    if (state.status === 'countdown') {
+      const seconds = Math.max(
+        0,
+        Number(state.countdownMs || 0) / 1000
+      );
+
+      stage.classList.remove('running', 'crashed');
+      stage.classList.add('countdown');
+
+      if (multi) multi.textContent = '1.00x';
+
+      if (plane) {
+        plane.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      }
+
+      if (status) {
+        status.textContent = `STARTING IN ${Math.ceil(seconds)}s`;
+      }
+
+      crashSlots.forEach((slot, i) => {
+        if (!slot.roundId && !slot.busy && slot.status !== 'ready') {
+          slot.status = 'ready';
+          updateSlotStatus(i, 'READY');
+          const result = $('#result' + i);
+          if (result) result.textContent = 'নতুন রাউন্ডে বেট করতে পারবেন';
+        }
+      });
+
+    } else if (state.status === 'active') {
+      stage.classList.remove('countdown', 'crashed');
+      stage.classList.add('running');
+
+      if (multi) multi.textContent = multiplier.toFixed(2) + 'x';
+
+      if (plane) {
+        const distance = Math.max(0, multiplier - 1);
+        plane.style.transform =
+          `translate(${Math.min(190, distance * 25)}px, ${-Math.min(120, distance * 18)}px) rotate(-15deg)`;
+      }
+
+      if (status) status.textContent = 'FLYING';
+
+    } else {
+      stage.classList.remove('running', 'countdown');
+      stage.classList.add('crashed');
+
+      if (multi) {
+        multi.textContent = Number(state.multiplier).toFixed(2) + 'x';
+      }
+
+      if (status) status.textContent = 'CRASHED';
     }
 
     updateCrashHistory(state.previous || []);
+    updateAllSlotButtons();
 
-    if (state.status === 'active') {
-      stage.classList.add('running');
-      status.textContent = 'FLYING';
-    } else {
-      stage.classList.remove('running');
-      status.textContent = 'CRASHED';
-      multi.textContent = Number(state.multiplier).toFixed(2) + 'x';
-    }
-
+    // প্রতিটি খেলোয়াড়ের নিজের বেটের অবস্থা আলাদাভাবে পরীক্ষা।
     for (let i = 0; i < crashSlots.length; i++) {
       const slot = crashSlots[i];
 
@@ -613,6 +668,12 @@ async function startCrash(index) {
   const slot = crashSlots[index];
   if (!slot || slot.roundId || slot.busy) return;
 
+  if (crashPhase !== 'countdown') {
+    toast('শুধু কাউন্টডাউনের সময় বেট করা যাবে');
+    updateSlotButtons(index);
+    return;
+  }
+
   const betInput = $('#crashBet' + index);
   const button = $('#startCrash' + index);
   const result = $('#result' + index);
@@ -642,7 +703,7 @@ async function startCrash(index) {
     updateSlotStatus(index, 'BET ACTIVE');
 
     if (result) {
-      result.textContent = 'বেট সফল! বিমান উড়ছে। Cash Out করুন।';
+      result.textContent = 'বেট সফল! প্লেন উড়লে Cash Out করতে পারবেন।';
     }
 
   } catch (e) {
@@ -660,6 +721,11 @@ async function cashout(index) {
   const slot = crashSlots[index];
 
   if (!slot || !slot.roundId || slot.busy) return;
+
+  if (crashPhase !== 'active') {
+    toast('প্লেন ওড়া শুরু হলে Cash Out করতে পারবেন');
+    return;
+  }
 
   const roundId = slot.roundId;
   slot.busy = true;
