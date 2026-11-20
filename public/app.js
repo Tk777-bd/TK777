@@ -552,7 +552,6 @@ function aviator(g) {
           `).join('')}
         </div>
 
-        <div class="aviator-footer-note">TK777 • BDT DISPLAY ONLY • NO CASH VALUE</div>
       </section>
     </main>
   `;
