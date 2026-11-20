@@ -1497,5 +1497,79 @@ async function playAce(gameId) {
   }
 }
 
+
+/* MOBILE BROWSER BACK NAVIGATION */
+(function setupTk777BackNavigation() {
+  const originalHome = home;
+  const originalPage = page;
+  const originalOpenGame = openGame;
+  const originalShowAuth = showAuth;
+  let routes = [{type:'home'}];
+  let restoring = false;
+  let firstHomeRender = true;
+  let nestedNavigation = 0;
+
+  try {
+    history.replaceState({tk777App:true,tk777Index:0}, '', location.href);
+  } catch (_) {}
+
+  function pushRoute(route) {
+    if (restoring || nestedNavigation) return;
+    routes.push(route);
+    try {
+      history.pushState({tk777App:true,tk777Index:routes.length-1}, '', location.href);
+    } catch (_) {}
+  }
+
+  home = function() {
+    if (firstHomeRender) firstHomeRender = false;
+    else pushRoute({type:'home'});
+    nestedNavigation++;
+    try { return originalHome.apply(this, arguments); }
+    finally { nestedNavigation--; }
+  };
+
+  page = function(name) {
+    pushRoute({type:'page',name});
+    nestedNavigation++;
+    try { return originalPage.apply(this, arguments); }
+    finally { nestedNavigation--; }
+  };
+
+  openGame = function(id) {
+    const game = games.find(x => x.id === id);
+    if (!game) return;
+    pushRoute(me ? {type:'game',id} : {type:'auth'});
+    nestedNavigation++;
+    try { return originalOpenGame.apply(this, arguments); }
+    finally { nestedNavigation--; }
+  };
+
+  showAuth = function() {
+    pushRoute({type:'auth'});
+    nestedNavigation++;
+    try { return originalShowAuth.apply(this, arguments); }
+    finally { nestedNavigation--; }
+  };
+
+  window.addEventListener('popstate', function(event) {
+    if (!routes.length) routes = [{type:'home'}];
+    if (routes.length > 1) routes.pop();
+    const route = routes[routes.length-1] || {type:'home'};
+    restoring = true;
+    try {
+      if (route.type === 'page') originalPage(route.name);
+      else if (route.type === 'game') originalOpenGame(route.id);
+      else if (route.type === 'auth') originalShowAuth();
+      else originalHome();
+    } finally {
+      restoring = false;
+    }
+    if (!event.state || !event.state.tk777App) {
+      try { history.pushState({tk777App:true,tk777Index:routes.length-1}, '', location.href); } catch (_) {}
+    }
+  });
+})();
+ 
 /* START APPLICATION */
 init();
