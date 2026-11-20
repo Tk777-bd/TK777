@@ -574,14 +574,14 @@ async function withdrawPage(){
 }
 async function loadWithdrawWalletNumber(){
  const input=document.getElementById('withdrawWalletNumber'),btn=document.getElementById('saveWithdrawWalletBtn'),msg=document.getElementById('withdrawWalletMsg');if(!input)return;
- try{const d=await api('/wallet-number');if(d.walletNumber){input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ করা আছে।';}}
+ try{const d=await api('/wallet-number');if(d.walletNumber){input.value=d.walletNumber;input.readOnly=true;input.style.background='#fff';input.style.color='#d00000';input.style.fontWeight='900';input.style.textShadow='1px 1px 0 #7a0000, 2px 2px 0 rgba(120,0,0,.35)';input.style.border='2px solid #d00000';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ করা আছে।';}}
  catch(e){if(msg)msg.textContent=e.message;}
 }
 async function saveWithdrawWalletNumber(){
  const input=document.getElementById('withdrawWalletNumber'),msg=document.getElementById('withdrawWalletMsg'),btn=document.getElementById('saveWithdrawWalletBtn'),walletNumber=String(input?.value||'').trim();
  if(!/^[0-9+ -]{8,20}$/.test(walletNumber)){if(msg)msg.textContent='সঠিক ওয়ালেট নম্বর লিখুন।';return;}
  if(!confirm('এই নম্বরটি একবার সেভ করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
- try{const d=await api('/wallet-number',{walletNumber});input.value=d.walletNumber;input.readOnly=true;input.style.background='#eee';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ হয়েছে।';}catch(e){if(msg)msg.textContent=e.message;}
+ try{const d=await api('/wallet-number',{walletNumber});input.value=d.walletNumber;input.readOnly=true;input.style.background='#fff';input.style.color='#d00000';input.style.fontWeight='900';input.style.textShadow='1px 1px 0 #7a0000, 2px 2px 0 rgba(120,0,0,.35)';input.style.border='2px solid #d00000';if(btn)btn.remove();if(msg)msg.textContent='নম্বর সেভ হয়েছে।';}catch(e){if(msg)msg.textContent=e.message;}
 }
 async function loadWithdrawPassword(){
  const setup=document.getElementById('withdrawPasswordSetup'),entry=document.getElementById('withdrawPasswordEntry');if(!setup||!entry)return;
@@ -592,7 +592,7 @@ async function saveWithdrawPassword(){
  const input=document.getElementById('withdrawPasswordSet'),msg=document.getElementById('withdrawPasswordMsg'),btn=document.getElementById('saveWithdrawPasswordBtn'),password=String(input?.value||'');
  if(!/^\d{6}$/.test(password)){if(msg)msg.textContent='ঠিক ৬ সংখ্যার পাসওয়ার্ড দিন।';return;}
  if(!confirm('এই উইথড্র পাসওয়ার্ডটি একবার সেট করবেন? পরে নিজে পরিবর্তন করতে পারবেন না।'))return;
- try{await api('/withdraw-password/set',{password});const setup=document.getElementById('withdrawPasswordSetup'),entry=document.getElementById('withdrawPasswordEntry');if(setup)setup.remove();if(entry)entry.hidden=false;const pass=document.getElementById('withdrawPassword');if(pass)pass.focus();}catch(e){if(msg)msg.textContent=e.message;}
+ try{await api('/withdraw-password/set',{password});const setup=document.getElementById('withdrawPasswordSetup'),entry=document.getElementById('withdrawPasswordEntry');if(setup)setup.remove();if(entry)entry.hidden=false;const pass=document.getElementById('withdrawPassword');if(pass)pass.focus();if(msg)msg.textContent='উইথড্র পাসওয়ার্ড সেভ হয়েছে।';}catch(e){if(msg)msg.textContent=e.message;}
 }
 async function loadWithdrawRequests(){
  const box=document.getElementById('withdrawRequestHistory');if(!box)return;
