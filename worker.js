@@ -369,7 +369,7 @@ async function route(req, env) {
     if (p === "/api/demo-deposits" && method === "POST") {
       if(!user)return json({error:"লগইন করুন"},401);
       const body=await req.json();const methodName=String(body.method||'');const amount=Number(body.amount);const ref=String(body.demo_reference||'');
-      if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||![100,200,500,1000].includes(amount)||!/^DEMO-[A-Z0-9-]{6,30}$/.test(ref))return json({error:"সঠিক Demo তথ্য দিন"},400);
+      if(!['Demo bKash','Demo Nagad','Demo Rocket'].includes(methodName)||!Number.isSafeInteger(amount)||amount<1||amount>1000000||!/^[A-Za-z0-9_-]{3,80}$/.test(ref))return json({error:"সঠিক Demo তথ্য দিন"},400);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
       await env.DB.prepare("INSERT INTO demo_deposits(id,user_id,method,amount,demo_reference) VALUES(?,?,?,?,?)").bind(uid(),user.id,methodName,amount,ref).run();
       return json({ok:true});
