@@ -431,6 +431,7 @@ function aviator(g) {
       <header class="aviator-header">
         <button class="aviator-back" onclick="home()" aria-label="Back">‹</button>
         <div class="aviator-wordmark">Aviator<span>TK777</span></div>
+        <button class="aviator-menu" type="button" onclick="toast(&quot;Game menu&quot;)" aria-label="Game menu">☰</button>
         <div class="aviator-wallet"><small>VIRTUAL BALANCE</small><b id="gameBalance">${money(me.balance)}</b></div>
       </header>
 
@@ -535,8 +536,8 @@ function aviator(g) {
                   </div>
                 </div>
                 <div class="bet-action-side">
-                  <button class="aviator-bet-button" id="startCrash${i}" onclick="startCrash(${i})">Bet<br><b>10.00 USD</b></button>
-                  <button class="aviator-cashout-button" id="cashoutBtn${i}" disabled onclick="cashout(${i})">Cash Out<br><b>0.00 USD</b></button>
+                  <button class="aviator-bet-button" id="startCrash${i}" onclick="startCrash(${i})">Bet<br><b>10.00 COINS</b></button>
+                  <button class="aviator-cashout-button" id="cashoutBtn${i}" disabled onclick="cashout(${i})">Cash Out<br><b>0.00 COINS</b></button>
                   <button class="aviator-cancel-button" id="cancelAuto${i}" onclick="cancelAuto(${i})" disabled>Cancel</button>
                 </div>
               </div>
@@ -575,7 +576,7 @@ function setQuickBet(index, amount) {
   input.value = String(amount);
   input.dispatchEvent(new Event('change', {bubbles:true}));
   const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>'+Number(amount).toFixed(2)+' USD</b>';
+  if (btn) btn.innerHTML = 'Bet<br><b>'+Number(amount).toFixed(2)+' COINS</b>';
 }
 
 function adjustQuickBet(index, direction) {
@@ -585,7 +586,7 @@ function adjustQuickBet(index, direction) {
   const next = Math.max(1,Math.min(1000000,current + direction));
   input.value = String(next);
   const btn = $('#startCrash'+index);
-  if (btn) btn.innerHTML = 'Bet<br><b>'+next.toFixed(2)+' USD</b>';
+  if (btn) btn.innerHTML = 'Bet<br><b>'+next.toFixed(2)+' COINS</b>';
 }
 
 function setAviatorMode(index, mode) {
