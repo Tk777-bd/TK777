@@ -636,8 +636,10 @@ async function route(req, env) {
       const body = await req.json();
       const methodName = String(body.method || "").replace(/^Demo\s+/i, "");
       const amount = Number(body.amount);
-      const walletNumber = String(body.walletNumber || "").trim();
-      if (!/^[0-9+\- ]{8,20}$/.test(walletNumber)) return json({ error: "সঠিক ওয়ালেট নম্বর লিখুন" }, 400);
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
+      const savedWallet=await env.DB.prepare("SELECT wallet_number FROM users WHERE id=?").bind(user.id).first();
+      const walletNumber=String(savedWallet?.wallet_number||"");
+      if(!walletNumber)return json({error:"আগে ওয়ালেট নম্বর একবার সেট করুন"},400);
       if (!["bKash", "Nagad", "Rocket"].includes(methodName) || !Number.isSafeInteger(amount) || amount < 1 || amount > 10000000) {
         return json({ error: "সঠিক Withdrawal তথ্য দিন" }, 400);
       }
@@ -688,6 +690,19 @@ async function route(req, env) {
       return user
         ? json({ user })
         : json({ error: "লগইন করুন" }, 401);
+    }
+    if (p === "/api/wallet-number" && user && method === "GET") {
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
+      const row=await env.DB.prepare("SELECT wallet_number FROM users WHERE id=?").bind(user.id).first();
+      return json({walletNumber:String(row?.wallet_number||"")});
+    }
+    if (p === "/api/wallet-number" && user && method === "POST") {
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
+      const body=await req.json(),walletNumber=String(body.walletNumber||"").trim();
+      if(!/^[0-9+ -]{8,20}$/.test(walletNumber))return json({error:"সঠিক ওয়ালেট নম্বর লিখুন"},400);
+      const saved=await env.DB.prepare("UPDATE users SET wallet_number=? WHERE id=? AND (wallet_number IS NULL OR wallet_number='')").bind(walletNumber,user.id).run();
+      if(!saved.meta?.changes)return json({error:"নম্বর আগে থেকেই সেট করা আছে। পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।"},409);
+      return json({ok:true,walletNumber});
     }
 
     if (p === "/api/logout" && method === "POST") {
@@ -1568,15 +1583,16 @@ async function route(req, env) {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       const q = String(url.searchParams.get("q") || "").trim().slice(0, 40);
       const rows = q
-        ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%" + q + "%", "%" + q + "%").all()
-        : await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users ORDER BY created_at DESC LIMIT 100").all();
+        ? await env.DB.prepare("SELECT id,username,email,balance,role,created_at,wallet_number FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 100").bind("%" + q + "%", "%" + q + "%").all()
+        : await env.DB.prepare("SELECT id,username,email,balance,role,created_at,wallet_number FROM users ORDER BY created_at DESC LIMIT 100").all();
       return json({ users: rows.results || [] });
     }
 
     if (p.startsWith("/api/admin/users/") && method === "GET") {
       if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
       const userId = decodeURIComponent(p.slice("/api/admin/users/".length));
-      const target = await env.DB.prepare("SELECT id,username,email,balance,role,created_at FROM users WHERE id=?").bind(userId).first();
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
+      const target = await env.DB.prepare("SELECT id,username,email,balance,role,created_at,wallet_number FROM users WHERE id=?").bind(userId).first();
       if (!target) return json({ error: "ইউজার পাওয়া যায়নি" }, 404);
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_deposits (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,demo_reference TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS demo_withdrawals (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,method TEXT NOT NULL,amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,reviewed_at TEXT,reviewed_by TEXT)").run();
@@ -1602,6 +1618,15 @@ async function route(req, env) {
       });
     }
 
+    if (p === "/api/admin/user-wallet-number" && method === "POST") {
+      if(!await admin())return json({error:"Admin access প্রয়োজন"},403);
+      await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_number TEXT NOT NULL DEFAULT ''").run().catch(() => {});
+      const body=await req.json(),userId=String(body.userId||""),walletNumber=String(body.walletNumber||"").trim();
+      if(!userId||!/^[0-9+ -]{8,20}$/.test(walletNumber))return json({error:"সঠিক ইউজার ও ওয়ালেট নম্বর দিন"},400);
+      const result=await env.DB.prepare("UPDATE users SET wallet_number=? WHERE id=?").bind(walletNumber,userId).run();
+      if(!result.meta?.changes)return json({error:"ইউজার পাওয়া যায়নি"},404);
+      return json({ok:true,walletNumber});
+    }
     if (p === "/api/admin/user-balance-set" && method === "POST") {
       const adminUser = await admin();
       if (!adminUser) return json({ error: "Admin access প্রয়োজন" }, 403);
