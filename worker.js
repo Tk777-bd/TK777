@@ -404,6 +404,15 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
+    if (p === "/api/home-banners" && method === "GET") {
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'home_banner_%' ORDER BY key").all();
+      const banners = (rows.results || [])
+        .map(r => String(r.value || "").trim())
+        .filter(v => /^https:\/\//i.test(v))
+        .slice(0,5);
+      return json({ banners });
+    }
+
     if (p === "/api/categories" && method === "GET") {
       const rows = await env.DB.prepare(`
         SELECT * FROM categories
