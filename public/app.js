@@ -484,8 +484,8 @@ function aviator(g) {
                 <stop offset="100%" stop-color="#ff304c"/>
               </linearGradient>
               <linearGradient id="flightFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#ed1741" stop-opacity=".48"/>
-                <stop offset="100%" stop-color="#ed1741" stop-opacity="0"/>
+                <stop offset="0%" stop-color="#b30b32" stop-opacity=".78"/>
+                <stop offset="100%" stop-color="#ed1741" stop-opacity=".58"/>
               </linearGradient>
               <filter id="flightGlow">
                 <feGaussianBlur stdDeviation="4" result="blur"/>
@@ -706,11 +706,13 @@ async function pollCrashState() {
       crashVisualValue = 1;
       crashVisualStartMs = null;
       const resetPlane = $('#planeWrap');
+      const resetGraph = $('#flightChart');
       if (resetPlane) {
         resetPlane.classList.remove('plane-hover','plane-approach','plane-crashed');
         resetPlane.style.left = '10%';
         resetPlane.style.top = '70%';
       }
+      if (resetGraph) resetGraph.classList.remove('graph-crashed');
       if (multi) multi.textContent = '1.00x';
 
       updateFlightCurve(1);
@@ -772,9 +774,11 @@ async function pollCrashState() {
 
       const wrap = $('#planeWrap');
       if (wrap) {
-        wrap.classList.remove('plane-hover');
+        wrap.classList.remove('plane-hover','plane-approach');
         wrap.classList.add('plane-crashed');
       }
+      const disappearingGraph = $('#flightChart');
+      if (disappearingGraph) disappearingGraph.classList.add('graph-crashed');
 
       const flash = $('#stageFlash');
       if (flash) flash.classList.add('show');
