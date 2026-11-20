@@ -594,11 +594,11 @@ async function submitWithdrawRequest(){
 
 async function inviteFriendsPage() {
   if(!me)return showAuth();
-  shell('<div class="page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Invite Friends</h2></div><div class="card"><h3>আপনার Referral Link</h3><p id="refRuleText">বন্ধুকে এই লিংক পাঠান। নতুন প্লেয়ার গেম খেলে নির্ধারিত Virtual Coin টার্নওভার পূরণ করলে আপনি বোনাস পাবেন।</p><input class="field" id="referralLink" readonly value="লোড হচ্ছে..."><button class="primary" id="copyReferralLink" type="button">Copy Invite Link</button><div id="referralMsg" class="muted"></div></div><div class="card"><h3>Referral Summary</h3><p>মোট Invite: <b id="refTotal">—</b></p><p>টার্নওভার পূরণ করেছে: <b id="refQualified">—</b></p><p>মোট Referral Bonus: <b id="refEarned">—</b> Virtual Coin</p></div></div>');
+  shell('<div class="page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Invite Friends</h2></div><div class="card"><h3>আপনার Referral Link</h3><p id="refRuleText">রেফার করুন এবং ১০৮ টাকা বোনাস পান</p><input class="field" id="referralLink" readonly value="লোড হচ্ছে..."><button class="primary" id="copyReferralLink" type="button">Copy Invite Link</button><div id="referralMsg" class="muted"></div></div><div class="card"><h3>Referral Summary</h3><p>মোট Invite: <b id="refTotal">—</b></p><p>টার্নওভার পূরণ করেছে: <b id="refQualified">—</b></p><p>মোট Referral Bonus: <b id="refEarned">—</b> Virtual Coin</p></div></div>');
   try{
     const d=await api('/referral'),link=window.location.origin+'/?ref='+encodeURIComponent(d.code),input=document.getElementById('referralLink');
     if(input)input.value=link;
-    const rule=document.getElementById('refRuleText');if(rule)rule.textContent='নতুন প্লেয়ার গেম খেলে মোট '+Number(d.threshold).toLocaleString('en-US')+' Virtual Coin টার্নওভার পূরণ করলে আপনি '+Number(d.bonus).toLocaleString('en-US')+' Virtual Coin বোনাস পাবেন।';
+    const rule=document.getElementById('refRuleText');if(rule)rule.textContent='রেফার করুন এবং ১০৮ টাকা বোনাস পান';
     document.getElementById('refTotal').textContent=d.total;
     document.getElementById('refQualified').textContent=d.qualified;
     document.getElementById('refEarned').textContent=d.earned;
