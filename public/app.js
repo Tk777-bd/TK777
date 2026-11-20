@@ -390,8 +390,8 @@ function showAuth() {
             <label>Username</label>
             <input class="field" name="username" placeholder="আপনার নাম">
           </div>
-          <label>Email</label>
-          <input class="field" name="email" type="email" required placeholder="Email address">
+          <label id="identityLabel">মোবাইল নম্বর / পুরোনো Gmail</label>
+          <input class="field" name="identity" type="text" required autocomplete="username" placeholder="মোবাইল নম্বর অথবা পুরোনো Gmail">
           <label>Password</label>
           <input class="field" name="password" type="password" minlength="8" required placeholder="কমপক্ষে ৮ অক্ষর">
           <button class="primary" id="authSubmit">Login</button>
@@ -413,6 +413,11 @@ function authMode(m) {
   if (!f) return;
 
   $('#usernameWrap').classList.toggle('hidden',m !== 'register');
+  const identityLabel = $('#identityLabel');
+  const identityInput = f.elements.identity;
+  identityLabel.textContent = m === 'register' ? 'মোবাইল নম্বর' : 'মোবাইল নম্বর / পুরোনো Gmail';
+  identityInput.placeholder = m === 'register' ? '01XXXXXXXXX' : 'মোবাইল নম্বর অথবা পুরোনো Gmail';
+  identityInput.type = 'text';
   $('#loginTab').classList.toggle('active',m === 'login');
   $('#registerTab').classList.toggle('active',m === 'register');
   $('#authSubmit').textContent = m === 'register' ? 'Create Account' : 'Login';
@@ -420,6 +425,11 @@ function authMode(m) {
   f.onsubmit = async e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(f));
+    const identity = String(data.identity || '').trim();
+    delete data.identity;
+    if (mode === 'register') data.phone = identity;
+    else if (identity.includes('@')) data.email = identity;
+    else data.phone = identity;
 
     try {
       const r = await api('/'+mode,data);
