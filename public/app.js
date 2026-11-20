@@ -302,6 +302,28 @@ function setupHomeBanners() {
 
 /* HOME */
 
+function openHomeDeposit() {
+  const app = document.getElementById('app');
+  if (!app || window.tk777DepositLoading) return;
+  window.tk777DepositLoading = true;
+  const overlay = document.createElement('div');
+  overlay.id = 'homeDepositLoading';
+  overlay.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:12px"><div style="width:34px;height:34px;border:4px solid rgba(255,255,255,.25);border-top-color:#f5c542;border-radius:50%;animation:tk777DepositSpin .7s linear infinite"></div><strong>লোড হচ্ছে...</strong></div>';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,8,18,.82);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;backdrop-filter:blur(3px)';
+  if (!document.getElementById('tk777DepositLoadingStyle')) {
+    const style = document.createElement('style');
+    style.id = 'tk777DepositLoadingStyle';
+    style.textContent = '@keyframes tk777DepositSpin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  document.body.appendChild(overlay);
+  window.setTimeout(() => {
+    overlay.remove();
+    window.tk777DepositLoading = false;
+    page('deposit');
+  }, 1000);
+}
+
 function home() {
   isPlayingGame = false;
   stopCrashMonitor();
@@ -311,7 +333,7 @@ function home() {
   shell(`
     ${renderHomeBanners()}
 
-    <div class="home-money-actions"><button onclick="page('deposit')">＋ Deposit</button><button onclick="page('withdraw')">↗ Withdraw</button></div>
+    <div class="home-money-actions"><button onclick="openHomeDeposit()">＋ Deposit</button><button onclick="page('withdraw')">↗ Withdraw</button></div>
     <div class="quick">
       <button onclick="page('member')"><b>◉</b><span>Balance</span></button>
       <button onclick="page('history')"><b>▤</b><span>History</span></button>
