@@ -1505,3 +1505,38 @@ body{background:#063b39}
 .bank-account-form .primary{margin-top:6px;border-radius:9px}
 .bank-account-form .primary:disabled{opacity:.55}
 .bank-account-limit{color:#9bd8c7;font-size:12px;margin:16px 0 3px}
+
+
+/* Home game cards: a brief flame burst once every second */
+.game{isolation:isolate}
+.game::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:100px;
+  z-index:2;
+  pointer-events:none;
+  opacity:0;
+  transform:scaleY(.72);
+  transform-origin:bottom center;
+  clip-path:polygon(0 100%,0 53%,7% 70%,15% 15%,23% 66%,33% 4%,43% 68%,53% 19%,63% 70%,74% 7%,84% 65%,93% 22%,100% 57%,100% 100%);
+  background:
+    radial-gradient(ellipse at 50% 100%,#fff5a6 0 8%,#ffb52e 22%,#ff4b0b 48%,transparent 72%),
+    linear-gradient(90deg,#ff3b08aa,#ffdc55dd 28%,#ff5a0acc 55%,#ffe36aaa 78%,#ff3b08aa);
+  background-blend-mode:screen;
+  filter:blur(3px) saturate(1.7);
+  mix-blend-mode:screen;
+  animation:tk777GameFlare 1s ease-out infinite;
+}
+.game .favorite-toggle{z-index:3}
+@keyframes tk777GameFlare{
+  0%,3%,100%{opacity:0;transform:scaleY(.68) translateY(5px);filter:blur(5px) saturate(1.3)}
+  7%{opacity:.92;transform:scaleY(1.08) translateY(0);filter:blur(2px) saturate(2)}
+  13%{opacity:.62;transform:scaleY(.92) translateY(-2px);filter:blur(4px) saturate(1.8)}
+  20%{opacity:0;transform:scaleY(.7) translateY(-5px);filter:blur(6px) saturate(1.2)}
+}
+@media(prefers-reduced-motion:reduce){
+  .game::after{animation:none;opacity:0}
+}
