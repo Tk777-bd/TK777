@@ -767,6 +767,26 @@ async function route(req, env) {
       return json({ ok: true });
     }
 
+
+    if (p === "/api/bank-accounts" && method === "GET") {
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS bank_accounts (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,slot INTEGER NOT NULL,method TEXT NOT NULL,number TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,UNIQUE(user_id,slot))").run();
+      const rows=await env.DB.prepare("SELECT method,number,slot FROM bank_accounts WHERE user_id=? ORDER BY slot ASC").bind(user.id).all();
+      return json({accounts:rows.results||[]});
+    }
+    if (p === "/api/bank-accounts" && method === "POST") {
+      if (!user) return json({ error: "লগইন করুন" }, 401);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS bank_accounts (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,slot INTEGER NOT NULL,method TEXT NOT NULL,number TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,UNIQUE(user_id,slot))").run();
+      const body=await req.json(),methodName=String(body.method||""),number=String(body.number||"").replace(/\D/g,"");
+      if(!["bKash","Nagad","Rocket"].includes(methodName)||!/^01[3-9]\d{8}$/.test(number))return json({error:"সঠিক পেমেন্ট পদ্ধতি ও ১১ সংখ্যার নম্বর দিন"},400);
+      const result=await env.DB.prepare("INSERT INTO bank_accounts(id,user_id,slot,method,number) SELECT ?,?,COALESCE(MAX(slot),0)+1,?,? FROM bank_accounts WHERE user_id=? HAVING COUNT(*)<5").bind(uid(),user.id,methodName,number,user.id).run().catch(async()=>{
+        return await env.DB.prepare("INSERT INTO bank_accounts(id,user_id,slot,method,number) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM bank_accounts WHERE user_id=?)<5").bind(uid(),user.id,methodName,number,user.id).run();
+      });
+      if(!result.meta?.changes)return json({error:"সর্বোচ্চ ৫টি নম্বর যোগ করা যাবে"},409);
+      const rows=await env.DB.prepare("SELECT method,number,slot FROM bank_accounts WHERE user_id=? ORDER BY slot ASC").bind(user.id).all();
+      return json({ok:true,accounts:rows.results||[]});
+    }
+
     if (p === "/api/me") {
       return user
         ? json({ user })
