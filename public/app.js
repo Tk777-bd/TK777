@@ -742,7 +742,7 @@ async function internalMessagesPage(){
 async function promotionPage() {
   isPlayingGame = false;
   stopCrashMonitor();
-  const banners = Array.isArray(promotionBanners) ? promotionBanners.filter(url => String(url || '').startsWith('https://')) : [];
+  const banners = Array.isArray(promotionBanners) ? promotionBanners.filter(url => String(url || '').toLowerCase().startsWith('https://')) : [];
   shell(`
     <div class="page member-subpage promotion-page">
       <div class="member-subpage-heading"><button onclick="home()" aria-label="Back">‹</button><h2>Promotion</h2></div>
