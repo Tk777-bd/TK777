@@ -2,6 +2,7 @@
 let token = localStorage.getItem('tk777_token') || '';
 let me = null, categories = [], games = [];
 let homeBanners = [], homeBannerTimer = null;
+let promotionBanners = [];
 let supportSettings = {telegram_username:'',telegram_image_url:''};
 const DEFAULT_DEPOSIT_CONTENT = {"fields":{"pageTitle":"Deposit","numberLabel":"NUMBER · COPY ONLY","copyButton":"Copy","numberNotice":"সেন্ড মানি করুন এই নাম্বারে।","paymentTitle":"পেমেন্ট পদ্ধতি","amountLabel":"পরিমাণ","amountPlaceholder":"Amount লিখুন","referenceLabel":"Transaction ID (BDT)","referencePlaceholder":"Transaction ID লিখুন","referenceHint":"ID লিখুন।","submitButton":"Submit Request","historyTitle":"আমার Requests","loadingText":"লোড হচ্ছে…","backButton":"Member Center","chooseMethodError":"আগে একটি পেমেন্ট পদ্ধতি সিলেক্ট করুন।","amountError":"সঠিক Amount লিখুন।","referenceError":"একটি Transaction ID লিখুন।","successMessage":"Request জমা হয়েছে। ২ মিনিটের মধ্যে ব্যালেন্স যোগ হবে ।","emptyHistory":"এখনো কোনো Request নেই","historyDemoSuffix":"(BDT)","statusPending":"Pending","statusAccepted":"Accepted","statusCancelled":"Cancelled","currencyPrefix":"৳"},"categories":[]};
 let depositContent = DEFAULT_DEPOSIT_CONTENT;
@@ -281,6 +282,7 @@ async function init() {
     categories = (await api('/categories')).categories;
     games = (await api('/games')).games;
     homeBanners = (await api('/home-banners')).banners || [];
+    promotionBanners = (await api('/promotion-banners')).banners || [];
     supportSettings = await api('/support-settings');
     demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
      withdrawButtonImages = supportSettings.withdraw_button_images || {bkash:'',nagad:'',rocket:''};
@@ -737,6 +739,19 @@ async function internalMessagesPage(){
  catch(e){box.innerHTML='<div class="card">'+esc(e.message)+'</div>';}
 }
 
+async function promotionPage() {
+  isPlayingGame = false;
+  stopCrashMonitor();
+  const banners = Array.isArray(promotionBanners) ? promotionBanners.filter(url => String(url || '').startsWith('https://')) : [];
+  shell(`
+    <div class="page member-subpage promotion-page">
+      <div class="member-subpage-heading"><button onclick="home()" aria-label="Back">‹</button><h2>Promotion</h2></div>
+      ${banners.length ? '<div class="promotion-banner-list">' + banners.map((url,i) => '<div class="promotion-banner-card"><img src="'+esc(url)+'" alt="Promotion Banner '+(i+1)+'" loading="lazy" onerror="this.parentElement.hidden=true"></div>').join('') + '</div>' : '<div class="card promotion-empty">বর্তমানে কোনো নতুন প্রমোশন নেই।</div>'}
+      <button class="secondary" onclick="home()">Home</button>
+    </div>
+  `);
+}
+
 function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
@@ -752,6 +767,7 @@ function page(name) {
   if (name === 'profitloss') return profitLossPage();
   if (name === 'messages') return internalMessagesPage();
   if (name === 'rebate') return rebatePage();
+  if (name === 'promotion') return promotionPage();
 
   const pages = {
     deposit: ['Deposit Information','TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা করা যায় না।'],
