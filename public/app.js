@@ -727,6 +727,7 @@ function page(name) {
   if (name === 'account') return myAccountPage();
   if (name === 'profitloss') return profitLossPage();
   if (name === 'messages') return internalMessagesPage();
+  if (name === 'rebate') return rebatePage();
 
   const pages = {
     deposit: ['Deposit Information','TK777 একটি ফ্রি-প্লে গেমিং ডেমো। এখানে শুধু নগদমূল্যহীন Virtual Coin ব্যবহার করা হয়। বাস্তব টাকা জমা করা যায় না।'],
@@ -748,6 +749,21 @@ function page(name) {
   };
   const item = pages[name] || ['TK777','এই পেজটি বর্তমানে উপলব্ধ নয়।'];
   shell(`
+async function rebatePage(){
+ if(!me)return showAuth();
+ shell('<div class="page member-subpage rebate-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Rebate</h2></div><div class="rebate-hero"><div class="rebate-hero-label">আপনার জমা রিবেট</div><div class="rebate-amount" id="rebatePending">৳0.00</div><div class="rebate-hero-note">প্রতি ১,০০০ টাকা বেটে ১০ টাকা রিবেট</div><button class="rebate-claim-btn" id="rebateClaimBtn" onclick="claimRebate()">রিবেট ক্লেইম করুন</button></div><div class="rebate-stats"><div><small>মোট রিবেট অর্জন</small><b id="rebateEarned">৳0.00</b></div><div><small>আগে ক্লেইম করেছেন</small><b id="rebateClaimed">৳0.00</b></div></div><div class="rebate-info"><b>রিবেট কীভাবে হিসাব হবে?</b><p>আপনার প্রতিটি গেমের বেটের ১% নয়, প্রতি ১,০০০ টাকায় ১০ টাকা হিসেবে হিসাব হবে। ১ টাকা বেট করলেও ১ পয়সা রিবেট জমা হবে। জমা রিবেট নিজেই ক্লেইম করতে পারবেন।</p></div><div class="rebate-demo-note">এটি নগদমূল্যহীন ডেমো ব্যালেন্সের হিসাব। বাস্তব টাকা নয়।</div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+ await loadRebate();
+}
+async function loadRebate(){
+ const pending=document.getElementById('rebatePending');if(!pending)return;
+ try{const d=await api('/rebate');pending.textContent='৳'+Number(d.pending||0).toFixed(2);document.getElementById('rebateEarned').textContent='৳'+Number(d.earned||0).toFixed(2);document.getElementById('rebateClaimed').textContent='৳'+Number(d.claimed||0).toFixed(2);const b=document.getElementById('rebateClaimBtn');b.disabled=Number(d.pending||0)<=0;b.textContent=Number(d.pending||0)>0?'রিবেট ক্লেইম করুন':'রিবেট জমা হলে ক্লেইম করুন';}catch(e){pending.textContent='লোড করা যায়নি';}
+}
+async function claimRebate(){
+ const b=document.getElementById('rebateClaimBtn');if(!b||b.disabled)return;b.disabled=true;b.textContent='ক্লেইম হচ্ছে...';
+ try{const d=await api('/rebate/claim',{ });if(d.error)throw new Error(d.error);await loadRebate();if(typeof loadBalance==='function')await loadBalance();alert('৳'+Number(d.amount||0).toFixed(2)+' রিবেট ব্যালেন্সে যোগ হয়েছে।');}
+ catch(e){alert(e.message||'রিবেট ক্লেইম করা যায়নি');await loadRebate();}
+}
+
 async function loadUnreadMessages(){const badge=document.getElementById('internalMessageBadge');if(!badge||!me)return;try{const d=await api('/messages'),n=Number(d.unread||0);badge.textContent=n>99?'99+':String(n);badge.hidden=n===0;}catch(e){}}
 async function internalMessagesPage(){
  if(!me)return showAuth();
