@@ -1121,7 +1121,7 @@ body{background:#063b39}
 .member-balance{display:flex;align-items:center;justify-content:space-between;margin:15px 0 13px;padding:11px 13px;border-radius:13px;background:#fff7df70;border:1px solid #fff0c2}
 .member-balance small{display:block;font-size:9px;letter-spacing:1.2px;color:#806638;font-weight:800}
 .member-balance strong{display:block;margin-top:3px;color:#47351d;font-size:22px;font-weight:900}
-.member-balance button{width:38px;height:38px;border-radius:50%;background:#fff0c9;color:#98712e;font-size:26px;line-height:1;box-shadow:0 2px 7px #76501e35}
+.member-balance button{width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;background:#fff0c9;color:#98712e;font-size:26px;line-height:1;box-shadow:0 2px 7px #76501e35}.member-balance-refresh-icon{display:block;line-height:1;transform:translate(-1px,-1px)}
 .member-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .member-shortcuts button{padding:10px 4px;border-radius:24px;background:linear-gradient(180deg,#fff9e7,#e6c77e);color:#51401f;font-size:12px;font-weight:800;box-shadow:0 3px 7px #80602c55;border:1px solid #fff1c8}
 .member-section-title{margin:17px 0 10px;padding:7px 12px;border-left:3px solid #e6bd63;color:#f3d47c;font-size:13px;font-weight:800;letter-spacing:.2px}
