@@ -151,6 +151,16 @@ const enc = new TextEncoder();
 async function ensureInternalMessageSchema(env){await env.DB.prepare("CREATE TABLE IF NOT EXISTS internal_messages (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,title TEXT NOT NULL,body TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'info',source_key TEXT UNIQUE,read_at TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();}
 async function createInternalMessage(env,userId,title,body,type="info",sourceKey=null){await ensureInternalMessageSchema(env);await env.DB.prepare("INSERT OR IGNORE INTO internal_messages(id,user_id,title,body,type,source_key) VALUES(?,?,?,?,?,?)").bind(uid(),userId,String(title||"বার্তা").slice(0,100),String(body||"").slice(0,500),String(type||"info").slice(0,30),sourceKey).run();}
 
+/* REBATE: 1 paisa per 1 taka wagered; display amounts as demo taka */
+async function ensureRebateSchema(env){
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS rebate_accounts (user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,pending_paisa INTEGER NOT NULL DEFAULT 0)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS rebate_claims (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,amount_paisa INTEGER NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
+    env.DB.prepare("CREATE TRIGGER IF NOT EXISTS rebate_on_game_round AFTER INSERT ON game_rounds WHEN NEW.bet_amount>0 BEGIN INSERT OR IGNORE INTO rebate_accounts(user_id,pending_paisa) VALUES(NEW.user_id,0); UPDATE rebate_accounts SET pending_paisa=pending_paisa+CAST(ROUND(NEW.bet_amount) AS INTEGER) WHERE user_id=NEW.user_id; END")
+  ]);
+  await env.DB.prepare("INSERT OR IGNORE INTO rebate_accounts(user_id,pending_paisa) SELECT user_id,CAST(ROUND(COALESCE(SUM(bet_amount),0)) AS INTEGER) FROM game_rounds GROUP BY user_id").run();
+}
+
 /* REFERRAL COINS */
 async function ensureReferralSchema(env) {
   await ensureInternalMessageSchema(env);
@@ -558,6 +568,30 @@ async function route(req, env) {
     const admin = () => requireAdmin(req, env);
 
 
+    if(p==="/api/rebate"&&method==="GET"){
+      if(!user)return json({error:"লগইন করুন"},401);
+      await ensureRebateSchema(env);
+      const row=await env.DB.prepare("SELECT pending_paisa FROM rebate_accounts WHERE user_id=?").bind(user.id).first();
+      const sums=await env.DB.prepare("SELECT COALESCE(SUM(amount_paisa),0) AS claimed_paisa FROM rebate_claims WHERE user_id=?").bind(user.id).first();
+      const balance=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+      const pending=Number(row?.pending_paisa||0),claimed=Number(sums?.claimed_paisa||0);
+      return json({pending:pending/100,earned:(pending+claimed)/100,claimed:claimed/100,balance:Number(balance?.balance||0)});
+    }
+    if(p==="/api/rebate/claim"&&method==="POST"){
+      if(!user)return json({error:"লগইন করুন"},401);
+      await ensureRebateSchema(env);
+      const claimId=uid();
+      const result=await env.DB.batch([
+        env.DB.prepare("INSERT INTO rebate_claims(id,user_id,amount_paisa) SELECT ?,user_id,pending_paisa FROM rebate_accounts WHERE user_id=? AND pending_paisa>0").bind(claimId,user.id),
+        env.DB.prepare("UPDATE rebate_accounts SET pending_paisa=0 WHERE user_id=? AND EXISTS(SELECT 1 FROM rebate_claims WHERE id=? AND user_id=?)").bind(user.id,claimId,user.id),
+        env.DB.prepare("UPDATE users SET balance=balance+(SELECT amount_paisa/100.0 FROM rebate_claims WHERE id=? AND user_id=?) WHERE id=? AND EXISTS(SELECT 1 FROM rebate_claims WHERE id=? AND user_id=?)").bind(claimId,user.id,user.id,claimId,user.id),
+        env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) SELECT ?,?, 'rebate_bonus',amount_paisa/100.0,(SELECT balance FROM users WHERE id=?),'Rebate claimed' FROM rebate_claims WHERE id=? AND user_id=?").bind(uid(),user.id,user.id,claimId,user.id)
+      ]);
+      const claim=await env.DB.prepare("SELECT amount_paisa FROM rebate_claims WHERE id=? AND user_id=?").bind(claimId,user.id).first();
+      if(!claim)return json({error:"ক্লেইম করার মতো রিবেট এখনো জমা হয়নি"},400);
+      const balance=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+      return json({ok:true,amount:Number(claim.amount_paisa)/100,balance:Number(balance?.balance||0)});
+    }
     if(p==="/api/messages"&&method==="GET"){
       if(!user)return json({error:"লগইন করুন"},401);
       await ensureInternalMessageSchema(env);
@@ -1066,6 +1100,7 @@ async function route(req, env) {
           SELECT balance FROM users WHERE id=?
         `).bind(user.id).first();
 
+        await ensureRebateSchema(env);
         await env.DB.batch([
           env.DB.prepare(`
             INSERT INTO game_rounds
@@ -1227,6 +1262,7 @@ async function route(req, env) {
         ).bind(payout, user.id).run();
         const bal = await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
         const roundId = uid();
+        await ensureRebateSchema(env);
         await env.DB.batch([
           env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)")
             .bind(roundId, user.id, gameId, "minigame", bet, multiplier, payout),
