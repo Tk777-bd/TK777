@@ -713,6 +713,30 @@ async function securityCenterPage(){if(!me)return showAuth();shell('<div class="
 async function saveSecurityProfile(kind){const n=document.getElementById('securityDisplayName'),nm=document.getElementById('securityNameMsg'),cm=document.getElementById('securityContactMsg');let body={};if(kind==='name'){body.displayName=String(n.value||'').trim();if(body.displayName.length<2){nm.textContent='কমপক্ষে ২ অক্ষরের নাম লিখুন।';return;}}else{body.whatsapp=document.getElementById('securityWhatsapp').value.trim();body.facebook=document.getElementById('securityFacebook').value.trim();body.gmail=document.getElementById('securityGmail').value.trim();if(!body.whatsapp||!body.facebook||!body.gmail){cm.textContent='WhatsApp, Facebook লিংক ও Gmail—তিনটিই পূরণ করুন।';return;}}try{const d=await api('/security/profile',body);if(kind==='name'){n.value=d.profile.display_name;n.readOnly=true;document.getElementById('saveSecurityName').remove();nm.textContent='নাম সেভ হয়েছে।';}else{document.getElementById('securityWhatsapp').readOnly=true;document.getElementById('securityFacebook').readOnly=true;const g=document.getElementById('securityGmail');g.value=d.profile.gmail_masked||('***'+body.gmail.slice(-3));g.readOnly=true;document.getElementById('saveSecurityContacts').remove();cm.textContent='তথ্য সেভ হয়েছে। আর পরিবর্তন করা যাবে না।';}}catch(e){(kind==='name'?nm:cm).textContent=e.message;}}
 async function changeLoginPassword(){const msg=document.getElementById('securityPasswordMsg'),oldPassword=document.getElementById('securityOldPassword').value,newPassword=document.getElementById('securityNewPassword').value,confirmPassword=document.getElementById('securityConfirmPassword').value;if(!oldPassword||newPassword.length<6||newPassword.length>128){msg.textContent='পুরোনো পাসওয়ার্ড দিন এবং নতুন পাসওয়ার্ড ৬–১২৮ অক্ষরের করুন।';return;}if(newPassword!==confirmPassword){msg.textContent='নতুন পাসওয়ার্ড দুটি মিলছে না।';return;}try{const d=await api('/security/password',{oldPassword,newPassword});msg.textContent=d.message;document.getElementById('securityOldPassword').value='';document.getElementById('securityNewPassword').value='';document.getElementById('securityConfirmPassword').value='';}catch(e){msg.textContent=e.message;}}
 async function changeWithdrawPassword(){const msg=document.getElementById('securityWithdrawMsg'),oldPassword=document.getElementById('securityOldWithdrawPassword').value,newPassword=document.getElementById('securityNewWithdrawPassword').value,confirmPassword=document.getElementById('securityConfirmWithdrawPassword').value;if(!/^[0-9]{6}$/.test(oldPassword)||!/^[0-9]{6}$/.test(newPassword)){msg.textContent='বর্তমান ও নতুন—দুটিই ৬ সংখ্যার হতে হবে।';return;}if(newPassword!==confirmPassword){msg.textContent='নতুন উইথড্র পাসওয়ার্ড দুটি মিলছে না।';return;}try{const d=await api('/security/withdraw-password',{oldPassword,newPassword});msg.textContent=d.message;document.getElementById('securityOldWithdrawPassword').value='';document.getElementById('securityNewWithdrawPassword').value='';document.getElementById('securityConfirmWithdrawPassword').value='';}catch(e){msg.textContent=e.message;}}
+async function rebatePage(){
+ if(!me)return showAuth();
+ shell('<div class="page member-subpage rebate-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Rebate</h2></div><div class="rebate-hero"><div class="rebate-hero-label">আপনার জমা রিবেট</div><div class="rebate-amount" id="rebatePending">৳0.00</div><div class="rebate-hero-note">প্রতি ১,০০০ টাকা বেটে ১০ টাকা রিবেট</div><button class="rebate-claim-btn" id="rebateClaimBtn" onclick="claimRebate()">রিবেট ক্লেইম করুন</button></div><div class="rebate-stats"><div><small>মোট রিবেট অর্জন</small><b id="rebateEarned">৳0.00</b></div><div><small>আগে ক্লেইম করেছেন</small><b id="rebateClaimed">৳0.00</b></div></div><div class="rebate-info"><b>রিবেট কীভাবে হিসাব হবে?</b><p>আপনার প্রতিটি গেমের বেটের ১% হিসেবে রিবেট হিসাব হবে—প্রতি ১,০০০ টাকায় ১০ টাকা। ১ টাকা বেট করলেও ১ পয়সা রিবেট জমা হবে। জমা রিবেট নিজেই ক্লেইম করতে পারবেন।</p></div><div class="rebate-demo-note">এটি নগদমূল্যহীন ডেমো ব্যালেন্সের হিসাব। বাস্তব টাকা নয়।</div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+ await loadRebate();
+}
+async function loadRebate(){
+ const pending=document.getElementById('rebatePending');if(!pending)return;
+ try{const d=await api('/rebate');pending.textContent='৳'+Number(d.pending||0).toFixed(2);document.getElementById('rebateEarned').textContent='৳'+Number(d.earned||0).toFixed(2);document.getElementById('rebateClaimed').textContent='৳'+Number(d.claimed||0).toFixed(2);const b=document.getElementById('rebateClaimBtn');b.disabled=Number(d.pending||0)<=0;b.textContent=Number(d.pending||0)>0?'রিবেট ক্লেইম করুন':'রিবেট জমা হলে ক্লেইম করুন';}catch(e){pending.textContent='লোড করা যায়নি';}
+}
+async function claimRebate(){
+ const b=document.getElementById('rebateClaimBtn');if(!b||b.disabled)return;b.disabled=true;b.textContent='ক্লেইম হচ্ছে...';
+ try{const d=await api('/rebate/claim',{ });if(d.error)throw new Error(d.error);await loadRebate();if(typeof refreshBalance==='function')await refreshBalance();alert('৳'+Number(d.amount||0).toFixed(2)+' রিবেট ব্যালেন্সে যোগ হয়েছে।');}
+ catch(e){alert(e.message||'রিবেট ক্লেইম করা যায়নি');await loadRebate();}
+}
+
+async function loadUnreadMessages(){const badge=document.getElementById('internalMessageBadge');if(!badge||!me)return;try{const d=await api('/messages'),n=Number(d.unread||0);badge.textContent=n>99?'99+':String(n);badge.hidden=n===0;}catch(e){}}
+async function internalMessagesPage(){
+ if(!me)return showAuth();
+ shell('<div class="page member-subpage internal-messages-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Internal Message</h2></div><div id="internalMessageList" class="internal-message-list"><div class="card">মেসেজ লোড হচ্ছে...</div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
+ const box=document.getElementById('internalMessageList');
+ try{const d=await api('/messages'),rows=d.messages||[];box.innerHTML=rows.map(m=>'<article class="internal-message-card '+(m.read_at?'is-read':'is-unread')+'"><div class="internal-message-heading"><b>'+esc(m.title)+'</b><small>'+esc(m.created_at||'')+'</small></div><p>'+esc(m.body)+'</p></article>').join('')||'<div class="card internal-message-empty">এখনো কোনো মেসেজ আসেনি।</div>';await api('/messages/read',{read:true});const badge=document.getElementById('internalMessageBadge');if(badge)badge.hidden=true;}
+ catch(e){box.innerHTML='<div class="card">'+esc(e.message)+'</div>';}
+}
+
 function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
@@ -739,7 +763,6 @@ function page(name) {
     security: ['Security Center','আপনার অ্যাকাউন্ট নিরাপদ রাখতে লগইন তথ্য গোপন রাখুন এবং নিজের ডিভাইস থেকে লগআউট করতে ভুলবেন না।'],
     invite: ['Invite Friends','এই ডেমোতে রেফারেল বোনাস চালু নেই।'],
     mission: ['Mission','বর্তমানে কোনো মিশন চালু নেই।'],
-    rebate: ['Rebate','এই ডেমোতে রিবেট সুবিধা চালু নেই।'],
     messages: ['Internal Message','আপনার জন্য নতুন কোনো বার্তা নেই।'],
     suggestion: ['Suggestion','পরামর্শ জমা দেওয়ার সুবিধা শিগগিরই যুক্ত করা হবে।'],
     download: ['Download App','TK777-এর অ্যাপ ডাউনলোড বর্তমানে উপলব্ধ নয়।'],
@@ -749,30 +772,6 @@ function page(name) {
   };
   const item = pages[name] || ['TK777','এই পেজটি বর্তমানে উপলব্ধ নয়।'];
   shell(`
-async function rebatePage(){
- if(!me)return showAuth();
- shell('<div class="page member-subpage rebate-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Rebate</h2></div><div class="rebate-hero"><div class="rebate-hero-label">আপনার জমা রিবেট</div><div class="rebate-amount" id="rebatePending">৳0.00</div><div class="rebate-hero-note">প্রতি ১,০০০ টাকা বেটে ১০ টাকা রিবেট</div><button class="rebate-claim-btn" id="rebateClaimBtn" onclick="claimRebate()">রিবেট ক্লেইম করুন</button></div><div class="rebate-stats"><div><small>মোট রিবেট অর্জন</small><b id="rebateEarned">৳0.00</b></div><div><small>আগে ক্লেইম করেছেন</small><b id="rebateClaimed">৳0.00</b></div></div><div class="rebate-info"><b>রিবেট কীভাবে হিসাব হবে?</b><p>আপনার প্রতিটি গেমের বেটের ১% হিসেবে রিবেট হিসাব হবে—প্রতি ১,০০০ টাকায় ১০ টাকা। ১ টাকা বেট করলেও ১ পয়সা রিবেট জমা হবে। জমা রিবেট নিজেই ক্লেইম করতে পারবেন।</p></div><div class="rebate-demo-note">এটি নগদমূল্যহীন ডেমো ব্যালেন্সের হিসাব। বাস্তব টাকা নয়।</div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
- await loadRebate();
-}
-async function loadRebate(){
- const pending=document.getElementById('rebatePending');if(!pending)return;
- try{const d=await api('/rebate');pending.textContent='৳'+Number(d.pending||0).toFixed(2);document.getElementById('rebateEarned').textContent='৳'+Number(d.earned||0).toFixed(2);document.getElementById('rebateClaimed').textContent='৳'+Number(d.claimed||0).toFixed(2);const b=document.getElementById('rebateClaimBtn');b.disabled=Number(d.pending||0)<=0;b.textContent=Number(d.pending||0)>0?'রিবেট ক্লেইম করুন':'রিবেট জমা হলে ক্লেইম করুন';}catch(e){pending.textContent='লোড করা যায়নি';}
-}
-async function claimRebate(){
- const b=document.getElementById('rebateClaimBtn');if(!b||b.disabled)return;b.disabled=true;b.textContent='ক্লেইম হচ্ছে...';
- try{const d=await api('/rebate/claim',{ });if(d.error)throw new Error(d.error);await loadRebate();if(typeof refreshBalance==='function')await refreshBalance();alert('৳'+Number(d.amount||0).toFixed(2)+' রিবেট ব্যালেন্সে যোগ হয়েছে।');}
- catch(e){alert(e.message||'রিবেট ক্লেইম করা যায়নি');await loadRebate();}
-}
-
-async function loadUnreadMessages(){const badge=document.getElementById('internalMessageBadge');if(!badge||!me)return;try{const d=await api('/messages'),n=Number(d.unread||0);badge.textContent=n>99?'99+':String(n);badge.hidden=n===0;}catch(e){}}
-async function internalMessagesPage(){
- if(!me)return showAuth();
- shell('<div class="page member-subpage internal-messages-page"><div class="member-subpage-heading"><button onclick="page(\'member\')" aria-label="Back">‹</button><h2>Internal Message</h2></div><div id="internalMessageList" class="internal-message-list"><div class="card">মেসেজ লোড হচ্ছে...</div></div><button class="secondary" onclick="page(\'member\')">Member Center</button></div>');
- const box=document.getElementById('internalMessageList');
- try{const d=await api('/messages'),rows=d.messages||[];box.innerHTML=rows.map(m=>'<article class="internal-message-card '+(m.read_at?'is-read':'is-unread')+'"><div class="internal-message-heading"><b>'+esc(m.title)+'</b><small>'+esc(m.created_at||'')+'</small></div><p>'+esc(m.body)+'</p></article>').join('')||'<div class="card internal-message-empty">এখনো কোনো মেসেজ আসেনি।</div>';await api('/messages/read',{read:true});const badge=document.getElementById('internalMessageBadge');if(badge)badge.hidden=true;}
- catch(e){box.innerHTML='<div class="card">'+esc(e.message)+'</div>';}
-}
-
     <div class="page member-subpage">
       <div class="member-subpage-heading"><button onclick="page('member')" aria-label="Back">‹</button><h2>${esc(item[0])}</h2></div>
       <div class="card"><p>${esc(item[1])}</p></div>
