@@ -752,6 +752,31 @@ async function promotionPage() {
   `);
 }
 
+
+async function bankAccountPage(){
+  if(!me)return showAuth();
+  shell('<div class="page member-subpage bank-account-page"><div class="member-subpage-heading"><button onclick="page(\'member\')">‹</button><h2>Bank Account</h2></div><div id="bankAccountContent" class="card"><p>লোড হচ্ছে…</p></div></div>');
+  await loadBankAccounts();
+}
+async function loadBankAccounts(){
+  const box=document.getElementById('bankAccountContent');if(!box)return;
+  try{
+    const d=await api('/bank-accounts'),items=Array.isArray(d.accounts)?d.accounts:[];
+    const rows=items.map((x,i)=>'<div class="bank-account-saved"><span class="bank-account-index">'+(i+1)+'</span><div><b>'+esc(x.method)+'</b><strong>'+esc(x.number)+'</strong></div><span class="bank-account-lock">Saved</span></div>').join('');
+    const form=items.length<5?'<div class="bank-account-form"><h3>নতুন নম্বর যোগ করুন</h3><label for="bankAccountMethod">Payment Method</label><select id="bankAccountMethod" class="field"><option value="bKash">বিকাশ</option><option value="Nagad">নগদ</option><option value="Rocket">রকেট</option></select><label for="bankAccountNumber">Number</label><input id="bankAccountNumber" class="field" type="tel" inputmode="numeric" maxlength="11" placeholder="১১ সংখ্যার নম্বর"><button class="primary" type="button" onclick="saveBankAccount()">Save Number</button></div>':'<p class="bank-account-limit">সর্বোচ্চ ৫টি নম্বর সংরক্ষণ করা হয়েছে।</p>';
+    box.innerHTML='<div class="bank-account-count">সংরক্ষিত নম্বর: '+items.length+'/5</div>'+(rows||'<p class="muted">এখনো কোনো নম্বর যোগ করা হয়নি।</p>')+form;
+  }catch(e){box.textContent=e.message||'তথ্য লোড করা যায়নি';}
+}
+async function saveBankAccount(){
+  const method=document.getElementById('bankAccountMethod')?.value||'';
+  const number=String(document.getElementById('bankAccountNumber')?.value||'').replace(/\D/g,'');
+  if(!['bKash','Nagad','Rocket'].includes(method))return toast('পেমেন্ট পদ্ধতি নির্বাচন করুন');
+  if(!/^01[3-9]\d{8}$/.test(number))return toast('সঠিক ১১ সংখ্যার নম্বর দিন');
+  const button=document.querySelector('.bank-account-form .primary');if(button)button.disabled=true;
+  try{await api('/bank-accounts',{method,number});toast('নম্বর সেভ হয়েছে');await loadBankAccounts();}
+  catch(e){toast(e.message||'নম্বর সেভ করা যায়নি');if(button)button.disabled=false;}
+}
+
 function page(name) {
   isPlayingGame = false;
   stopCrashMonitor();
@@ -760,6 +785,7 @@ function page(name) {
   if (name === 'invite') return inviteFriendsPage();
   if (name === 'deposit') return depositPage();
   if (name === 'withdraw') return withdrawPage();
+  if (name === 'bank') return bankAccountPage();
   if (name === 'withdrawRecord') return withdrawRecordPage();
   if (name === 'depositRecord') return depositRecordPage();
   if (name === 'history') return historyPage();
