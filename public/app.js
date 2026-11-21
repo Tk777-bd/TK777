@@ -760,7 +760,7 @@ async function loadRebate(){
 }
 async function claimRebate(){
  const b=document.getElementById('rebateClaimBtn');if(!b||b.disabled)return;b.disabled=true;b.textContent='ক্লেইম হচ্ছে...';
- try{const d=await api('/rebate/claim',{ });if(d.error)throw new Error(d.error);await loadRebate();if(typeof loadBalance==='function')await loadBalance();alert('৳'+Number(d.amount||0).toFixed(2)+' রিবেট ব্যালেন্সে যোগ হয়েছে।');}
+ try{const d=await api('/rebate/claim',{ });if(d.error)throw new Error(d.error);await loadRebate();if(typeof refreshBalance==='function')await refreshBalance();alert('৳'+Number(d.amount||0).toFixed(2)+' রিবেট ব্যালেন্সে যোগ হয়েছে।');}
  catch(e){alert(e.message||'রিবেট ক্লেইম করা যায়নি');await loadRebate();}
 }
 
