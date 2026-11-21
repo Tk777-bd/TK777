@@ -1489,3 +1489,19 @@ body{background:#063b39}
 .promotion-banner-card img{display:block;width:100%;aspect-ratio:16/7;object-fit:cover;background:#103e39}
 .promotion-banner-card[hidden]{display:none}
 .promotion-empty{text-align:center;padding:24px}
+
+/* Member Center - saved payment numbers */
+.bank-account-page .card{padding:15px}
+.bank-account-count{font-size:13px;font-weight:800;color:#f4d77e;margin-bottom:12px}
+.bank-account-saved{display:flex;align-items:center;gap:11px;padding:12px 8px;border-bottom:1px solid #286258}
+.bank-account-index{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#f0d99f;color:#59451f;font-weight:900}
+.bank-account-saved>div{display:grid;gap:3px;flex:1;min-width:0}
+.bank-account-saved b{font-size:12px;color:#f4d77e}
+.bank-account-saved strong{font-size:17px;color:#fff;letter-spacing:1px}
+.bank-account-lock{font-size:10px;color:#9bd8c7}
+.bank-account-form{margin-top:17px;padding-top:13px;border-top:1px solid #286258}
+.bank-account-form h3{margin:0 0 12px;color:#f4d77e;font-size:15px}
+.bank-account-form label{display:block;color:#dce9e2;font-size:12px;margin-top:8px}
+.bank-account-form .primary{margin-top:6px;border-radius:9px}
+.bank-account-form .primary:disabled{opacity:.55}
+.bank-account-limit{color:#9bd8c7;font-size:12px;margin:16px 0 3px}
