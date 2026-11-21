@@ -1476,3 +1476,8 @@ body{background:#063b39}
 .rebate-info{padding:16px;border-radius:14px;background:var(--card,#fff);border:1px solid var(--border,#ddd);margin-top:14px}
 .rebate-info b{font-size:14px}.rebate-info p{font-size:12px;line-height:1.7;margin:8px 0 0;opacity:.8}
 .rebate-demo-note{text-align:center;font-size:10px;opacity:.6;margin:14px 0}
+
+/* Rebate amount cards: ensure readable contrast */
+.rebate-stats>div{background:linear-gradient(145deg,#1d5147,#14363a);border:1px solid #4c8e75;color:#fff}
+.rebate-stats small{color:#d8eee2;opacity:1}
+.rebate-stats b{color:#fff}
