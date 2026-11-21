@@ -1106,7 +1106,7 @@ body{background:#063b39}
 
 /* Refined account balance and screenshot-inspired Member Center */
 .balance-chip{display:flex;align-items:center;gap:7px;padding:5px 7px 5px 12px;border-radius:24px;background:linear-gradient(135deg,#0b3835,#155b50);border:1px solid #48a58b;box-shadow:0 3px 10px #001b1840;color:#f8df88;font-size:12px;font-weight:800;white-space:nowrap}
-.balance-refresh{width:27px;height:27px;min-width:27px;padding:0;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#f9df82,#d99a2c);color:#173c35;font-size:19px;line-height:1;box-shadow:0 1px 5px #0004}
+.balance-refresh{width:27px;height:27px;min-width:27px;padding:0;border-radius:50%;display:grid;place-items:center;text-align:center;text-indent:1px;background:linear-gradient(145deg,#f9df82,#d99a2c);color:#173c35;font-size:19px;line-height:1;box-shadow:0 1px 5px #0004}
 .balance-refresh.is-refreshing{animation:tkBalanceSpin .7s linear infinite}
 @keyframes tkBalanceSpin{to{transform:rotate(360deg)}}
 .member-page{padding:12px 12px 88px}
