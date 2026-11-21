@@ -1481,3 +1481,11 @@ body{background:#063b39}
 .rebate-stats>div{background:linear-gradient(145deg,#1d5147,#14363a);border:1px solid #4c8e75;color:#fff}
 .rebate-stats small{color:#d8eee2;opacity:1}
 .rebate-stats b{color:#fff}
+
+/* Promotion page: vertically scrollable banner gallery */
+.promotion-page{max-width:620px;margin:0 auto}
+.promotion-banner-list{display:flex;flex-direction:column;gap:14px;margin:12px 0 18px}
+.promotion-banner-card{overflow:hidden;border-radius:14px;background:#103e39;border:1px solid #286b60;box-shadow:0 5px 16px #0002}
+.promotion-banner-card img{display:block;width:100%;aspect-ratio:16/7;object-fit:cover;background:#103e39}
+.promotion-banner-card[hidden]{display:none}
+.promotion-empty{text-align:center;padding:24px}
