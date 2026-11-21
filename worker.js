@@ -948,6 +948,17 @@ async function route(req, env) {
       });
     }
 
+    if (p === "/api/promotion-banners" && method === "GET") {
+      const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'promotion_banner_%'").all();
+      const banners = (rows.results || [])
+        .filter(r => /^promotion_banner_([1-9]|10)$/.test(String(r.key || "")))
+        .sort((a,b) => Number(a.key.split("_").pop()) - Number(b.key.split("_").pop()))
+        .map(r => String(r.value || "").trim())
+        .filter(v => /^https:\/\//i.test(v))
+        .slice(0, 10);
+      return json({ banners });
+    }
+
     if (p === "/api/home-banners" && method === "GET") {
       const rows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'home_banner_%' ORDER BY key").all();
       const banners = (rows.results || [])
