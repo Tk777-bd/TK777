@@ -173,7 +173,7 @@ function memberCenter() {
         </div>
         <div class="member-balance">
           <div><small>AVAILABLE BALANCE</small><strong id="memberBalanceValue">${money(me.balance)}</strong></div>
-          <button type="button" onclick="refreshBalance(this)" aria-label="Refresh balance">↻</button>
+          <button type="button" onclick="refreshBalance(this)" aria-label="Refresh balance"><span class="member-balance-refresh-icon">↻</span></button>
         </div>
         <div class="member-shortcuts">
           <button onclick="page('deposit')">Deposit</button>
