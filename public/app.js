@@ -66,6 +66,10 @@ window.addEventListener('message', event => {
   if (event.origin !== location.origin) return;
   const frame = document.getElementById('superAceFrame');
   if (!frame || event.source !== frame.contentWindow) return;
+  if (event.data?.type === 'tk777-welcome-audio') {
+    startTk777WelcomeAudio();
+    return;
+  }
   if (event.data?.type !== 'tk777-balance-update') return;
   const balance = Number(event.data.balance);
   if (!Number.isFinite(balance) || balance < 0) return;
