@@ -1112,11 +1112,14 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length;
+      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0;
       const frames=[];
+      const comboSteps=[1,2,3,5];
       for(let step=0;step<6;step++){
         const found=findWins(grid),hit=new Set(found.wins);
         if(!found.groups.length)break;
+        cascadeX=comboSteps[Math.min(cascadeCount,3)]*(isFreeSpin?2:1);
+        maxCascadeX=Math.max(maxCascadeX,cascadeX);
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
@@ -1126,7 +1129,7 @@ async function route(req, env) {
           while(survivors.length<4)survivors.push(pickCard());
           for(let row=3;row>=0;row--){const ix=row*5+col,card=survivors[3-row];if(grid[ix]!==card)fresh.push(ix);next[ix]=card;}
         }
-        grid=next;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});cascadeX=Math.min(cascadeX+1,5);
+        grid=next;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
@@ -1141,7 +1144,7 @@ async function route(req, env) {
         if(payout)entries.push(env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়"));
         entries.push(env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)").bind(roundId,user.id,gameId,"superace",isFreeSpin?0:stake,multiplier,payout));
         await env.DB.batch(entries);
-        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount});
+        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,maxCascadeX,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount});
       }catch(error){if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();throw error;}
     }
 
