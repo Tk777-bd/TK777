@@ -10,10 +10,10 @@
 .multi{border:0;background:transparent;color:#38200a;font-weight:900;font-size:17px;padding:5px 11px;border-radius:17px}
 .multi.active{background:linear-gradient(#fff4b7,#ff9f16);color:#fff;text-shadow:0 1px #6b2a00;box-shadow:0 0 9px #fff4b0}
 .stage{padding:8px 5px 4px;border-top:4px solid #c6b28c;border-bottom:3px solid #a56c32;background:linear-gradient(#6f9793 0,#07505b 14px,#063c49)}
-.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,min(21.8vw,88px));gap:3px;max-width:410px;margin:auto}
-.tile{position:relative;overflow:hidden;border:1px solid #d4c18d;border-radius:5px;background:linear-gradient(145deg,#fffdf3,#d8e0e8);box-shadow:inset 0 0 0 2px #fff9e9,0 2px 4px #001e28;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
-.tile img{width:100%;height:100%;object-fit:contain;display:block;padding:1px}
-.tile.dim{filter:brightness(.28) saturate(.65)}\n.tile.golden-joker{border:2px solid #ffe36b;box-shadow:inset 0 0 0 2px #fff3a0,0 0 12px 4px rgba(255,202,42,.9)}\n.tile.golden-joker:before{content:'GOLDEN JOKER';position:absolute;z-index:3;bottom:2px;left:0;right:0;text-align:center;font:bold 7px Arial;color:#fff4a8;text-shadow:0 1px 3px #542500;pointer-events:none}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,min(21.8vw,88px));gap:1px;max-width:410px;margin:auto;background:transparent}
+.tile{position:relative;overflow:hidden;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
+.tile img{width:100%;height:100%;object-fit:contain;display:block;padding:0;background:transparent}
+.tile.dim{filter:brightness(.28) saturate(.65)}\n.tile.golden-joker{border:0;background:transparent;box-shadow:0 0 7px 1px rgba(255,202,42,.65)}\n.tile.golden-joker:before{content:'GOLDEN JOKER';position:absolute;z-index:3;bottom:2px;left:0;right:0;text-align:center;font:bold 7px Arial;color:#fff4a8;text-shadow:0 1px 3px #542500;pointer-events:none}
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
 .tile.win:after{content:"";position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,210,.85) 48%,transparent 63%);transform:translateX(-130%);animation:shineSweep .72s ease-in-out infinite}
 .tile.drop{animation:cardDrop .48s cubic-bezier(.16,.78,.2,1) both}
@@ -33,7 +33,7 @@
 .balance{text-align:center;background:#120b0b;padding:6px;color:#ffe2a0;font-size:12px}
 .balance b{font-size:16px;color:white}
 .note{text-align:center;background:#120b0b;color:#b8ad98;font-size:9px;padding:3px 0 8px}
-@media(min-width:500px){.game{min-height:650px}.board{grid-template-rows:repeat(4,88px)}}
+@media(min-width:500px){.game{min-height:650px}.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,min(21.8vw,88px));gap:1px;max-width:410px;margin:auto;background:transparent}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
 </style></head><body><main class="game">
 <header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button><div class="brand">SuperAce</div></header>
