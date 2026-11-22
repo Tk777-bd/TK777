@@ -27,18 +27,17 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @keyframes goldenTransform{0%{transform:scale(1);filter:brightness(1)}35%{transform:scale(1.16) rotateY(90deg);filter:brightness(2.1)}70%{transform:scale(1.12) rotateY(180deg);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1.35)}}
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
 .tile.win:after{content:"";position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,210,.85) 48%,transparent 63%);transform:translateX(-130%);animation:shineSweep .72s ease-in-out infinite}
-.tile.drop{animation:cardDrop .34s cubic-bezier(.22,.61,.36,1) both;will-change:transform,opacity}
+.tile.drop{animation:cardDrop .42s ease-out both;will-change:transform,opacity}
 .tile.flip-out{z-index:5;animation:cardFlipOut .28s ease-in both;pointer-events:none}
 .tile.flip-in{z-index:5;animation:cardFlipIn .38s cubic-bezier(.2,.75,.25,1) both}
 @keyframes cardFlipOut{0%{transform:rotateY(0) scale(1);opacity:1;filter:brightness(1)}55%{transform:rotateY(90deg) scale(.92);opacity:.9;filter:brightness(1.8)}100%{transform:rotateY(90deg) scale(.72);opacity:0;filter:brightness(2)}}
 @keyframes cardFlipIn{0%{transform:rotateY(-90deg) scale(.72);opacity:0;filter:brightness(2)}55%{transform:rotateY(8deg) scale(1.04);opacity:1;filter:brightness(1.45)}100%{transform:rotateY(0) scale(1);opacity:1;filter:none}}
-.tile.reel-spin{overflow:hidden;animation:reelSpin .58s cubic-bezier(.18,.72,.24,1) both;animation-delay:calc(var(--reel,0)*115ms);filter:brightness(1.12);will-change:transform,filter}
-.tile.reel-spin img{animation:reelBlur .18s linear infinite;will-change:transform,opacity}
-@keyframes reelSpin{0%{transform:translateY(-72%);filter:blur(2.2px) brightness(1.35)}72%{transform:translateY(-8%);filter:blur(.6px) brightness(1.12)}100%{transform:translateY(0);filter:none}}
-@keyframes reelBlur{0%{transform:translateY(-10%);opacity:.72}100%{transform:translateY(10%);opacity:1}}
+.tile.reel-spin{overflow:hidden;animation:reelSpin .42s ease-out both;animation-delay:calc(var(--reel,0)*45ms);will-change:transform,opacity}
+.tile.reel-spin img{animation:none;will-change:auto}
+@keyframes reelSpin{0%{transform:translateY(-12%);opacity:.82;filter:brightness(1.12)}100%{transform:translateY(0);opacity:1;filter:none}}
 @keyframes winPulse{from{filter:brightness(1.05)}to{filter:brightness(1.65)}}
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
-@keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.72;filter:blur(1px)}72%{opacity:1;filter:blur(0)}100%{transform:translateY(0);opacity:1;filter:none}}
+@keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.9}100%{transform:translateY(0);opacity:1}}
 .status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .win-line{flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
 .controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
@@ -116,6 +115,11 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
    cell.style.setProperty('--fall-from',fromOffset+'%');
   }
   if(id===null||id===undefined||id==='empty'){$('board').appendChild(cell);return;}
+  if(id==='scatter'){
+   cell.classList.add('scatter-fallback');
+   cell.innerHTML='<div class="scatter-coin"><b>✦</b><small>SCATTER</small></div>';
+   $('board').appendChild(cell);return;
+  }
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
   const artKey=cardKey==='goldenjoker'?'goldenJoker':cardKey==='goldencard'?'ace':cardKey;
@@ -128,13 +132,20 @@ function update(){
  $('betMinus').disabled=busy||bet<=1;$('betPlus').disabled=busy||bet>=1000000;
 }
 function setCombo(value,isFree){
- comboX=Number(value||1);
- const factor=isFree?2:1,base=comboX/factor;
+ const factor=isFree?2:1;
+ const allowed=[1,2,3,5];
+ const raw=Number(value)||factor;
+ comboX=Math.max(factor,raw);
+ const base=comboX/factor;
+ const shown=allowed.includes(base)?base:allowed.reduce((best,n)=>Math.abs(n-base)<Math.abs(best-base)?n:best,1);
  document.querySelectorAll('.multi').forEach(b=>{
   const step=Number(b.dataset.x);
+  const active=step===shown;
   b.textContent='×'+(step*factor);
-  b.classList.toggle('active',step===base);
+  b.classList.toggle('active',active);
+  b.setAttribute('aria-current',active?'true':'false');
  });
+ $('comboMeter').setAttribute('aria-label','Combo multiplier ×'+(shown*factor));
 }
 async function request(path,body){
  const token=localStorage.getItem('tk777_token')||'';
