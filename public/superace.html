@@ -46,13 +46,13 @@
  <div class="ctrl"><button class="round" id="auto" type="button">⟳</button>Autoplay</div>
  <div class="ctrl"><button class="round" id="turbo" type="button">ϟ</button>Turbo</div>
 </section>
-<div class="balance">Main Balance&nbsp; <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
+<div class="balance">Main Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
 </main>
 <script>
 (function(){
 'use strict';
 const $=id=>document.getElementById(id),gameId=new URLSearchParams(location.search).get('gameId')||'super-ace';
-const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const definitions={
  ace:{rank:'A',suit:'♠',name:'ACE',tone:'#153d69'},
