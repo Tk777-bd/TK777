@@ -170,6 +170,25 @@ function setCombo(value,isFree){
  });
  $('comboMeter').setAttribute('aria-label','Combo multiplier ×'+(shown*factor));
 }
+function highlightExisting(wins){
+ const hit=new Set(wins||[]);
+ [...$('board').children].forEach((cell,index)=>{
+  cell.classList.toggle('win',hit.has(index));
+  cell.classList.toggle('dim',hit.size>0&&!hit.has(index));
+ });
+}
+async function refillExisting(grid,cells){
+ const board=[...$('board').children];
+ for(const ix of [...new Set((cells||[]).map(Number).filter(n=>n>=0&&n<20))]){
+  const cell=board[ix];if(!cell)continue;
+  setCardFace(cell,grid[ix]);
+  cell.style.setProperty('--fall-from','-115%');
+  cell.classList.add('drop');
+  await sleep(turbo?45:95);
+  cell.classList.remove('drop');
+ }
+ visibleGrid=[...grid];
+}
 async function request(path,body){
  const token=localStorage.getItem('tk777_token')||'';
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
@@ -277,7 +296,7 @@ async function play(){
      continue;
     }
     if(frame.type==='win'){
-     draw(frame.grid,frame.wins||[]);
+     highlightExisting(frame.wins||[]);
      $('status').textContent='WINNING CARDS';
      await sleep(turbo?240:650);continue;
     }
@@ -300,15 +319,15 @@ async function play(){
      const arriving=[...new Set((frame.cells||[]).map(Number).filter(ix=>ix>=0&&ix<20))];
      $('status').textContent='NEW CARDS FROM ABOVE';
      // Render the complete refill once; repeated full-board redraws caused visible card shaking.
-     draw(frame.grid,[],arriving);
-     await sleep(turbo?220:420);
+     await refillExisting(frame.grid,arriving);
+     await sleep(turbo?100:220);
      continue;
     }
     draw(frame.grid,frame.wins||[]);
     await sleep(turbo?240:650);
    }
-   // Keep the final settled board; do not redraw every card together.
-   if(Array.isArray(result.finalGrid)&&result.finalGrid.length===20)draw(result.finalGrid);
+   // Keep the settled DOM intact when the final board is already displayed.
+   if(Array.isArray(result.finalGrid)&&result.finalGrid.length===20&&JSON.stringify(visibleGrid)!==JSON.stringify(result.finalGrid))draw(result.finalGrid);
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
   totalWin+=Math.max(0,Number(result.payout||0));$('win').textContent=fmt(totalWin);
