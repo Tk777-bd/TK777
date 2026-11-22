@@ -260,16 +260,19 @@ async function animateAnticipationRow(grid){
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
 }
+let pendingSpinId=null;
 async function play(){
  if(busy)return;
+ if(!pendingSpinId)pendingSpinId=crypto.randomUUID();
+ const requestId=pendingSpinId;
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
  if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
  busy=true;$('spin').disabled=true;update();$('status').textContent='ওপর থেকে কার্ড পড়ছে...';
  try{
-  const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0}).then(value=>({value}),error=>({error}));
+  const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0,requestId}).then(value=>({value}),error=>({error}));
   // Keep the landed board untouched until the server returns the real result.
-  const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
+  const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;pendingSpinId=null;
   const firstBoard=(result.frames||[]).find(frame=>frame.type==='win')?.grid||result.finalGrid;
   // Animate the initial result once as individual falling cards; no reel spinning.
   if(firstBoard)await animateReels(firstBoard);
