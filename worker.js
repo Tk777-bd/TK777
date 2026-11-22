@@ -1121,7 +1121,10 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:20},(_,ix)=>pickCard(ix%5)),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0,scatterTriggered=scatterCount>=3;
+      let grid=Array.from({length:20},(_,ix)=>pickCard(ix%5)),cascadeX=1,totalWin=0,cascadeCount=0;
+      const scatterCount=grid.filter(x=>x==="scatter").length;
+      const scatterTriggered=scatterCount>=3;
+      let maxCascadeX=0;
       const frames=[];
       const comboSteps=[1,2,3,5];
       for(let step=0;step<8;step++){
@@ -1132,21 +1135,38 @@ async function route(req, env) {
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
-        // Winning Golden Cards transform in place and persist as wild Jokers through later cascades.
+        // Golden Cards convert to wild Golden Jokers; converted Jokers may be removed in later cascades.
         const goldenCells=found.wins.filter(ix=>grid[ix]==="goldenCard");
-        const persistent=new Set(found.wins.filter(ix=>grid[ix]==="goldenCard"||grid[ix]==="goldenJoker"));
-        const removed=[...hit].filter(ix=>!persistent.has(ix));
-        const next=[...grid];
-        // JILI-style cascade: winning cards flip out, then only those exact positions are refilled.
-        // Golden Cards flip into persistent Golden Jokers and stay in their original cells.
-        for(const ix of goldenCells)next[ix]="goldenJoker";
-        if(goldenCells.length)frames.push({type:"golden",grid:[...next],cells:goldenCells,cascadeX});
-        if(removed.length)frames.push({type:"replaceOut",grid:[...next],cells:removed,cascadeX});
-        for(const ix of removed)next[ix]=pickCard(ix%5);
-        grid=next;
-        scatterCount=Math.max(scatterCount,grid.filter(x=>x==="scatter").length);
-        if(scatterCount>=3)scatterTriggered=true;
-        if(removed.length)frames.push({type:"replace",grid:[...grid],cells:removed,cascadeX});
+        const nextAfterGolden=[...grid];
+        for(const ix of goldenCells)nextAfterGolden[ix]="goldenJoker";
+        if(goldenCells.length)frames.push({type:"golden",grid:[...nextAfterGolden],cells:goldenCells,cascadeX});
+        const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard");
+        if(!removed.length){grid=nextAfterGolden;continue;}
+        frames.push({type:"remove",grid:[...grid],cells:removed,cascadeX});
+        const removedSet=new Set(removed);
+        const compacted=Array(20).fill(null),moved=[],refillCells=[];
+        // Each reel compacts independently: survivors fall to the bottom; fresh cards enter from above.
+        for(let col=0;col<5;col++){
+          const survivors=[];
+          for(let row=3;row>=0;row--){
+            const oldIx=row*5+col;
+            if(!removedSet.has(oldIx)){
+              const newRow=3-survivors.length,newIx=newRow*5+col;
+              survivors.push({id:nextAfterGolden[oldIx],oldIx,newIx});
+            }
+          }
+          const emptyCount=4-survivors.length;
+          for(let row=0;row<emptyCount;row++)refillCells.push(row*5+col);
+          for(const item of survivors){
+            compacted[item.newIx]=item.id;
+            if(item.oldIx!==item.newIx)moved.push(item.newIx);
+          }
+        }
+        frames.push({type:"drop",grid:[...compacted],cells:moved,cascadeX});
+        const refilled=[...compacted];
+        for(const ix of refillCells)refilled[ix]=pickCard(ix%5);
+        grid=refilled;
+        frames.push({type:"refill",grid:[...grid],cells:refillCells,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
