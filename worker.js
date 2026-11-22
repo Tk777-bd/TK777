@@ -1205,9 +1205,30 @@ async function route(req, env) {
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
       const freeSpinAward=scatterTriggered?(isFreeSpin?5:10):0;
       freeSpins+=freeSpinAward;
-      await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
-      if(!isFreeSpin){const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);}
+      const requestId=String(body.requestId||"").trim();
+      if(!/^[0-9a-f-]{36}$/i.test(requestId))return json({error:"Spin request ID সঠিক নয়"},400);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS superace_requests (user_id TEXT NOT NULL,request_id TEXT NOT NULL,status TEXT NOT NULL,response_json TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(user_id,request_id))").run();
+      await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS superace_one_processing_per_user ON superace_requests(user_id) WHERE status='processing'").run();
+      const prior=await env.DB.prepare("SELECT status,response_json FROM superace_requests WHERE user_id=? AND request_id=?").bind(user.id,requestId).first();
+      if(prior){
+        if(prior.status==="completed"&&prior.response_json){let cached;try{cached=JSON.parse(prior.response_json)}catch(_){cached=null;}if(cached)return json(cached);}
+        return json({error:"এই Spin-এর ফলাফল প্রক্রিয়াধীন। একই Spin আবার পাঠানো হয়েছে; একটু অপেক্ষা করুন।"},409);
+      }
+      const lock=await env.DB.prepare("INSERT OR IGNORE INTO superace_requests(user_id,request_id,status) VALUES(?,?,'processing')").bind(user.id,requestId).run();
+      if(!lock.meta.changes){
+        const same=await env.DB.prepare("SELECT status,response_json FROM superace_requests WHERE user_id=? AND request_id=?").bind(user.id,requestId).first();
+        if(same?.status==="completed"&&same.response_json){try{return json(JSON.parse(same.response_json));}catch(_){}}
+        return json({error:"আগের Spin এখনো প্রক্রিয়াধীন। একটু অপেক্ষা করুন।"},409);
+      }
       try{
+        if(!isFreeSpin){
+          const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();
+          if(!debit.meta.changes){
+            await env.DB.prepare("DELETE FROM superace_requests WHERE user_id=? AND request_id=?").bind(user.id,requestId).run();
+            return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);
+          }
+        }
+        await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
         if(payout)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(payout,user.id).run();
         const bal=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first(),entries=[];
         await ensureRebateSchema(env);
@@ -1215,8 +1236,14 @@ async function route(req, env) {
         if(payout)entries.push(env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়"));
         entries.push(env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)").bind(roundId,user.id,gameId,"superace",isFreeSpin?0:stake,multiplier,payout));
         await env.DB.batch(entries);
-        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,maxCascadeX,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount,freeSpinAward});
-      }catch(error){if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();throw error;}
+        const responseData={multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,maxCascadeX,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount,freeSpinAward};
+        await env.DB.prepare("UPDATE superace_requests SET status='completed',response_json=? WHERE user_id=? AND request_id=?").bind(JSON.stringify(responseData),user.id,requestId).run();
+        return json(responseData);
+      }catch(error){
+        await env.DB.prepare("UPDATE superace_requests SET status='failed' WHERE user_id=? AND request_id=?").bind(user.id,requestId).run();
+        if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();
+        throw error;
+      }
     }
 
     /* MINI GAMES */
