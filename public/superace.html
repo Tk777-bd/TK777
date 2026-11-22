@@ -127,7 +127,7 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
  grid.forEach((rawId,index)=>{
   const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
   const cell=document.createElement('div');
-  cell.className='tile'++(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
+  cell.className='tile'+(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
   cell.style.setProperty('--reel',String(index%5));
   if(falling.has(index)){
    const move=moveByTarget.get(index);
@@ -207,7 +207,7 @@ async function loadBalance(){
 }
 function setCardFace(cell,rawId){
  const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
- cell.className='tile'++(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'');
+ cell.className='tile'+(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'');
  cell.innerHTML='';
  if(id===null||id===undefined||id==='empty'){cell.classList.add('empty');return;}
  const img=document.createElement('img');
