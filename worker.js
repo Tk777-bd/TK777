@@ -1101,9 +1101,10 @@ async function route(req, env) {
       // Ordinary wild cards never drop. A winning yellow K creates a temporary wild.
       const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.10];
       const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
-      // Eight pale-gold copies drop as matching symbols; golden K retains its original reel restriction.
+      // All eight distinct golden cards can appear only on the middle three reels (columns 2-4).
       const goldIds={ace:"goldenAce",king:"goldenCard",queen:"goldenQueen",jack:"goldenJack",spade:"goldenSpade",heart:"goldenHeart",diamond:"goldenDiamond",club:"goldenClub"};
-      const pickCard=col=>{if(col>=1&&col<=3&&rand()<.065)return "goldenCard";if(rand()<.065){const pool=["ace","queen","jack","spade","heart","diamond","club"];return goldIds[pool[Math.floor(rand()*pool.length)]];}return pickBaseCard();};
+      const goldPool=Object.values(goldIds);
+      const pickCard=col=>{if(col>=1&&col<=3&&rand()<.13)return goldPool[Math.floor(rand()*goldPool.length)];return pickBaseCard();};
       const findWins=grid=>{
         const groups=[],all=[];
         for(const symbol of cards.filter(c=>c.id!=="scatter")){
@@ -1153,8 +1154,8 @@ async function route(req, env) {
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
-        // Only the yellow K (Golden K) in a winning group becomes a temporary wild in that exact cell.
-        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>grid[ix]==="goldenCard");
+        // Only golden cards that are part of a winning group become wild, in their exact cells.
+        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>String(grid[ix]||"").startsWith("golden"));
         const nextAfterGolden=[...grid];
         if(goldenCells.length){
           for(const ix of goldenCells)nextAfterGolden[ix]="wild";
