@@ -148,7 +148,7 @@ function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.ran
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
  visibleGrid=Array.isArray(grid)?[...grid]:[];
  const hit=new Set(wins||[]),transforms=new Set((goldenCells||[]).map(Number)),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
- for(const index of transforms){if(visibleGrid[index]==='goldenCard')visibleGrid[index]='wild';}
+ for(const index of transforms){if(String(visibleGrid[index]||'').startsWith('golden'))visibleGrid[index]='wild';}
  const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
  grid.forEach((rawId,index)=>{
@@ -257,7 +257,7 @@ function transformYellowKCells(cells){
  const changed=[];
  for(const rawIndex of (cells||[])){
   const index=Number(rawIndex),cell=boardCells[index];
-  if(!cell||!visibleGrid||!(visibleGrid[index]==='goldenCard'||String(visibleGrid[index]||'').startsWith('golden')))continue;
+  if(!cell||!visibleGrid||!String(visibleGrid[index]||'').startsWith('golden'))continue;
   const img=cell.querySelector('img');
   if(!img)continue;
   img.alt='wild';img.src=art.wild;cell.classList.remove('golden-card','golden-copy');cell.classList.add('golden-transform');
