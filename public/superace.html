@@ -234,7 +234,7 @@ loadBalance();
 function startTk777WelcomeAudio(){
  if(sessionStorage.getItem('tk777_welcome_played'))return;
  sessionStorage.setItem('tk777_welcome_played','1');
- const audio=new Audio('/welcome-tk777.mp3');audio.volume=0.9;
+ const audio=new Audio(window.parent.TK777_WELCOME_AUDIO);audio.volume=0.9;
  audio.play().catch(()=>sessionStorage.removeItem('tk777_welcome_played'));
 }
 document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
