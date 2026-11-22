@@ -4,13 +4,17 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#02040b;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center}
 .game{width:min(96vw,500px);height:94dvh;min-height:0;margin:auto;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:radial-gradient(ellipse at 50% 43%,#174d58 0,#092b3b 48%,#050a19 100%);padding:0 0 3px;border:1px solid #28394b;border-radius:9px;box-shadow:0 8px 28px #000b}
-.top{height:76px;flex:0 0 76px;position:relative;text-align:center;background:linear-gradient(180deg,#070a18 0%,#111528 72%,#281515 73%,#6e2d19 83%,#25100c 100%);border-bottom:3px solid #d28a36;box-shadow:0 4px 12px #000b}
+.top{height:28%;flex:0 0 28%;min-height:185px;position:relative;text-align:center;overflow:visible;background:radial-gradient(ellipse at 50% 48%,#1b1724 0%,#090b18 65%,#03050c 100%);border-bottom:12px ridge #8b4a21;box-shadow:0 7px 16px #000c}
+.top:before{content:"";position:absolute;left:0;right:0;top:42%;height:31%;background:linear-gradient(180deg,#28130e 0%,#78391d 15%,#a45a2b 42%,#532411 67%,#1d0c08 100%);border-top:4px solid #d08a47;border-bottom:5px solid #32130b;box-shadow:0 5px 12px #000b}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(90deg,#382019,#e2ad56 18%,#67351a 50%,#e0a34c 82%,#382019);border-top:2px solid #f4d18a}
 .close{position:absolute;z-index:4;left:8px;top:8px;width:25px;height:25px;border:1px solid #b9a17c;border-radius:50%;background:#171b28;color:#fff;font-size:20px;line-height:18px;box-shadow:0 1px 5px #000}
-.brand{display:block;position:absolute;bottom:8px;width:100%;font:bold 22px Georgia,serif;letter-spacing:.3px;color:#ffe6a0;text-shadow:0 2px #541b0c,0 0 4px #ffb43c,0 0 10px #ff8d20}
-.multis{height:36px;flex:0 0 36px;width:min(82%,330px);margin:-1px auto 0;position:relative;z-index:3;display:flex;justify-content:space-around;align-items:center;border:2px solid #f5c86c;border-radius:20px;background:linear-gradient(180deg,#fff0a8 0%,#ffb52f 48%,#a94b0a 100%);box-shadow:0 2px 0 #55250b,0 0 12px #ff9e27}
-.multi{border:0;background:transparent;color:#63310c;font-weight:900;font-size:16px;padding:4px 9px;border-radius:15px;min-width:42px;text-align:center;opacity:.82;transition:all .2s;text-shadow:0 1px #ffe8a0}
+.brand{display:block;position:absolute;z-index:2;top:57%;bottom:auto;width:100%;font:bold clamp(28px,7vw,42px) Georgia,serif;letter-spacing:.3px;color:#ffe6a0;text-shadow:0 3px #541b0c,0 0 5px #ffb43c,0 0 14px #ff8d20}
+.buy-bonus{position:absolute;z-index:3;right:9px;top:8px;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;background:radial-gradient(circle at 35% 25%,#fff58a,#ff9b08 42%,#bb1a08 72%,#4a0905);border:3px solid #ffd35d;color:#fff6b0;font-weight:1000;font-size:13px;line-height:12px;text-shadow:0 2px 3px #740800;box-shadow:0 2px 8px #000b,0 0 12px #f90}
+.side-menu{position:absolute;z-index:3;left:-13px;top:49%;padding:12px 13px 12px 17px;border:2px solid #b68a3b;border-radius:0 12px 12px 0;background:linear-gradient(90deg,#15121a,#57411e);color:#ffe08a;font-weight:900;writing-mode:vertical-rl;text-orientation:mixed;box-shadow:0 2px 8px #000}
+.multis{height:58px;flex:0 0 58px;width:min(82%,350px);margin:-30px auto 0;position:relative;z-index:4;display:flex;justify-content:space-around;align-items:center;border:3px solid #f5c86c;border-radius:30px;background:linear-gradient(180deg,#fff0a8 0%,#ffb52f 48%,#a94b0a 100%);box-shadow:0 3px 0 #55250b,0 0 14px #ff9e27}
+.multi{border:0;background:transparent;color:#63310c;font-weight:900;font-size:clamp(20px,5vw,30px);padding:4px 9px;border-radius:15px;min-width:42px;text-align:center;opacity:.82;transition:all .2s;text-shadow:0 1px #ffe8a0}
 .multi.active{background:linear-gradient(180deg,#fffbd1,#ffc23b 65%,#f08a16);color:#6b2107;box-shadow:inset 0 1px 2px #fff,0 0 9px #fff0a5;opacity:1;transform:scale(1.08)}
-.stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:7px 5px 5px;margin-top:0;background:linear-gradient(180deg,#0c2738 0%,#0d4551 45%,#082b39 100%);border-top:5px solid #8b9294;border-bottom:5px solid #a95a24;box-shadow:inset 0 0 18px #000a,0 5px 12px #0008;position:relative}
+.stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 7px 5px;margin-top:0;background:radial-gradient(ellipse at 50% 45%,#12606b 0%,#0b3947 58%,#071b2c 100%);border-top:5px solid #8b9294;border-bottom:8px ridge #a95a24;box-shadow:inset 0 0 18px #000a,0 5px 12px #0008;position:relative}
 .stage:before,.stage:after{content:"";position:absolute;left:0;right:0;height:5px;background:linear-gradient(90deg,#424a4d,#d7d6c8 22%,#777d7a 50%,#eee4c8 78%,#424a4d);box-shadow:0 1px 3px #000}
 .stage:before{top:-5px}.stage:after{bottom:-5px}
 .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:min(100%,420px);height:100%;max-height:100%;max-width:100%;aspect-ratio:.88/1;margin:auto;background:#4b5356;align-items:stretch;justify-items:stretch;padding:2px;border:2px solid #aeb8b8;box-shadow:0 0 0 2px #27343b,0 5px 16px #000b}
@@ -40,22 +44,22 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.9}100%{transform:translateY(0);opacity:1}}
 .status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .win-line{flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
-.controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
+.controls{flex:0 0 105px;min-height:105px;display:flex;align-items:center;justify-content:space-around;padding:7px 7px 8px;background:linear-gradient(180deg,#60351d 0%,#2b1a13 28%,#100d13 76%,#070a12 100%);border-top:5px ridge #b57937;border-bottom:3px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
 .ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:#f6dfa6;min-width:35px;text-shadow:0 1px #000}
-.round{width:27px;height:27px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
 .bet-control{display:flex;flex-direction:row;gap:3px;align-items:center;min-width:98px}
 .bet-value{min-width:34px;text-align:center;display:flex;flex-direction:column;gap:2px}
 .bet-value small{font-size:8px;color:#f6dfa6}.bet-value b{font-size:12px;color:#fff}
-.spin{width:57px;height:57px;flex:0 0 57px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fffbd0,#ffc02b 48%,#a64a05 82%);color:#672605;font-weight:1000;font-size:12px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a,inset 0 0 0 2px #fff8}
+.spin{width:104px;height:104px;flex:0 0 104px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fffbd0,#ffc02b 48%,#a64a05 82%);color:#672605;font-weight:1000;font-size:12px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a,inset 0 0 0 2px #fff8}
 .spin:disabled,.round:disabled{opacity:.5}
-.balance{text-align:center;background:linear-gradient(90deg,#090b11,#322018,#090b11);padding:5px 4px 2px;color:#f2dca5;font-size:10px;border-top:1px solid #795a30;flex:0 0 24px}
-.balance b{font-size:13px;color:white}
+.balance{text-align:center;background:linear-gradient(90deg,#080a12,#3a2417,#080a12);padding:7px 4px 4px;color:#f2dca5;font-size:14px;border-top:2px solid #795a30;flex:0 0 34px}
+.balance b{font-size:17px;color:white}
 .note{text-align:center;background:#090b11;color:#b8ad98;font-size:8px;padding:1px 0 3px;flex:0 0 14px}
 @media(min-width:500px){.game{width:min(94vw,500px);height:94dvh;margin:auto}.board{width:min(100%,420px)}}
-@media(max-height:590px){.top{height:62px;flex-basis:62px}.stage{padding:4px}.controls{flex-basis:58px;min-height:58px}.spin{width:49px;height:49px;flex-basis:49px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
+@media(max-height:700px){.top{height:24%;flex-basis:24%;min-height:145px}.controls{flex-basis:82px;min-height:82px}.spin{width:76px;height:76px;flex-basis:76px}.round{width:34px;height:34px}.multis{height:48px;flex-basis:48px;margin-top:-24px}.stage{padding:4px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
 </style></head><body><main class="game">
-<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button><div class="brand">SuperAce</div></header>
+<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button><div class="buy-bonus">BUY<br>BONUS</div><div class="side-menu">MENU</div><div class="brand">SuperAce</div></header>
 <div class="multis" id="comboMeter" aria-label="Combo multiplier"><div class="multi active" data-x="1">×1</div><div class="multi" data-x="2">×2</div><div class="multi" data-x="3">×3</div><div class="multi" data-x="5">×5</div></div>
 <section class="stage"><div class="board" id="board"></div></section>
 <div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">WIN&nbsp; <span id="win">0.000</span></div>
