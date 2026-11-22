@@ -120,7 +120,8 @@ const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
  visibleGrid=Array.isArray(grid)?[...grid]:[];
- const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
+ const hit=new Set(wins||[]),transforms=new Set((goldenCells||[]).map(Number)),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
+ for(const index of transforms){if(visibleGrid[index]==='goldenCard')visibleGrid[index]='wild';}
  const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
  grid.forEach((rawId,index)=>{
@@ -141,7 +142,7 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
   }
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
-  const artKey=cardKey==='goldencard'?'king':cardKey;
+  const artKey=transforms.has(index)?'wild':cardKey==='goldencard'?'king':cardKey;
   img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>★</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
   img.src=art[artKey]||art.ace;cell.appendChild(img);$('board').appendChild(cell);
  });
@@ -306,7 +307,7 @@ async function play(){
      await sleep(turbo?240:650);continue;
     }
     if(frame.type==='golden'){
-     transformYellowKCells(frame.cells||[]);
+     draw(frame.grid,[],[],false,frame.cells||[]);
      $('status').textContent='✨ YELLOW K → WILD';
      await sleep(turbo?260:620);continue;
     }
