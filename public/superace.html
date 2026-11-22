@@ -270,6 +270,26 @@ async function animateAnticipationRow(grid){
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
 }
+let cardSfxContext=null;
+function playCardCutSound(){
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return;
+  if(!cardSfxContext)cardSfxContext=new AudioCtx();
+  if(cardSfxContext.state==='suspended')cardSfxContext.resume();
+  const ctx=cardSfxContext,now=ctx.currentTime,duration=.16;
+  const buffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*duration),ctx.sampleRate);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
+  const noise=ctx.createBufferSource();noise.buffer=buffer;
+  const filter=ctx.createBiquadFilter();filter.type='bandpass';filter.frequency.setValueAtTime(1750,now);filter.Q.value=.7;
+  const gain=ctx.createGain();gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.018);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+  noise.connect(filter);filter.connect(gain);gain.connect(ctx.destination);noise.start(now);noise.stop(now+duration);
+  const tick=ctx.createOscillator(),tickGain=ctx.createGain();tick.type='triangle';tick.frequency.setValueAtTime(620,now);tick.frequency.exponentialRampToValueAtTime(260,now+.075);
+  tickGain.gain.setValueAtTime(.0001,now);tickGain.gain.exponentialRampToValueAtTime(.055,now+.008);tickGain.gain.exponentialRampToValueAtTime(.0001,now+.085);
+  tick.connect(tickGain);tickGain.connect(ctx.destination);tick.start(now);tick.stop(now+.09);
+ }catch(_){}
+}
 let pendingSpinId=null;
 async function play(){
  if(busy)return;
@@ -312,6 +332,7 @@ async function play(){
      await sleep(turbo?260:620);continue;
     }
     if(frame.type==='remove'){
+     playCardCutSound();
      draw(frame.grid,[],[],false,[],frame.cells||[],'out');
      $('status').textContent='WINNING CARDS · REMOVED';
      await sleep(turbo?140:300);continue;
