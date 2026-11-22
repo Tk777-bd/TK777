@@ -138,13 +138,22 @@ function setCombo(value,isFree){
 }
 async function request(path,body){
  const token=localStorage.getItem('tk777_token')||'';
- const response=await fetch('/api'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
- const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){throw Error('সার্ভার থেকে সঠিক উত্তর পাওয়া যায়নি')}
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+ let response,raw;
+ try{
+  response=await fetch('/api'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined,signal:controller.signal});
+  raw=await response.text();
+ }catch(error){
+  if(error&&error.name==='AbortError')throw Error('সার্ভার উত্তর দিতে দেরি করছে। আবার চেষ্টা করুন।');
+  throw Error('সার্ভারের সঙ্গে সংযোগ হচ্ছে না। আবার চেষ্টা করুন।');
+ }finally{clearTimeout(timeout)}
+ let data;try{data=JSON.parse(raw)}catch(_){throw Error('সার্ভার থেকে সঠিক উত্তর পাওয়া যায়নি')}
  if(!response.ok)throw Error(data.error||'গেম চালু করা যায়নি');return data;
 }
 async function loadBalance(){
- try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins)$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';draw(randomBoard())}
- catch(e){$('status').textContent=e.message;$('balance').textContent='Login required'}
+ draw(randomBoard());
+ try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins)$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER'}
+ catch(e){$('status').textContent=e.message;$('balance').textContent='Login required';if(!$('board').children.length)draw(randomBoard())}
 }
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
