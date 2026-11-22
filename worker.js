@@ -1085,7 +1085,7 @@ async function route(req, env) {
       return json({freeSpins:Number(state?.free_spins||0),betAmount:Number(state?.bet_amount||50),betMultiplier:Number(state?.bet_multiplier||1)});
     }
 
-    /* SUPER ACE: free 5x4 / 1024-ways inspired game with server-settled virtual coins */
+    /* SUPER ACE: 5x4 ways game with Golden Card -> persistent Golden Joker cascades */
     if (p === "/api/play" && method === "POST") {
       const body = await req.json();
       const gameId = String(body.gameId || "");
@@ -1099,12 +1099,21 @@ async function route(req, env) {
       if (!Number.isSafeInteger(bet) || bet < 1 || ![1,2,3,5].includes(betMultiplier) || bet * betMultiplier > 1000000) return json({ error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন" }, 400);
       const cards=[{id:"ace",rate:5},{id:"king",rate:4},{id:"queen",rate:3.5},{id:"jack",rate:3},{id:"spade",rate:2},{id:"heart",rate:2},{id:"diamond",rate:2},{id:"club",rate:2},{id:"wild",rate:0},{id:"scatter",rate:0}];
       const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.28,.32];
-      const pickCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
+      const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
+      // Golden Cards land only on reels 2, 3 and 4, using the user's existing card artwork.
+      const pickCard=col=>(col>=1&&col<=3&&rand()<.065)?"goldenCard":pickBaseCard();
       const findWins=grid=>{
         const groups=[],all=[];
         for(const symbol of cards.filter(c=>!["wild","scatter"].includes(c.id))){
           const reels=[];
-          for(let col=0;col<5;col++){const cells=[];for(let row=0;row<4;row++){const ix=row*5+col;if(grid[ix]===symbol.id||grid[ix]==="wild")cells.push(ix);}reels.push(cells);}
+          for(let col=0;col<5;col++){
+            const cells=[];
+            for(let row=0;row<4;row++){
+              const ix=row*5+col,card=grid[ix];
+              if(card===symbol.id||card==="wild"||card==="goldenCard"||card==="goldenJoker")cells.push(ix);
+            }
+            reels.push(cells);
+          }
           let ways=1,reelCount=0;
           for(const cells of reels){if(!cells.length)break;ways*=cells.length;reelCount++;}
           if(reelCount>=3){const cells=reels.slice(0,reelCount).flat();groups.push({id:symbol.id,cells,ways,reels:reelCount,rate:symbol.rate});all.push(...cells);}
@@ -1112,10 +1121,10 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0,scatterTriggered=scatterCount>=3;
+      let grid=Array.from({length:20},(_,ix)=>pickCard(ix%5)),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0,scatterTriggered=scatterCount>=3;
       const frames=[];
       const comboSteps=[1,2,3,5];
-      for(let step=0;step<6;step++){
+      for(let step=0;step<8;step++){
         const found=findWins(grid),hit=new Set(found.wins);
         if(!found.groups.length)break;
         cascadeX=comboSteps[Math.min(cascadeCount,3)]*(isFreeSpin?2:1);
@@ -1123,13 +1132,27 @@ async function route(req, env) {
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
+        // Winning Golden Cards transform in place and persist as wild Jokers through later cascades.
+        const goldenCells=found.wins.filter(ix=>grid[ix]==="goldenCard");
+        const persistent=new Set(found.wins.filter(ix=>grid[ix]==="goldenCard"||grid[ix]==="goldenJoker"));
+        const removed=new Set([...hit].filter(ix=>!persistent.has(ix)));
         const next=[...grid],fresh=[];
+        for(const ix of goldenCells)next[ix]="goldenJoker";
+        if(goldenCells.length)frames.push({type:"golden",grid:[...next],cells:goldenCells,cascadeX});
         for(let col=0;col<5;col++){
-          const survivors=[];for(let row=3;row>=0;row--){const ix=row*5+col;if(!hit.has(ix))survivors.push(grid[ix]);}
-          while(survivors.length<4)survivors.push(pickCard());
-          for(let row=3;row>=0;row--){const ix=row*5+col,card=survivors[3-row];if(grid[ix]!==card)fresh.push(ix);next[ix]=card;}
+          const survivors=[];
+          for(let row=3;row>=0;row--){const ix=row*5+col;if(!removed.has(ix))survivors.push(next[ix]);}
+          while(survivors.length<4)survivors.push(pickCard(col));
+          for(let row=3;row>=0;row--){
+            const ix=row*5+col,card=survivors[3-row];
+            if(next[ix]!==card)fresh.push(ix);
+            next[ix]=card;
+          }
         }
-        grid=next;scatterCount=Math.max(scatterCount,grid.filter(x=>x==="scatter").length);if(scatterCount>=3)scatterTriggered=true;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
+        grid=next;
+        scatterCount=Math.max(scatterCount,grid.filter(x=>x==="scatter").length);
+        if(scatterCount>=3)scatterTriggered=true;
+        frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
