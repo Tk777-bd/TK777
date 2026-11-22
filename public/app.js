@@ -1540,6 +1540,7 @@ async function pollCrashState() {
       }
       if (resetGraph) resetGraph.classList.remove('graph-crashed');
       if (multi) multi.textContent = '1.00x';
+      updateFlightGlow(1);
 
       updateFlightCurve(1);
 
@@ -1596,6 +1597,7 @@ async function pollCrashState() {
       crashVisualStartMs = null;
       crashVisualValue = multiplier;
       if (multi) multi.textContent = multiplier.toFixed(2)+'x';
+      updateFlightGlow(multiplier);
       updateFlightCurve(multiplier);
       updateCashoutAmounts(multiplier);
 
@@ -1684,6 +1686,23 @@ function setCrashVisualTarget(target,startMs) {
   }
 }
 
+function updateFlightGlow(multiplier) {
+  const stage = $('#aviatorStage');
+  if (!stage) return;
+  const value = Number(multiplier) || 1;
+  let color = 'rgba(0,0,0,0)';
+  let spread = 0.72;
+  if (value >= 100) { color = 'rgba(255,190,70,.30)'; spread = 1.65; }
+  else if (value >= 50) { color = 'rgba(225,90,190,.27)'; spread = 1.55; }
+  else if (value >= 20) { color = 'rgba(65,210,175,.26)'; spread = 1.48; }
+  else if (value >= 10) { color = 'rgba(255,155,65,.25)'; spread = 1.38; }
+  else if (value >= 5) { color = 'rgba(85,145,255,.24)'; spread = 1.28; }
+  else if (value >= 3) { color = 'rgba(255,75,95,.23)'; spread = 1.12; }
+  else if (value >= 2) { color = 'rgba(170,105,255,.22)'; spread = .94; }
+  stage.style.setProperty('--flight-glow-color', color);
+  stage.style.setProperty('--flight-glow-spread', String(spread));
+}
+
 function renderCrashVisual(now) {
   if (!$('#aviatorStage') || crashVisualStartMs === null) {
     crashVisualFrame = null;
@@ -1697,6 +1716,7 @@ function renderCrashVisual(now) {
     ? Math.min(rawValue,crashVisualCrashMultiplier)
     : rawValue;
   crashVisualValue = value;
+  updateFlightGlow(value);
 
   const multi = $('#multi');
   if (multi) multi.textContent = value.toFixed(2)+'x';
