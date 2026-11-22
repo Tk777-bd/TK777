@@ -582,9 +582,10 @@ body{background:#063b39}
   box-shadow:inset 0 0 28px #000,0 1px 4px #000;
 }
 .aviator-rays{
-  position:absolute;inset:-50%;z-index:0;opacity:.9;pointer-events:none;
-  background:repeating-conic-gradient(from 0deg at 50% 50%,#242424 0deg 7deg,#090909 7deg 15deg);
-  transform:rotate(-10deg);mask-image:radial-gradient(ellipse at center,#000 5%,#000b 54%,transparent 78%);
+  position:absolute;inset:0;z-index:0;opacity:.9;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 0% 100%,#242424 0deg 7deg,#090909 7deg 15deg);
+  transform:rotate(-10deg);transform-origin:0% 100%;
+  mask-image:radial-gradient(ellipse at 0% 100%,#000 5%,#000b 54%,transparent 78%);
 }
 .aviator-stage:before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
