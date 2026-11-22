@@ -230,4 +230,13 @@ $('betPlus').addEventListener('click',()=>{if(busy)return;bet=Math.min(1000000,b
 window.addEventListener('beforeunload',()=>{auto=false});
 loadBalance();
 })();
+
+function startTk777WelcomeAudio(){
+ if(sessionStorage.getItem('tk777_welcome_played'))return;
+ sessionStorage.setItem('tk777_welcome_played','1');
+ const audio=new Audio('/welcome-tk777.mp3');audio.volume=0.9;
+ audio.play().catch(()=>sessionStorage.removeItem('tk777_welcome_played'));
+}
+document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
+document.addEventListener('keydown',startTk777WelcomeAudio,{once:true,capture:true});
 </script></body></html>
