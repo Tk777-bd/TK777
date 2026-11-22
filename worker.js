@@ -1160,7 +1160,7 @@ async function route(req, env) {
         }
         // Converted wilds remain for the next cascade; when they help form a win,
         // they are included in found.wins and removed with that winning group.
-        const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard"||goldenCells.includes(ix));
+        const removed=found.wins.filter(ix=>!goldenCells.includes(ix));
         frames.push({type:"remove",grid:[...nextAfterGolden],cells:removed,cascadeX});
         const removedSet=new Set(removed);
         const compacted=Array(20).fill(null),moved=[],moves=[],refillCells=[];
