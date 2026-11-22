@@ -263,7 +263,11 @@ function sendBalanceToParent(){
 let pendingSpinId=null;
 async function play(){
  if(busy)return;
- if(!pendingSpinId)pendingSpinId=crypto.randomUUID();
+ if(!pendingSpinId){
+  pendingSpinId=(typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function')
+   ?crypto.randomUUID()
+   :'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+ }
  const requestId=pendingSpinId;
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
