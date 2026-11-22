@@ -1142,7 +1142,7 @@ async function route(req, env) {
         if(goldenCells.length)frames.push({type:"golden",grid:[...nextAfterGolden],cells:goldenCells,cascadeX});
         const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard");
         if(!removed.length){grid=nextAfterGolden;continue;}
-        frames.push({type:"remove",grid:[...grid],cells:removed,cascadeX});
+        frames.push({type:"remove",grid:[...nextAfterGolden],cells:removed,cascadeX});
         const removedSet=new Set(removed);
         const compacted=Array(20).fill(null),moved=[],refillCells=[];
         // Each reel compacts independently: survivors fall to the bottom; fresh cards enter from above.
