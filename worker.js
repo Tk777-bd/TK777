@@ -1102,8 +1102,8 @@ async function route(req, env) {
       const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.10];
       const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
       // Eight pale-gold copies drop as matching symbols; golden K retains its original reel restriction.
-      const goldIds={ace:"goldenAce",king:"goldenCard",queen:"goldenQueen",jack:"goldenJack",spade:"goldenSpade",heart:"goldenHeart",diamond:"goldenDiamond",club:"goldenClub"};
-      const pickCard=col=>{if(col>=1&&col<=3&&rand()<.065)return "goldenCard";if(rand()<.065){const pool=["ace","queen","jack","spade","heart","diamond","club"];return goldIds[pool[Math.floor(rand()*pool.length)]];}return pickBaseCard();};
+      const goldIds={ace:"goldenAce",king:"goldenKing",queen:"goldenQueen",jack:"goldenJack",spade:"goldenSpade",heart:"goldenHeart",diamond:"goldenDiamond",club:"goldenClub"};
+      const pickCard=col=>{if(col>=1&&col<=3&&rand()<.065)return "goldenKing";if(rand()<.065){const pool=["ace","queen","jack","spade","heart","diamond","club"];return goldIds[pool[Math.floor(rand()*pool.length)]];}return pickBaseCard();};
       const findWins=grid=>{
         const groups=[],all=[];
         for(const symbol of cards.filter(c=>c.id!=="scatter")){
@@ -1112,7 +1112,7 @@ async function route(req, env) {
             const cells=[];
             for(let row=0;row<4;row++){
               const ix=row*5+col,card=grid[ix];
-              const goldenBase=card==="goldenCard"?"king":String(card||"").startsWith("golden")?String(card).slice(6).toLowerCase():null;
+              const goldenBase=card==="goldenKing"?"king":String(card||"").startsWith("golden")?String(card).slice(6).toLowerCase():null;
               if(card===symbol.id||card==="wild"||goldenBase===symbol.id)cells.push(ix);
             }
             reels.push(cells);
@@ -1154,7 +1154,7 @@ async function route(req, env) {
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
         // Every pale-gold copy in a winning group becomes a temporary wild in that exact cell.
-        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>grid[ix]==="goldenCard"||String(grid[ix]||"").startsWith("golden"));
+        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>grid[ix]==="goldenKing"||String(grid[ix]||"").startsWith("golden"));
         const nextAfterGolden=[...grid];
         if(goldenCells.length){
           for(const ix of goldenCells)nextAfterGolden[ix]="wild";
