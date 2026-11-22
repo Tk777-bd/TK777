@@ -1690,15 +1690,21 @@ function updateFlightGlow(multiplier) {
   const stage = $('#aviatorStage');
   if (!stage) return;
   const value = Number(multiplier) || 1;
+  let tier = 'base';
   let color = 'rgba(0,0,0,0)';
   let spread = 0.72;
-  if (value >= 100) { color = 'rgba(255,190,70,.30)'; spread = 1.65; }
-  else if (value >= 50) { color = 'rgba(225,90,190,.27)'; spread = 1.55; }
-  else if (value >= 20) { color = 'rgba(65,210,175,.26)'; spread = 1.48; }
-  else if (value >= 10) { color = 'rgba(255,155,65,.25)'; spread = 1.38; }
-  else if (value >= 5) { color = 'rgba(85,145,255,.24)'; spread = 1.28; }
-  else if (value >= 3) { color = 'rgba(255,75,95,.23)'; spread = 1.12; }
-  else if (value >= 2) { color = 'rgba(170,105,255,.22)'; spread = .94; }
+  if (value >= 100) { tier = 'gold'; color = 'rgba(255,190,70,.30)'; spread = 1.65; }
+  else if (value >= 50) { tier = 'pink'; color = 'rgba(225,90,190,.27)'; spread = 1.55; }
+  else if (value >= 20) { tier = 'mint'; color = 'rgba(65,210,175,.26)'; spread = 1.48; }
+  else if (value >= 10) { tier = 'orange'; color = 'rgba(255,155,65,.25)'; spread = 1.38; }
+  else if (value >= 5) { tier = 'blue'; color = 'rgba(85,145,255,.24)'; spread = 1.28; }
+  else if (value >= 3) { tier = 'red'; color = 'rgba(255,75,95,.23)'; spread = 1.12; }
+  else if (value >= 2) { tier = 'violet'; color = 'rgba(170,105,255,.22)'; spread = .94; }
+
+  // Update only when the multiplier enters a new color band; otherwise
+  // repeated animation frames would keep restarting the CSS transition.
+  if (stage.dataset.flightGlowTier === tier) return;
+  stage.dataset.flightGlowTier = tier;
   stage.style.setProperty('--flight-glow-color', color);
   stage.style.setProperty('--flight-glow-spread', String(spread));
 }
