@@ -1135,24 +1135,18 @@ async function route(req, env) {
         // Winning Golden Cards transform in place and persist as wild Jokers through later cascades.
         const goldenCells=found.wins.filter(ix=>grid[ix]==="goldenCard");
         const persistent=new Set(found.wins.filter(ix=>grid[ix]==="goldenCard"||grid[ix]==="goldenJoker"));
-        const removed=new Set([...hit].filter(ix=>!persistent.has(ix)));
-        const next=[...grid],fresh=[];
+        const removed=[...hit].filter(ix=>!persistent.has(ix));
+        const next=[...grid];
+        // JILI-style cascade: winning cards flip out, then only those exact positions are refilled.
+        // Golden Cards flip into persistent Golden Jokers and stay in their original cells.
         for(const ix of goldenCells)next[ix]="goldenJoker";
         if(goldenCells.length)frames.push({type:"golden",grid:[...next],cells:goldenCells,cascadeX});
-        for(let col=0;col<5;col++){
-          const survivors=[];
-          for(let row=3;row>=0;row--){const ix=row*5+col;if(!removed.has(ix))survivors.push(next[ix]);}
-          while(survivors.length<4)survivors.push(pickCard(col));
-          for(let row=3;row>=0;row--){
-            const ix=row*5+col,card=survivors[3-row];
-            if(next[ix]!==card)fresh.push(ix);
-            next[ix]=card;
-          }
-        }
+        if(removed.length)frames.push({type:"replaceOut",grid:[...next],cells:removed,cascadeX});
+        for(const ix of removed)next[ix]=pickCard(ix%5);
         grid=next;
         scatterCount=Math.max(scatterCount,grid.filter(x=>x==="scatter").length);
         if(scatterCount>=3)scatterTriggered=true;
-        frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
+        if(removed.length)frames.push({type:"replace",grid:[...grid],cells:removed,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
