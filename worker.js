@@ -1112,7 +1112,7 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0;
+      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length,maxCascadeX=0,scatterTriggered=scatterCount>=3;
       const frames=[];
       const comboSteps=[1,2,3,5];
       for(let step=0;step<6;step++){
@@ -1129,11 +1129,12 @@ async function route(req, env) {
           while(survivors.length<4)survivors.push(pickCard());
           for(let row=3;row>=0;row--){const ix=row*5+col,card=survivors[3-row];if(grid[ix]!==card)fresh.push(ix);next[ix]=card;}
         }
-        grid=next;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
+        grid=next;scatterCount=Math.max(scatterCount,grid.filter(x=>x==="scatter").length);if(scatterCount>=3)scatterTriggered=true;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
-      if(scatterCount>=3)freeSpins+=8;
+      const freeSpinAward=scatterTriggered?(isFreeSpin?5:10):0;
+      freeSpins+=freeSpinAward;
       await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
       if(!isFreeSpin){const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);}
       try{
@@ -1144,7 +1145,7 @@ async function route(req, env) {
         if(payout)entries.push(env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়"));
         entries.push(env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)").bind(roundId,user.id,gameId,"superace",isFreeSpin?0:stake,multiplier,payout));
         await env.DB.batch(entries);
-        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,maxCascadeX,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount});
+        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,maxCascadeX,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount,freeSpinAward});
       }catch(error){if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();throw error;}
     }
 
