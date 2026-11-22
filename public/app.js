@@ -58,7 +58,7 @@ function startTk777WelcomeAudio(){
     }).catch(()=>{});
   }
 }
-window.addEventListener('load',()=>{startTk777WelcomeAudio();});
+startTk777WelcomeAudio(); // Start immediately when app.js is parsed, without waiting for window load.
 document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
 document.addEventListener('keydown',startTk777WelcomeAudio,{once:true,capture:true});
 
