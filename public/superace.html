@@ -1,25 +1,28 @@
 <!doctype html>
 <html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Super Ace</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#08091a;color:#fff;font-family:Arial,sans-serif}
-.game{width:100%;height:100dvh;min-height:100dvh;margin:0 auto;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#14575a 0,#073b40 50%,#06191f 100%);padding-bottom:5px}
-.top{height:48px;background:linear-gradient(180deg,#080d18,#162b2b 72%,#70401b);position:relative;text-align:center;border-bottom:1px solid #d6ad65;box-shadow:0 3px 12px #0008}
-.close{position:absolute;left:10px;top:7px;border:0;background:transparent;color:#fff;font-size:26px;line-height:1}
-.brand{display:none;position:absolute;bottom:5px;width:100%;font:bold 22px Georgia;color:#ffe8a4;text-shadow:0 2px #5d1b05,0 0 9px #ffae2b}
-.multis{height:38px;width:78%;margin:-1px auto 0;position:relative;z-index:2;display:flex;justify-content:space-around;align-items:center;border:2px solid #ffe7a2;border-radius:24px;background:linear-gradient(#ffefb2,#e4a02a 58%,#a74c0b);box-shadow:0 0 12px #ffb82e}
-.multi{border:0;background:transparent;color:#654019;font-weight:900;font-size:17px;padding:5px 11px;border-radius:17px;min-width:46px;text-align:center;opacity:.68;transition:all .2s}
-.multi.active{background:linear-gradient(#fff8cf,#ffb62e);color:#642600;text-shadow:0 1px #fff1a0;box-shadow:0 0 12px #fff4b0,0 0 20px #ff9c20;opacity:1;transform:scale(1.12)}
-.stage{padding:9px 5px 7px;border-top:3px solid #d5b16a;border-bottom:3px solid #b57b35;background:linear-gradient(180deg,#183c39 0,#0b302f 100%);box-shadow:inset 0 0 18px #0008,0 5px 15px #0008}
-.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:100%;max-width:410px;aspect-ratio:1.04/1;margin:auto;background:transparent;align-items:stretch;justify-items:stretch}
-.tile{position:relative;overflow:hidden;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#070a18;color:#fff;font-family:Arial,sans-serif}
+.game{width:100%;height:100dvh;min-height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:radial-gradient(ellipse at 50% 43%,#174d58 0,#092b3b 48%,#050a19 100%);padding:0 0 3px}
+.top{height:76px;flex:0 0 76px;position:relative;text-align:center;background:linear-gradient(180deg,#070a18 0%,#111528 72%,#281515 73%,#6e2d19 83%,#25100c 100%);border-bottom:3px solid #d28a36;box-shadow:0 4px 12px #000b}
+.close{position:absolute;z-index:4;left:8px;top:8px;width:25px;height:25px;border:1px solid #b9a17c;border-radius:50%;background:#171b28;color:#fff;font-size:20px;line-height:18px;box-shadow:0 1px 5px #000}
+.brand{display:block;position:absolute;bottom:8px;width:100%;font:bold 22px Georgia,serif;letter-spacing:.3px;color:#ffe6a0;text-shadow:0 2px #541b0c,0 0 4px #ffb43c,0 0 10px #ff8d20}
+.multis{height:36px;flex:0 0 36px;width:min(82%,330px);margin:-1px auto 0;position:relative;z-index:3;display:flex;justify-content:space-around;align-items:center;border:2px solid #f5c86c;border-radius:20px;background:linear-gradient(180deg,#fff0a8 0%,#ffb52f 48%,#a94b0a 100%);box-shadow:0 2px 0 #55250b,0 0 12px #ff9e27}
+.multi{border:0;background:transparent;color:#63310c;font-weight:900;font-size:16px;padding:4px 9px;border-radius:15px;min-width:42px;text-align:center;opacity:.82;transition:all .2s;text-shadow:0 1px #ffe8a0}
+.multi.active{background:linear-gradient(180deg,#fffbd1,#ffc23b 65%,#f08a16);color:#6b2107;box-shadow:inset 0 1px 2px #fff,0 0 9px #fff0a5;opacity:1;transform:scale(1.08)}
+.stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:7px 5px 5px;margin-top:0;background:linear-gradient(180deg,#0c2738 0%,#0d4551 45%,#082b39 100%);border-top:5px solid #8b9294;border-bottom:5px solid #a95a24;box-shadow:inset 0 0 18px #000a,0 5px 12px #0008;position:relative}
+.stage:before,.stage:after{content:"";position:absolute;left:0;right:0;height:5px;background:linear-gradient(90deg,#424a4d,#d7d6c8 22%,#777d7a 50%,#eee4c8 78%,#424a4d);box-shadow:0 1px 3px #000}
+.stage:before{top:-5px}.stage:after{bottom:-5px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:min(100%,420px);height:100%;max-height:100%;aspect-ratio:.88/1;margin:auto;background:#4b5356;align-items:stretch;justify-items:stretch;padding:2px;border:2px solid #aeb8b8;box-shadow:0 0 0 2px #27343b,0 5px 16px #000b}
+.tile{position:relative;overflow:hidden;border:1px solid #8b999c;border-radius:2px;background:linear-gradient(145deg,#e9f2ed,#a9c4ce);box-shadow:inset 0 0 0 1px #fff8,0 1px 2px #0008;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
 .tile img{width:100%;height:100%;object-fit:fill;display:block;padding:0;margin:0;background:transparent;min-width:0;min-height:0}
 .tile.dim{filter:brightness(.28) saturate(.65)}
 .tile.scatter-fallback{filter:none!important;background:radial-gradient(circle at 35% 28%,#fff6a6 0,#f7b72c 42%,#9b4b08 76%,#542304 100%);border:2px solid #ffe69a;box-shadow:inset 0 0 0 2px #b66a13,0 0 8px #ffbf37}
 .scatter-coin{width:90%;height:90%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fffbd0,#f8c23e 45%,#b66a12 78%,#6d3307);border:2px solid #fff0a8;box-shadow:inset 0 0 0 2px #d18b1e,0 1px 5px #0009;color:#7a3506;text-shadow:0 1px #fff5b8}
-.scatter-coin b{font:bold 34px Georgia;line-height:1}.scatter-coin small{font:bold 8px Arial;letter-spacing:.7px;color:#fff8d5;text-shadow:0 1px 2px #572500}\n.tile.golden-card,.tile.golden-joker{border:1px solid #ffe28a;background:transparent;box-shadow:0 0 8px 2px rgba(255,202,42,.72)}
+.scatter-coin b{font:bold 34px Georgia;line-height:1}.scatter-coin small{font:bold 8px Arial;letter-spacing:.7px;color:#fff8d5;text-shadow:0 1px 2px #572500}
+.tile.golden-card,.tile.golden-joker{border:1px solid #ffe28a;background:transparent;box-shadow:0 0 8px 2px rgba(255,202,42,.72)}
 .tile.golden-card:before,.tile.golden-joker:before{position:absolute;z-index:3;bottom:2px;left:0;right:0;text-align:center;font:bold 7px Arial;color:#fff4a8;text-shadow:0 1px 3px #542500;pointer-events:none}
-.tile.golden-card:before{content:'GOLDEN CARD'}
-.tile.golden-joker:before{content:'GOLDEN JOKER'}
+.tile.golden-card:before{content:'GOLDEN CARD'}.tile.golden-joker:before{content:'GOLDEN JOKER'}
 .tile.golden-transform{animation:goldenTransform .62s ease both}
 @keyframes goldenTransform{0%{transform:scale(1);filter:brightness(1)}35%{transform:scale(1.16) rotateY(90deg);filter:brightness(2.1)}70%{transform:scale(1.12) rotateY(180deg);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1.35)}}
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
@@ -36,33 +39,34 @@
 @keyframes winPulse{from{filter:brightness(1.05)}to{filter:brightness(1.65)}}
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
 @keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.72;filter:blur(1px)}72%{opacity:1;filter:blur(0)}100%{transform:translateY(0);opacity:1;filter:none}}
-.status{height:27px;text-align:center;padding-top:6px;font:bold 12px Arial;color:#ffe7a4;text-shadow:0 1px #321}
-.win-line{height:30px;text-align:center;color:#ffdf72;font:bold 18px Georgia}
-.controls{min-height:94px;display:flex;align-items:center;justify-content:space-around;padding:6px 7px;background:linear-gradient(180deg,#103b39,#092527 50%,#24190f 51%,#0d0d0b);border-top:2px solid #d3a95e;border-bottom:1px solid #9a6b31;gap:3px;box-shadow:0 -5px 16px #0007}
-.ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:#f6dfa6;min-width:42px}
-.round{width:29px;height:29px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#7d887e,#263d37);color:#fff1bd;font-size:17px;font-weight:900}
-.bet-control{display:flex;flex-direction:row;gap:4px;align-items:center;min-width:105px}
-.bet-value{min-width:38px;text-align:center;display:flex;flex-direction:column;gap:3px}
-.bet-value small{font-size:9px;color:#f6dfa6}.bet-value b{font-size:13px;color:#fff}
-.spin{width:62px;height:62px;flex:0 0 62px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fff7b2,#ffc02b 48%,#a64a05);color:#672605;font-weight:1000;font-size:13px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a}
+.status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-line{flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
+.controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
+.ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:#f6dfa6;min-width:35px;text-shadow:0 1px #000}
+.round{width:27px;height:27px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
+.bet-control{display:flex;flex-direction:row;gap:3px;align-items:center;min-width:98px}
+.bet-value{min-width:34px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.bet-value small{font-size:8px;color:#f6dfa6}.bet-value b{font-size:12px;color:#fff}
+.spin{width:57px;height:57px;flex:0 0 57px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fffbd0,#ffc02b 48%,#a64a05 82%);color:#672605;font-weight:1000;font-size:12px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a,inset 0 0 0 2px #fff8}
 .spin:disabled,.round:disabled{opacity:.5}
-.balance{text-align:center;background:linear-gradient(90deg,#10110e,#292015,#10110e);padding:7px;color:#f2dca5;font-size:12px;border-top:1px solid #795a30}
-.balance b{font-size:16px;color:white}
-.note{text-align:center;background:#10110e;color:#b8ad98;font-size:9px;padding:3px 0 8px}
-@media(min-width:500px){.game{min-height:650px}.board{width:min(100%,410px);aspect-ratio:1.04/1;grid-template-rows:repeat(4,minmax(0,1fr));gap:2px}}
+.balance{text-align:center;background:linear-gradient(90deg,#090b11,#322018,#090b11);padding:5px 4px 2px;color:#f2dca5;font-size:10px;border-top:1px solid #795a30;flex:0 0 24px}
+.balance b{font-size:13px;color:white}
+.note{text-align:center;background:#090b11;color:#b8ad98;font-size:8px;padding:1px 0 3px;flex:0 0 14px}
+@media(min-width:500px){.game{max-width:500px;margin:0 auto}.board{width:min(100%,420px)}}
+@media(max-height:590px){.top{height:62px;flex-basis:62px}.stage{padding:4px}.controls{flex-basis:58px;min-height:58px}.spin{width:49px;height:49px;flex-basis:49px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
 </style></head><body><main class="game">
-<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button></header>
+<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button><div class="brand">SuperAce</div></header>
 <div class="multis" id="comboMeter" aria-label="Combo multiplier"><div class="multi active" data-x="1">×1</div><div class="multi" data-x="2">×2</div><div class="multi" data-x="3">×3</div><div class="multi" data-x="5">×5</div></div>
 <section class="stage"><div class="board" id="board"></div></section>
 <div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">WIN&nbsp; <span id="win">0.000</span></div>
 <section class="controls">
  <div class="ctrl bet-control"><button class="round" id="betMinus" type="button">−</button><div class="bet-value"><small>BET</small><b id="bet">50</b></div><button class="round" id="betPlus" type="button">+</button></div>
  <div class="ctrl"><button class="spin" id="spin" type="button">✦<br>SPIN</button></div>
- <div class="ctrl"><button class="round" id="auto" type="button">⟳</button>Autoplay</div>
+ <div class="ctrl"><button class="round" id="auto" type="button">⟳</button>Auto</div>
  <div class="ctrl"><button class="round" id="turbo" type="button">ϟ</button>Turbo</div>
 </section>
-<div class="balance">Main Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
+<div class="balance">Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
 </main>
 <script>
 (function(){
