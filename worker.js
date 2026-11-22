@@ -1240,8 +1240,8 @@ async function route(req, env) {
         await env.DB.prepare("UPDATE superace_requests SET status='completed',response_json=? WHERE user_id=? AND request_id=?").bind(JSON.stringify(responseData),user.id,requestId).run();
         return json(responseData);
       }catch(error){
-        await env.DB.prepare("UPDATE superace_requests SET status='failed' WHERE user_id=? AND request_id=?").bind(user.id,requestId).run();
         if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();
+        await env.DB.prepare("DELETE FROM superace_requests WHERE user_id=? AND request_id=?").bind(user.id,requestId).run();
         throw error;
       }
     }
