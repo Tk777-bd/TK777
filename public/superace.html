@@ -43,7 +43,8 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
 @keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.9}100%{transform:translateY(0);opacity:1}}
 .status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.win-line{flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
+.win-line{display:none;flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
+.win-line.show{display:block}
 .controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
 .ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:#f6dfa6;min-width:35px;text-shadow:0 1px #000}
 .round{width:27px;height:27px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
@@ -140,7 +141,7 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
   }
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
-  const artKey=(cardKey==='goldenjoker'||cardKey==='littlejoker')?'goldenJoker':cardKey==='bigjoker'?'wild':cardKey==='goldencard'?'ace':cardKey;
+  const artKey=cardKey==='goldencard'?'king':cardKey;
   img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>★</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
   img.src=art[artKey]||art.ace;cell.appendChild(img);$('board').appendChild(cell);
  });
@@ -267,7 +268,7 @@ async function play(){
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
  if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
- busy=true;$('spin').disabled=true;update();$('status').textContent='ওপর থেকে কার্ড পড়ছে...';
+ busy=true;$('spin').disabled=true;update();totalWin=0;$('win').textContent='';$('win').parentElement.classList.remove('show');$('status').textContent='ওপর থেকে কার্ড পড়ছে...';
  try{
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0,requestId}).then(value=>({value}),error=>({error}));
   // Keep the landed board untouched until the server returns the real result.
@@ -293,7 +294,7 @@ async function play(){
     }
     if(frame.type==='golden'){
      draw(frame.grid,[],[],false,frame.cells||[]);
-     $('status').textContent='✨ GOLDEN CARD → GOLDEN JOKER';
+     $('status').textContent='✨ YELLOW K → WILD';
      await sleep(turbo?260:620);continue;
     }
     if(frame.type==='remove'){
@@ -321,7 +322,7 @@ async function play(){
    if(Array.isArray(result.finalGrid)&&result.finalGrid.length===20&&JSON.stringify(visibleGrid)!==JSON.stringify(result.finalGrid))draw(result.finalGrid);
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
-  totalWin+=Math.max(0,Number(result.payout||0));$('win').textContent=fmt(totalWin);
+  totalWin=Math.max(0,Number(result.payout||0));if(totalWin>0){$('win').textContent=fmt(totalWin);$('win').parentElement.classList.add('show');}
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
