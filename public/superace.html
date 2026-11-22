@@ -114,7 +114,7 @@ async function play(){
  if(busy)return;
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
- if(balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
+ if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
  busy=true;auto=auto;$('spin').disabled=true;update();$('win').textContent='0.000';$('status').textContent='কার্ড ঘুরছে...';
  try{
   const result=await request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0});
@@ -130,7 +130,8 @@ async function play(){
   }
   setCombo(freeSpins>0?2:1,false);
   $('win').textContent=fmt(result.payout||0);
-  $('status').textContent=(result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(Number(result.scatterCount||0)>=3?' · +8 FREE SPINS':'')+(freeSpins?' · FREE SPINS '+freeSpins:'');
+  const awarded=Number(result.freeSpinAward||0);
+  $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
  finally{
   busy=false;$('spin').disabled=false;update();
