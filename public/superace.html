@@ -231,12 +231,7 @@ window.addEventListener('beforeunload',()=>{auto=false});
 loadBalance();
 })();
 
-function startTk777WelcomeAudio(){
- if(sessionStorage.getItem('tk777_welcome_played'))return;
- sessionStorage.setItem('tk777_welcome_played','1');
- const audio=new Audio(window.parent.TK777_WELCOME_AUDIO);audio.volume=0.9;
- audio.play().catch(()=>sessionStorage.removeItem('tk777_welcome_played'));
-}
+function startTk777WelcomeAudio(){window.parent.postMessage({type:'tk777-welcome-audio'},'*');}
 document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
 document.addEventListener('keydown',startTk777WelcomeAudio,{once:true,capture:true});
 </script></body></html>
