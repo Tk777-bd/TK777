@@ -18,7 +18,7 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .stage:before,.stage:after{content:"";position:absolute;left:0;right:0;height:5px;background:linear-gradient(90deg,#424a4d,#d7d6c8 22%,#777d7a 50%,#eee4c8 78%,#424a4d);box-shadow:0 1px 3px #000}
 .stage:before{top:-5px}.stage:after{bottom:-5px}
 .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:min(100%,420px);height:100%;max-height:100%;max-width:100%;aspect-ratio:.88/1;margin:auto;background:#4b5356;align-items:stretch;justify-items:stretch;padding:2px;border:2px solid #aeb8b8;box-shadow:0 0 0 2px #27343b,0 5px 16px #000b}
-.tile{position:relative;overflow:hidden;border:1px solid #8b999c;border-radius:2px;background:linear-gradient(145deg,#e9f2ed,#a9c4ce);box-shadow:inset 0 0 0 1px #fff8,0 1px 2px #0008;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
+.tile{position:relative;overflow:hidden;border:1px solid #8b999c;border-radius:2px;background:linear-gradient(145deg,#e9f2ed,#a9c4ce);box-shadow:inset 0 0 0 1px #fff8,0 1px 2px #0008;display:flex;align-items:center;justify-content:center;transition:filter .12s}
 .tile.empty{background:rgba(2,10,20,.38);border:1px solid rgba(130,157,166,.22);box-shadow:inset 0 0 7px rgba(0,0,0,.42)}
 .tile img{width:100%;height:100%;object-fit:fill;display:block;padding:0;margin:0;background:transparent;min-width:0;min-height:0}.tile img.scatter-art{object-fit:contain}
 .tile.dim{filter:brightness(.28) saturate(.65)}
@@ -70,7 +70,7 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 <header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button> <div class="brand">SuperAce</div></header>
 <div class="multis" id="comboMeter" aria-label="Combo multiplier"><div class="multi active" data-x="1">×1</div><div class="multi" data-x="2">×2</div><div class="multi" data-x="3">×3</div><div class="multi" data-x="5">×5</div></div>
 <section class="stage"><div class="board" id="board"></div></section>
-<div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">WIN&nbsp; <span id="win">0.000</span></div>
+<div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">TOTAL WIN&nbsp; <span id="win">0.00</span></div>
 <section class="controls">
  <div class="ctrl bet-control"><button class="round" id="betMinus" type="button">−</button><div class="bet-value"><small>BET</small><b id="bet">50</b></div><button class="round" id="betPlus" type="button">+</button></div>
  <div class="ctrl"><button class="spin" id="spin" type="button">✦<br>SPIN</button></div>
@@ -219,16 +219,10 @@ async function play(){
     }
     if(frame.type==='refill'){
      const arriving=[...new Set((frame.cells||[]).map(Number).filter(ix=>ix>=0&&ix<20))];
-     const staged=[...frame.grid];
-     for(const ix of arriving)staged[ix]=null;
-     draw(staged);
      $('status').textContent='NEW CARDS FROM ABOVE';
-     await sleep(turbo?90:180);
-     for(const ix of arriving){
-      staged[ix]=frame.grid[ix];
-      draw(staged,[],[ix]);
-      await sleep(turbo?85:145);
-     }
+     // Render the complete refill once; repeated full-board redraws caused visible card shaking.
+     draw(frame.grid,[],arriving);
+     await sleep(turbo?220:420);
      continue;
     }
     draw(frame.grid,frame.wins||[]);
@@ -244,8 +238,8 @@ async function play(){
  finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(freeSpinReady&&freeSpins>0){await sleep(turbo?180:500);if(freeSpinReady&&freeSpins>0)play()}else if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
 }
 function updateFreeSpinButton(){
- if(freeSpins>0&&freeSpinReady){$('spin').innerHTML='✦<br>FREE SPIN<br><small>'+freeSpins+' LEFT</small>';}
- else if(freeSpins>0){$('spin').innerHTML='✦<br>START<br>'+freeSpins+' FREE';}
+ // During the bonus, show only the remaining count on the spin button.
+ if(freeSpins>0){$('spin').textContent=String(freeSpins);}
  else $('spin').innerHTML='✦<br>SPIN';
 }
 function showFreeSpinOffer(){
