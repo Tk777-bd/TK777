@@ -43,24 +43,36 @@ const $ = s => document.querySelector(s);
 
 let tk777WelcomeAudio=null;
 let tk777WelcomeStarted=false;
+let tk777WelcomePending=false;
 function startTk777WelcomeAudio(){
-  if(tk777WelcomeStarted)return;
+  if(tk777WelcomeStarted || tk777WelcomePending)return;
   if(!tk777WelcomeAudio){
-    tk777WelcomeAudio=new Audio(window.TK777_WELCOME_AUDIO);
-    tk777WelcomeAudio.volume=0.9;
+    tk777WelcomeAudio=new Audio();
+    tk777WelcomeAudio.src=window.TK777_WELCOME_AUDIO;
     tk777WelcomeAudio.preload='auto';
+    tk777WelcomeAudio.volume=0.9;
+    tk777WelcomeAudio.load();
   }
+  tk777WelcomePending=true;
   const attempt=tk777WelcomeAudio.play();
   if(attempt && typeof attempt.then==='function'){
     attempt.then(()=>{
       tk777WelcomeStarted=true;
-
-    }).catch(()=>{});
+      tk777WelcomePending=false;
+    }).catch(()=>{
+      tk777WelcomePending=false;
+      // Browser autoplay may be blocked; retry on the next user interaction.
+    });
+  } else {
+    tk777WelcomeStarted=true;
+    tk777WelcomePending=false;
   }
 }
-startTk777WelcomeAudio(); // Start immediately when app.js is parsed, without waiting for window load.
-document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
-document.addEventListener('keydown',startTk777WelcomeAudio,{once:true,capture:true});
+// Begin buffering and attempt playback as soon as this script runs.
+startTk777WelcomeAudio();
+// Keep retrying after autoplay rejection; a successful user gesture can unlock playback.
+document.addEventListener('pointerdown',startTk777WelcomeAudio,{capture:true});
+document.addEventListener('keydown',startTk777WelcomeAudio,{capture:true});
 
 window.addEventListener('message', event => {
   if (event.origin !== location.origin) return;
