@@ -246,16 +246,11 @@ async function animateReels(grid){
 async function animateAnticipationRow(grid){
  const cells=[...$('board').children];
  if(cells.length!==20)return;
- // Anticipation is a glowing pause, not spinning or cycling card faces.
+ // The initial board is already displayed. Anticipation only flashes the row;
+ // never set the same card faces again or replay their falling animation.
  for(let col=0;col<5;col++)cells[5+col].classList.add('anticipation-line');
  await sleep(turbo?130:360);
- for(let col=0;col<5;col++){
-  setCardFace(cells[5+col],grid[5+col]);
-  cells[5+col].classList.add('anticipation-line');
- }
- await sleep(turbo?100:180);
  cells.slice(5,10).forEach(cell=>cell.classList.remove('anticipation-line'));
- visibleGrid=[...grid];
 }
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
@@ -277,11 +272,12 @@ async function play(){
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0,requestId}).then(value=>({value}),error=>({error}));
   // Keep the landed board untouched until the server returns the real result.
   const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;pendingSpinId=null;
-  const firstBoard=(result.frames||[]).find(frame=>frame.type==='win')?.grid||result.finalGrid;
-  // Animate the initial result once as individual falling cards; no reel spinning.
+  const frames=Array.isArray(result.frames)?result.frames:[];
+  const firstBoard=frames[0]?.grid||result.finalGrid;
+  // Play the first board exactly once. Later frames are cascade-only updates.
   if(firstBoard)await animateReels(firstBoard);
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
-  if(!result.frames||!result.frames.length){if(result.finalGrid)await animateReels(result.finalGrid);await sleep(turbo?100:220)}
+  if(!frames.length){await sleep(turbo?100:220)}
   else{
    for(const frame of result.frames){
     setCombo(frame.cascadeX||1,Boolean(result.freeSpin));
