@@ -1153,8 +1153,8 @@ async function route(req, env) {
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
-        // Every pale-gold copy in a winning group becomes a temporary wild in that exact cell.
-        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>grid[ix]==="goldenCard"||String(grid[ix]||"").startsWith("golden"));
+        // Only the yellow K (Golden K) in a winning group becomes a temporary wild in that exact cell.
+        const goldenCells=[...new Set(found.groups.flatMap(group=>group.cells))].filter(ix=>grid[ix]==="goldenCard");
         const nextAfterGolden=[...grid];
         if(goldenCells.length){
           for(const ix of goldenCells)nextAfterGolden[ix]="wild";
