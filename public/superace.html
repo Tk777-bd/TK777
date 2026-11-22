@@ -241,7 +241,7 @@ async function play(){
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
- finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
+ finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(freeSpinReady&&freeSpins>0){await sleep(turbo?180:500);if(freeSpinReady&&freeSpins>0)play()}else if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
 }
 function updateFreeSpinButton(){
  if(freeSpins>0&&freeSpinReady){$('spin').innerHTML='✦<br>FREE SPIN<br><small>'+freeSpins+' LEFT</small>';}
@@ -249,6 +249,7 @@ function updateFreeSpinButton(){
  else $('spin').innerHTML='✦<br>SPIN';
 }
 function showFreeSpinOffer(){
+ auto=false;$('auto').style.background='';
  freeSpinReady=false;
  $('freeOfferText').textContent='আপনি '+freeSpins+'টি Free Spin পেয়েছেন। শুরু করতে নিচের বাটনে চাপ দিন।';
  $('freeStart').textContent='START '+freeSpins+' FREE SPINS';
@@ -260,6 +261,7 @@ $('freeStart').addEventListener('click',()=>{
  freeSpinReady=true;
  $('status').textContent='FREE SPINS READY · '+freeSpins+' LEFT';
  updateFreeSpinButton();
+ play();
 });
 $('spin').addEventListener('click',()=>{auto=false;if(freeSpins>0&&!freeSpinReady){showFreeSpinOffer();return;}play()});
 $('auto').addEventListener('click',()=>{if(busy)return;auto=!auto;$('auto').style.background=auto?'radial-gradient(circle,#ffe58a,#a65a08)':'';if(auto)play()});
