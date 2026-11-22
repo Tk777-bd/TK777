@@ -25,6 +25,10 @@
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
 .tile.win:after{content:"";position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,210,.85) 48%,transparent 63%);transform:translateX(-130%);animation:shineSweep .72s ease-in-out infinite}
 .tile.drop{animation:cardDrop .48s cubic-bezier(.16,.78,.2,1) both}
+.tile.flip-out{z-index:5;animation:cardFlipOut .28s ease-in both;pointer-events:none}
+.tile.flip-in{z-index:5;animation:cardFlipIn .38s cubic-bezier(.2,.75,.25,1) both}
+@keyframes cardFlipOut{0%{transform:rotateY(0) scale(1);opacity:1;filter:brightness(1)}55%{transform:rotateY(90deg) scale(.92);opacity:.9;filter:brightness(1.8)}100%{transform:rotateY(90deg) scale(.72);opacity:0;filter:brightness(2)}}
+@keyframes cardFlipIn{0%{transform:rotateY(-90deg) scale(.72);opacity:0;filter:brightness(2)}55%{transform:rotateY(8deg) scale(1.04);opacity:1;filter:brightness(1.45)}100%{transform:rotateY(0) scale(1);opacity:1;filter:none}}
 .tile.reel-spin{overflow:hidden;animation:reelSpin .42s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--reel,0)*90ms);filter:brightness(1.25)}
 .tile.reel-spin img{animation:reelBlur .12s linear infinite}
 @keyframes reelSpin{0%{transform:translateY(-38%);filter:blur(2px) brightness(1.8)}65%{transform:translateY(8%);filter:blur(1px) brightness(1.35)}100%{transform:translateY(0);filter:none}}
@@ -93,11 +97,11 @@ const art={
 let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,comboX=1;
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
-function draw(grid,wins,drop,spinning,goldenCells){
- const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]);$('board').innerHTML='';
+function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType){
+ const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]);$('board').innerHTML='';
  grid.forEach((id,index)=>{
   const cell=document.createElement('div');
-  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'')+(spinning?' reel-spin':'');
+  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(replacing.has(index)&&replaceType==='in'?' flip-in':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'')+(spinning?' reel-spin':'');
   cell.style.setProperty('--reel',String(index%5));
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
@@ -152,6 +156,18 @@ async function play(){
      draw(frame.grid,[],[],false,frame.cells||[]);
      $('status').textContent='✨ GOLDEN CARD → GOLDEN JOKER';
      await sleep(turbo?260:620);
+     continue;
+    }
+    if(frame.type==='replaceOut'){
+     draw(frame.grid,[],[],false,[],frame.cells||[],'out');
+     $('status').textContent='WINNING CARDS · FLIPPING';
+     await sleep(turbo?120:280);
+     continue;
+    }
+    if(frame.type==='replace'){
+     draw(frame.grid,[],[],false,[],frame.cells||[],'in');
+     $('status').textContent='NEW CARDS · CASCADE';
+     await sleep(turbo?170:380);
      continue;
     }
     draw(frame.grid,frame.wins||[],frame.type==='drop'?frame.drop||[]:[]);
