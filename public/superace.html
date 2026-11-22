@@ -38,6 +38,8 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @keyframes cardFlipOut{0%{transform:rotateY(0) scale(1);opacity:1;filter:brightness(1)}55%{transform:rotateY(90deg) scale(.92);opacity:.9;filter:brightness(1.8)}100%{transform:rotateY(90deg) scale(.72);opacity:0;filter:brightness(2)}}
 @keyframes cardFlipIn{0%{transform:rotateY(-90deg) scale(.72);opacity:0;filter:brightness(2)}55%{transform:rotateY(8deg) scale(1.04);opacity:1;filter:brightness(1.45)}100%{transform:rotateY(0) scale(1);opacity:1;filter:none}}
 .tile.reel-spin{overflow:hidden;animation:reelSpin .42s ease-out both;animation-delay:calc(var(--reel,0)*45ms);will-change:transform,opacity}
+.tile.reel-running{overflow:hidden;filter:blur(.7px) brightness(1.25);animation:reelRunning .11s linear infinite}
+@keyframes reelRunning{0%{transform:translateY(-18%)}100%{transform:translateY(18%)}}
 .tile.reel-spin img{animation:none;will-change:auto}
 .tile.anticipation-line{z-index:6;border:2px solid #fff7a8;box-shadow:0 0 8px 4px #ffe45c,0 0 22px 8px #ffb52a;animation:anticipationGlow .13s ease-in-out infinite alternate}
 @keyframes anticipationGlow{from{filter:brightness(1.1)}to{filter:brightness(2.2)}}
@@ -187,14 +189,67 @@ async function loadBalance(){
  try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins){$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';showFreeSpinOffer()}}
  catch(e){$('status').textContent=e.message;$('balance').textContent='Login required';if(!$('board').children.length)draw(randomBoard())}
 }
-async function dealCardsOneByOne(grid,cells){
- const targets=Array.isArray(cells)?[...new Set(cells.map(Number).filter(ix=>ix>=0&&ix<20))]:Array.from({length:20},(_,ix)=>ix);
- const next=visibleGrid.length===20?[...visibleGrid]:Array(20).fill("empty");
- for(const ix of targets){
-  next[ix]=grid[ix];
-  draw([...next],[],[ix]);
-  await sleep(turbo?55:115);
+function setCardFace(cell,rawId){
+ const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
+ cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'');
+ cell.innerHTML='';
+ if(id===null||id===undefined||id==='empty'){cell.classList.add('empty');return;}
+ const img=document.createElement('img');
+ img.draggable=false;img.decoding='async';img.loading='eager';
+ if(id==='scatter'){
+  img.className='scatter-art';img.alt='SCATTER';img.src=art.scatter;
+  img.onerror=()=>{img.remove();cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>＄</b><small>SCATTER</small></div>';};
+ }else{
+  const key=String(id||'ace').trim().toLowerCase();
+  const artKey=key==='goldenjoker'?'goldenJoker':key==='goldencard'?'ace':key;
+  img.alt=String(id);img.src=art[artKey]||art.ace;
+  img.onerror=()=>{img.onerror=null;img.src=art.ace;};
  }
+ cell.appendChild(img);
+}
+async function animateReels(grid){
+ if(!Array.isArray(grid)||grid.length!==20)return;
+ const cells=[...$('board').children];
+ if(cells.length!==20){draw(grid);return;}
+ // Each of the five reels cycles independently, then stops on its own final four cards.
+ for(let col=0;col<5;col++){
+  await sleep(turbo?35:105);
+  for(let tick=0;tick<(turbo?5:9);tick++){
+   for(let row=0;row<4;row++){
+    const cell=cells[row*5+col];
+    setCardFace(cell,ids[Math.floor(Math.random()*ids.length)]);
+    cell.classList.add('reel-running');
+   }
+   await sleep(turbo?38:62);
+  }
+  for(let row=0;row<4;row++){
+   const cell=cells[row*5+col];
+   setCardFace(cell,grid[row*5+col]);
+   cell.classList.remove('reel-running');
+  }
+ }
+ visibleGrid=[...grid];
+}
+async function animateAnticipationRow(grid){
+ const cells=[...$('board').children],pool=ids.filter(id=>id!=='scatter');
+ if(cells.length!==20)return;
+ for(let tick=0;tick<6;tick++){
+  for(let col=0;col<5;col++){
+   const cell=cells[5+col];
+   setCardFace(cell,pool[Math.floor(Math.random()*pool.length)]);
+   cell.classList.add('reel-running','anticipation-line');
+  }
+  await sleep(turbo?45:85);
+ }
+ for(let col=0;col<5;col++){
+  const cell=cells[5+col];
+  setCardFace(cell,grid[5+col]);
+  cell.classList.remove('reel-running');
+  cell.classList.add('anticipation-line');
+ }
+ await sleep(turbo?100:180);
+ cells.slice(5,10).forEach(cell=>cell.classList.remove('anticipation-line'));
+ visibleGrid=[...grid];
 }
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
@@ -207,31 +262,21 @@ async function play(){
  busy=true;$('spin').disabled=true;update();$('status').textContent='কার্ড ঘুরছে...';
  try{
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0}).then(value=>({value}),error=>({error}));
-  // Keep the currently landed cards visible while the server calculates the next result.
-  // Do not replace the board with a fresh random set during the spin animation.
-  [...$('board').children].forEach(cell=>cell.classList.add('reel-spin'));
-  await sleep(turbo?360:780);
+  // Keep the landed board untouched until the server returns the real result.
   const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
+  const firstBoard=(result.frames||[]).find(frame=>frame.type==='win'||frame.type==='anticipation')?.grid||result.finalGrid;
+  if(firstBoard)await animateReels(firstBoard);
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
-  if(!result.frames||!result.frames.length){const finalGrid=result.finalGrid||randomBoard();await dealCardsOneByOne(finalGrid);await sleep(turbo?100:220)}
+  if(!result.frames||!result.frames.length){if(result.finalGrid)await animateReels(result.finalGrid);await sleep(turbo?100:220)}
   else{
    for(const frame of result.frames){
     setCombo(frame.cascadeX||1,Boolean(result.freeSpin));
     if(frame.type==='anticipation'){
-     // Two scatters on the top row trigger a brief light-up and fast passing-card tease.
-     const pool=ids.filter(id=>id!=='scatter');
-     for(let pass=0;pass<5;pass++){
-      const passing=Array.from({length:20},()=>pool[Math.floor(Math.random()*pool.length)]);
-      draw(passing,[],[],true);
-      [...$('board').children].slice(5,10).forEach(cell=>cell.classList.add('anticipation-line'));
-      await sleep(turbo?65:105);
-     }
-     draw(frame.grid);
-     await sleep(turbo?90:170);
+     // Only the second reel row flashes; the other fifteen landed cards stay fixed.
+     await animateAnticipationRow(frame.grid);
      continue;
     }
     if(frame.type==='win'){
-     await dealCardsOneByOne(frame.grid);
      draw(frame.grid,frame.wins||[]);
      $('status').textContent='WINNING CARDS';
      await sleep(turbo?240:650);continue;
@@ -255,8 +300,8 @@ async function play(){
      const arriving=[...new Set((frame.cells||[]).map(Number).filter(ix=>ix>=0&&ix<20))];
      $('status').textContent='NEW CARDS FROM ABOVE';
      // Render the complete refill once; repeated full-board redraws caused visible card shaking.
-     await dealCardsOneByOne(frame.grid,arriving);
-     await sleep(turbo?100:220);
+     draw(frame.grid,[],arriving);
+     await sleep(turbo?220:420);
      continue;
     }
     draw(frame.grid,frame.wins||[]);
