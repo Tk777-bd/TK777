@@ -25,7 +25,7 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .tile.scatter-fallback{filter:none!important;background:radial-gradient(circle at 35% 28%,#fff6a6 0,#f7b72c 42%,#9b4b08 76%,#542304 100%);border:2px solid #ffe69a;box-shadow:inset 0 0 0 2px #b66a13,0 0 8px #ffbf37}
 .scatter-coin{width:90%;height:90%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fffbd0,#f8c23e 45%,#b66a12 78%,#6d3307);border:2px solid #fff0a8;box-shadow:inset 0 0 0 2px #d18b1e,0 1px 5px #0009;color:#7a3506;text-shadow:0 1px #fff5b8}
 .scatter-coin b{font:bold 34px Georgia;line-height:1}.scatter-coin small{font:bold 8px Arial;letter-spacing:.7px;color:#fff8d5;text-shadow:0 1px 2px #572500}
-.tile.golden-card,.tile.golden-joker{border:1px solid #ffe28a;background:transparent;box-shadow:0 0 8px 2px rgba(255,202,42,.72)}
+.tile.golden-joker{border:1px solid #ffe28a;background:transparent;box-shadow:0 0 8px 2px rgba(255,202,42,.72)}
 .tile.golden-copy img{filter:sepia(.48) saturate(1.55) hue-rotate(350deg) brightness(1.08)}
 
  .tile.golden-transform{animation:goldenTransform .62s ease both}
@@ -121,13 +121,13 @@ function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.ran
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
  visibleGrid=Array.isArray(grid)?[...grid]:[];
  const hit=new Set(wins||[]),transforms=new Set((goldenCells||[]).map(Number)),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
- for(const index of transforms){if(visibleGrid[index]==='goldenCard')visibleGrid[index]='wild';}
+ for(const index of transforms){if(visibleGrid[index]==='goldenKing')visibleGrid[index]='wild';}
  const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
  grid.forEach((rawId,index)=>{
   const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
   const cell=document.createElement('div');
-  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
+  cell.className='tile'++(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
   cell.style.setProperty('--reel',String(index%5));
   if(falling.has(index)){
    const move=moveByTarget.get(index);
@@ -207,7 +207,7 @@ async function loadBalance(){
 }
 function setCardFace(cell,rawId){
  const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
- cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'');
+ cell.className='tile'++(String(id||'').startsWith('golden')?' golden-copy':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'');
  cell.innerHTML='';
  if(id===null||id===undefined||id==='empty'){cell.classList.add('empty');return;}
  const img=document.createElement('img');
@@ -228,10 +228,10 @@ function transformYellowKCells(cells){
  const changed=[];
  for(const rawIndex of (cells||[])){
   const index=Number(rawIndex),cell=boardCells[index];
-  if(!cell||!visibleGrid||!(visibleGrid[index]==='goldenCard'||String(visibleGrid[index]||'').startsWith('golden')))continue;
+  if(!cell||!visibleGrid||!(visibleGrid[index]==='goldenKing'||String(visibleGrid[index]||'').startsWith('golden')))continue;
   const img=cell.querySelector('img');
   if(!img)continue;
-  img.alt='wild';img.src=art.wild;cell.classList.remove('golden-card','golden-copy');cell.classList.add('golden-transform');
+  img.alt='wild';img.src=art.wild;cell.classList.remove('golden-copy');cell.classList.add('golden-transform');
   visibleGrid[index]='wild';changed.push(index);
  }
  return changed;
