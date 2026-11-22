@@ -1576,9 +1576,9 @@ body{background:#063b39}
   transform:scale(var(--flight-glow-spread));
   transform-origin:center;
   transition:
-    --flight-glow-color 1.15s ease,
-    transform 1.35s cubic-bezier(.2,.65,.25,1),
-    opacity 1.15s ease;
+    --flight-glow-color 2.4s ease-in-out,
+    transform 2.6s cubic-bezier(.22,.61,.36,1),
+    opacity 2.4s ease-in-out;
 }
 @media(prefers-reduced-motion:reduce){
   .aviator-stage::before{transition:none}
