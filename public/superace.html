@@ -249,6 +249,9 @@ function setCardFace(cell,rawId){
   const artKey=(key==='goldenjoker'||key==='littlejoker')?'goldenJoker':key==='bigjoker'?'wild':key==='goldencard'?'king':key.startsWith('golden')?key.slice(6):key;
   img.alt=String(id);img.src=art[artKey]||art.ace;
   img.onerror=()=>{img.onerror=null;img.src=art.ace;};
+  // Keep the ordinary white King consistent during falling/cascade animations.
+  // The separate goldenCard must retain its original gold artwork.
+  if(key==='king')whiteKingArtPromise.then(src=>{if(img.isConnected&&key==='king')img.src=src;});
  }
  cell.appendChild(img);
 }
