@@ -2062,11 +2062,6 @@ function superAce(g) {
   stopCrashMonitor();
   shell(`
     <div class="superace-host">
-      <div class="game-top top">
-        <button class="secondary" onclick="home()">‹ BACK</button>
-        <b>${esc(g.name)}</b>
-        <span id="gameBalance">${money(me.balance)}</span>
-      </div>
       <iframe id="superAceFrame" class="superace-frame" title="Super Ace" src="/superace.html?gameId=${encodeURIComponent(g.id)}"></iframe>
     </div>
   `);
