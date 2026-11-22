@@ -1144,7 +1144,7 @@ async function route(req, env) {
         if(!removed.length){grid=nextAfterGolden;continue;}
         frames.push({type:"remove",grid:[...nextAfterGolden],cells:removed,cascadeX});
         const removedSet=new Set(removed);
-        const compacted=Array(20).fill(null),moved=[],refillCells=[];
+        const compacted=Array(20).fill(null),moved=[],moves=[],refillCells=[];
         // Each reel compacts independently: survivors fall to the bottom; fresh cards enter from above.
         for(let col=0;col<5;col++){
           const survivors=[];
@@ -1159,10 +1159,10 @@ async function route(req, env) {
           for(let row=0;row<emptyCount;row++)refillCells.push(row*5+col);
           for(const item of survivors){
             compacted[item.newIx]=item.id;
-            if(item.oldIx!==item.newIx)moved.push(item.newIx);
+            if(item.oldIx!==item.newIx){moved.push(newIx);moves.push({from:item.oldIx,to:newIx});}
           }
         }
-        frames.push({type:"drop",grid:[...compacted],cells:moved,cascadeX});
+        frames.push({type:"drop",grid:[...compacted],cells:moved,moves,cascadeX});
         const refilled=[...compacted];
         for(const ix of refillCells)refilled[ix]=pickCard(ix%5);
         grid=refilled;
