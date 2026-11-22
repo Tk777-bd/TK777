@@ -1110,7 +1110,7 @@ async function route(req, env) {
             const cells=[];
             for(let row=0;row<4;row++){
               const ix=row*5+col,card=grid[ix];
-              if(card===symbol.id||card==="wild"||card==="goldenCard"||card==="goldenJoker")cells.push(ix);
+              if(card===symbol.id||["wild","bigJoker","littleJoker","goldenJoker","goldenCard"].includes(card))cells.push(ix);
             }
             reels.push(cells);
           }
@@ -1153,8 +1153,25 @@ async function route(req, env) {
         // Golden Cards convert to wild Golden Jokers; converted Jokers may be removed in later cascades.
         const goldenCells=found.wins.filter(ix=>grid[ix]==="goldenCard");
         const nextAfterGolden=[...grid];
-        for(const ix of goldenCells)nextAfterGolden[ix]="goldenJoker";
-        if(goldenCells.length)frames.push({type:"golden",grid:[...nextAfterGolden],cells:goldenCells,cascadeX});
+        const transformedCells=[];
+        for(const ix of goldenCells){
+          const makeBig=rand()<0.5;
+          nextAfterGolden[ix]=makeBig?"bigJoker":"littleJoker";
+          transformedCells.push(ix);
+          if(makeBig){
+            const candidates=[];
+            for(let col=1;col<=4;col++)for(let row=0;row<4;row++){
+              const target=row*5+col,card=nextAfterGolden[target];
+              if(target!==ix&&!["scatter","wild","bigJoker","littleJoker","goldenJoker","goldenCard"].includes(card))candidates.push(target);
+            }
+            // Big Joker duplicates into 1–4 eligible positions on reels 2–5.
+            for(const target of candidates.sort(()=>rand()-.5).slice(0,1+Math.floor(rand()*4))){
+              nextAfterGolden[target]="bigJoker";
+              transformedCells.push(target);
+            }
+          }
+        }
+        if(goldenCells.length)frames.push({type:"golden",grid:[...nextAfterGolden],cells:transformedCells,cascadeX});
         const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard");
         if(!removed.length){grid=nextAfterGolden;continue;}
         frames.push({type:"remove",grid:[...nextAfterGolden],cells:removed,cascadeX});
@@ -1186,7 +1203,7 @@ async function route(req, env) {
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
-      const freeSpinAward=scatterTriggered?10:0;
+      const freeSpinAward=scatterTriggered?(isFreeSpin?5:10):0;
       freeSpins+=freeSpinAward;
       await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
       if(!isFreeSpin){const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);}
