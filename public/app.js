@@ -40,6 +40,16 @@ let crashSlots = [
 
 const $ = s => document.querySelector(s);
 
+function startTk777WelcomeAudio(){
+  if(sessionStorage.getItem('tk777_welcome_played'))return;
+  sessionStorage.setItem('tk777_welcome_played','1');
+  const audio=new Audio('/welcome-tk777.mp3');
+  audio.volume=0.9;
+  audio.play().catch(()=>sessionStorage.removeItem('tk777_welcome_played'));
+}
+document.addEventListener('pointerdown',startTk777WelcomeAudio,{once:true,capture:true});
+document.addEventListener('keydown',startTk777WelcomeAudio,{once:true,capture:true});
+
 window.addEventListener('message', event => {
   if (event.origin !== location.origin) return;
   const frame = document.getElementById('superAceFrame');
