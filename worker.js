@@ -1079,6 +1079,12 @@ async function route(req, env) {
       });
     }
 
+    if (p === "/api/superace-state" && method === "GET") {
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS superace_state (user_id TEXT PRIMARY KEY,free_spins INTEGER NOT NULL DEFAULT 0,bet_amount INTEGER NOT NULL DEFAULT 50,bet_multiplier INTEGER NOT NULL DEFAULT 1)").run();
+      const state = await env.DB.prepare("SELECT free_spins,bet_amount,bet_multiplier FROM superace_state WHERE user_id=?").bind(user.id).first();
+      return json({freeSpins:Number(state?.free_spins||0),betAmount:Number(state?.bet_amount||50),betMultiplier:Number(state?.bet_multiplier||1)});
+    }
+
     /* SUPER ACE: free 5x4 / 1024-ways inspired game with server-settled virtual coins */
     if (p === "/api/play" && method === "POST") {
       const body = await req.json();
@@ -1112,7 +1118,7 @@ async function route(req, env) {
         const found=findWins(grid),hit=new Set(found.wins);
         if(!found.groups.length)break;
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
-        for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*Math.min(g.ways,64)*bet*cascadeX*.035;
+        for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
         const next=[...grid],fresh=[];
         for(let col=0;col<5;col++){
