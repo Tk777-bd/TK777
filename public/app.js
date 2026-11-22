@@ -40,6 +40,21 @@ let crashSlots = [
 
 const $ = s => document.querySelector(s);
 
+window.addEventListener('message', event => {
+  if (event.origin !== location.origin) return;
+  const frame = document.getElementById('superAceFrame');
+  if (!frame || event.source !== frame.contentWindow) return;
+  if (event.data?.type !== 'tk777-balance-update') return;
+  const balance = Number(event.data.balance);
+  if (!Number.isFinite(balance) || balance < 0) return;
+  if (me) me.balance = balance;
+  const amount = money(balance);
+  ['topBalanceValue','memberBalanceValue','gameBalance'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = amount;
+  });
+});
+
 const api = async (path, body = null) => {
   const r = await fetch('/api' + path, {
     method: body ? 'POST' : 'GET',
@@ -2045,82 +2060,17 @@ function renderSuperAceCards(randomize = false) {
 
 function superAce(g) {
   stopCrashMonitor();
-
   shell(`
-    <div class="game-top top">
-      <button class="secondary" onclick="home()">‹ BACK</button>
-      <b>${esc(g.name)}</b>
-      <span id="gameBalance">${money(me.balance)}</span>
-    </div>
-    <div class="game-screen sa-screen">
-      <div class="sa-cabinet">
-        <div class="sa-wood-top">
-          <div class="sa-buy-bonus">BUY<br>BONUS</div>
-          <div class="sa-brand">SUPER ACE</div>
-          <div class="sa-multipliers">
-            <span class="active">×1</span><span>×2</span><span>×3</span><span>×5</span>
-          </div>
-          <div class="sa-wild-note">MATCH THE CARDS • WIN BIG <span>♛ WILD</span></div>
-        </div>
-        <div class="sa-reel-frame">
-          <div class="cards-grid sa-cards" id="cards">
-            ${renderSuperAceCards()}
-          </div>
-        </div>
-        <div class="sa-win-line"><span>WIN</span><strong id="saWin">0.000</strong></div>
-        <div class="sa-controls">
-          <div class="sa-control-icon">⚙</div>
-          <div class="sa-bet-control">
-            <label for="acebet">BET</label>
-            <input id="acebet" type="number" min="1" max="1000000" step="1" value="10">
-          </div>
-          <button class="sa-spin" id="aceSpin" onclick="playAce('${esc(g.id)}')"><span>✦</span><small>SPIN</small></button>
-          <div class="sa-control-icon sa-turbo">↻</div>
-        </div>
-        <div class="sa-balance-line"><span>LV 0</span> Balance <strong id="gameBalanceBottom">${money(me.balance)}</strong></div>
-        <div id="result" class="sa-result">স্পিন করতে গোল্ড বাটনে চাপ দিন</div>
+    <div class="superace-host">
+      <div class="game-top top">
+        <button class="secondary" onclick="home()">‹ BACK</button>
+        <b>${esc(g.name)}</b>
+        <span id="gameBalance">${money(me.balance)}</span>
       </div>
+      <iframe id="superAceFrame" class="superace-frame" title="Super Ace" src="/superace.html?gameId=${encodeURIComponent(g.id)}"></iframe>
     </div>
   `);
 }
-
-async function playAce(gameId) {
-  const btn = $('#aceSpin');
-  btn.disabled = true;
-
-  try {
-    const bet = Number($('#acebet').value);
-
-    if (!Number.isSafeInteger(bet) || bet < 1) {
-      throw Error('১ বা তার বেশি পূর্ণসংখ্যার বেট দিন');
-    }
-
-    const r = await api('/play',{
-      gameId,
-      betAmount:bet
-    });
-
-    me.balance = r.balance;
-
-    const suits = ['♠','♥','♦','♣'];
-
-    $('#cards').innerHTML = renderSuperAceCards(true);
-
-    $('#saWin').textContent = Number(r.payout || 0).toFixed(3);
-    $('#result').textContent =
-      `ফলাফল ${r.multiplier}x · পেআউট ${r.payout} ক্রেডিট · ব্যালেন্স ${money(r.balance)}`;
-
-    $('#gameBalance').textContent = money(r.balance);
-    $('#gameBalanceBottom').textContent = money(r.balance);
-
-  } catch (e) {
-    toast(e.message);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-
 /* MOBILE BROWSER BACK NAVIGATION */
 (function setupTk777BackNavigation() {
   const originalHome = home;
