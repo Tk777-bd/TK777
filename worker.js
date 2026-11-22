@@ -1079,104 +1079,64 @@ async function route(req, env) {
       });
     }
 
-    /* SUPER ACE: server-authoritative card cascades and main-balance settlement */
+    /* SUPER ACE: free 5x4 / 1024-ways inspired game with server-settled virtual coins */
     if (p === "/api/play" && method === "POST") {
       const body = await req.json();
       const gameId = String(body.gameId || "");
-      const bet = Number(body.betAmount);
-      const betMultiplier = Number(body.betMultiplier || 1);
-      if (!Number.isSafeInteger(bet) || bet < 1 || ![1,2,3,5].includes(betMultiplier) || bet * betMultiplier > 1000000) {
-        return json({ error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন" }, 400);
-      }
       const game = await env.DB.prepare("SELECT * FROM games WHERE id=? AND active=1").bind(gameId).first();
       if (!game || game.game_type !== "superace") return json({ error: "এই গেমের ধরন সঠিক নয়" }, 404);
-
-      const cardDefs = [
-        {id:"ace",weight:1,rate:3},{id:"king",weight:1,rate:2.5},
-        {id:"queen",weight:1,rate:2.3},{id:"jack",weight:1,rate:2},
-        {id:"spade",weight:1,rate:1.5},{id:"heart",weight:1,rate:1.5},
-        {id:"diamond",weight:1,rate:1.5},{id:"club",weight:1,rate:1.5},
-        {id:"wild",weight:.18,rate:2},{id:"scatter",weight:.22,rate:0}
-      ];
-      const pickCard = () => {
-        const total=cardDefs.reduce((sum,card)=>sum+card.weight,0);
-        let value=rand()*total;
-        for(const card of cardDefs){value-=card.weight;if(value<=0)return card.id;}
-        return cardDefs[0].id;
-      };
-      const findWins = grid => {
-        const visited=new Set(),groups=[];
-        const neighbors=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-        for(let row=0;row<3;row++)for(let col=0;col<5;col++){
-          const start=row*5+col;
-          if(visited.has(start))continue;
-          const id=grid[start],queue=[[row,col]],cells=[];
-          visited.add(start);
-          while(queue.length){
-            const [y,x]=queue.shift(),index=y*5+x;
-            cells.push(index);
-            for(const [dy,dx] of neighbors){
-              const ny=y+dy,nx=x+dx;
-              if(ny<0||ny>=3||nx<0||nx>=5)continue;
-              const next=ny*5+nx;
-              if(visited.has(next)||grid[next]!==id)continue;
-              visited.add(next);queue.push([ny,nx]);
-            }
-          }
-          if(cells.length>=3)groups.push({id,cells});
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS superace_state (user_id TEXT PRIMARY KEY,free_spins INTEGER NOT NULL DEFAULT 0,bet_amount INTEGER NOT NULL DEFAULT 50,bet_multiplier INTEGER NOT NULL DEFAULT 1)").run();
+      const saved = await env.DB.prepare("SELECT * FROM superace_state WHERE user_id=?").bind(user.id).first();
+      const isFreeSpin = Boolean(body.freeSpin) && Number(saved?.free_spins || 0) > 0;
+      const bet = isFreeSpin ? Number(saved.bet_amount) : Number(body.betAmount);
+      const betMultiplier = isFreeSpin ? Number(saved.bet_multiplier) : Number(body.betMultiplier || 1);
+      if (!Number.isSafeInteger(bet) || bet < 1 || ![1,2,3,5].includes(betMultiplier) || bet * betMultiplier > 1000000) return json({ error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন" }, 400);
+      const cards=[{id:"ace",rate:5},{id:"king",rate:4},{id:"queen",rate:3.5},{id:"jack",rate:3},{id:"spade",rate:2},{id:"heart",rate:2},{id:"diamond",rate:2},{id:"club",rate:2},{id:"wild",rate:0},{id:"scatter",rate:0}];
+      const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.28,.32];
+      const pickCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
+      const findWins=grid=>{
+        const groups=[],all=[];
+        for(const symbol of cards.filter(c=>!["wild","scatter"].includes(c.id))){
+          const reels=[];
+          for(let col=0;col<5;col++){const cells=[];for(let row=0;row<4;row++){const ix=row*5+col;if(grid[ix]===symbol.id||grid[ix]==="wild")cells.push(ix);}reels.push(cells);}
+          let ways=1,reelCount=0;
+          for(const cells of reels){if(!cells.length)break;ways*=cells.length;reelCount++;}
+          if(reelCount>=3){const cells=reels.slice(0,reelCount).flat();groups.push({id:symbol.id,cells,ways,reels:reelCount,rate:symbol.rate});all.push(...cells);}
         }
-        return groups;
+        return {groups,wins:[...new Set(all)]};
       };
-
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:25},pickCard),cascadeX=betMultiplier,totalWin=0,cascadeCount=0;
+      let grid=Array.from({length:20},pickCard),cascadeX=1,totalWin=0,cascadeCount=0,scatterCount=grid.filter(x=>x==="scatter").length;
       const frames=[];
-      for(let step=0;step<8;step++){
-        const groups=findWins(grid);
-        if(!groups.length)break;
-        const hit=new Set(groups.flatMap(group=>group.cells));
-        frames.push({type:"win",grid:[...grid],wins:[...hit],cascadeX});
-        for(const group of groups){
-          const rate=cardDefs.find(card=>card.id===group.id)?.rate||1;
-          totalWin+=rate*(group.cells.length-2)*bet*cascadeX*.22;
-        }
+      for(let step=0;step<6;step++){
+        const found=findWins(grid),hit=new Set(found.wins);
+        if(!found.groups.length)break;
+        frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
+        for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*Math.min(g.ways,64)*bet*cascadeX*.035;
         cascadeCount++;
-        const next=[...grid],freshCells=[];
+        const next=[...grid],fresh=[];
         for(let col=0;col<5;col++){
-          const survivors=[];
-          for(let row=2;row>=0;row--){const index=row*5+col;if(!hit.has(index))survivors.push(grid[index]);}
-          while(survivors.length<3)survivors.push(pickCard());
-          for(let row=2;row>=0;row--){
-            const index=row*5+col,newCard=survivors[2-row];
-            if(grid[index]!==newCard)freshCells.push(index);
-            next[index]=newCard;
-          }
+          const survivors=[];for(let row=3;row>=0;row--){const ix=row*5+col;if(!hit.has(ix))survivors.push(grid[ix]);}
+          while(survivors.length<4)survivors.push(pickCard());
+          for(let row=3;row>=0;row--){const ix=row*5+col,card=survivors[3-row];if(grid[ix]!==card)fresh.push(ix);next[ix]=card;}
         }
-        grid=next;
-        frames.push({type:"drop",grid:[...grid],drop:freshCells,cascadeX});
-        cascadeX=cascadeX===1?2:cascadeX===2?3:5;
+        grid=next;frames.push({type:"drop",grid:[...grid],drop:fresh,cascadeX});cascadeX=Math.min(cascadeX+1,5);
       }
-      const payout=Math.max(0,Math.floor(totalWin));
-      const multiplier=Number((payout/stake).toFixed(2));
-      const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();
-      if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);
+      const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
+      let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
+      if(scatterCount>=3)freeSpins+=8;
+      await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
+      if(!isFreeSpin){const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);}
       try{
         if(payout)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(payout,user.id).run();
-        const bal=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first();
+        const bal=await env.DB.prepare("SELECT balance FROM users WHERE id=?").bind(user.id).first(),entries=[];
         await ensureRebateSchema(env);
-        await env.DB.batch([
-          env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)")
-            .bind(roundId,user.id,gameId,"superace",stake,multiplier,payout),
-          env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
-            .bind(uid(),user.id,"game",-stake,bal.balance-payout,game.name+" বেট"),
-          ...(payout?[env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)")
-            .bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়")]:[])
-        ]);
-        return json({multiplier,payout,balance:bal.balance,roundId,stake,cascadeCount,frames,finalGrid:grid});
-      }catch(error){
-        await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();
-        throw error;
-      }
+        if(!isFreeSpin)entries.push(env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"game",-stake,bal.balance-payout,game.name+" বেট"));
+        if(payout)entries.push(env.DB.prepare("INSERT INTO transactions(id,user_id,type,amount,balance_after,note) VALUES(?,?,?,?,?,?)").bind(uid(),user.id,"win",payout,bal.balance,game.name+" জয়"));
+        entries.push(env.DB.prepare("INSERT INTO game_rounds(id,user_id,game_id,game_type,bet_amount,multiplier,payout) VALUES(?,?,?,?,?,?,?)").bind(roundId,user.id,gameId,"superace",isFreeSpin?0:stake,multiplier,payout));
+        await env.DB.batch(entries);
+        return json({multiplier,payout,balance:bal.balance,roundId,stake:isFreeSpin?0:stake,cascadeCount,frames,finalGrid:grid,freeSpins,freeSpin:isFreeSpin,scatterCount});
+      }catch(error){if(!isFreeSpin)await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(stake-payout,user.id).run();throw error;}
     }
 
     /* MINI GAMES */
