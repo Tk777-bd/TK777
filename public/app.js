@@ -44,7 +44,7 @@ const $ = s => document.querySelector(s);
 let tk777WelcomeAudio=null;
 let tk777WelcomeStarted=false;
 function startTk777WelcomeAudio(){
-  if(tk777WelcomeStarted || sessionStorage.getItem('tk777_welcome_played'))return;
+  if(tk777WelcomeStarted)return;
   if(!tk777WelcomeAudio){
     tk777WelcomeAudio=new Audio(window.TK777_WELCOME_AUDIO);
     tk777WelcomeAudio.volume=0.9;
@@ -54,7 +54,7 @@ function startTk777WelcomeAudio(){
   if(attempt && typeof attempt.then==='function'){
     attempt.then(()=>{
       tk777WelcomeStarted=true;
-      sessionStorage.setItem('tk777_welcome_played','1');
+
     }).catch(()=>{});
   }
 }
