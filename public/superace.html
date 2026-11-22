@@ -35,7 +35,7 @@
 @keyframes reelBlur{0%{transform:translateY(-10%);opacity:.72}100%{transform:translateY(10%);opacity:1}}
 @keyframes winPulse{from{filter:brightness(1.05)}to{filter:brightness(1.65)}}
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
-@keyframes cardDrop{0%{transform:translateY(-115%);opacity:.55}100%{transform:translateY(0);opacity:1}}
+@keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.72;filter:blur(1px)}72%{opacity:1;filter:blur(0)}100%{transform:translateY(0);opacity:1;filter:none}}
 .status{height:27px;text-align:center;padding-top:6px;font:bold 12px Arial;color:#ffe7a4;text-shadow:0 1px #321}
 .win-line{height:30px;text-align:center;color:#ffdf72;font:bold 18px Georgia}
 .controls{min-height:94px;display:flex;align-items:center;justify-content:space-around;padding:6px 7px;background:linear-gradient(180deg,#103b39,#092527 50%,#24190f 51%,#0d0d0b);border-top:2px solid #d3a95e;border-bottom:1px solid #9a6b31;gap:3px;box-shadow:0 -5px 16px #0007}
@@ -98,13 +98,19 @@ const art={
 let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,comboX=1;
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
-function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType){
+function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
  const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
+ const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
  grid.forEach((id,index)=>{
   const cell=document.createElement('div');
   cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(spinning?' reel-spin':'');
   cell.style.setProperty('--reel',String(index%5));
+  if(falling.has(index)){
+   const move=moveByTarget.get(index);
+   const fromOffset=move?(Math.floor(Number(move.from)/5)-Math.floor(Number(move.to)/5))*100:-115;
+   cell.style.setProperty('--fall-from',fromOffset+'%');
+  }
   if(id===null||id===undefined||id==='empty'){$('board').appendChild(cell);return;}
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
@@ -166,7 +172,7 @@ async function play(){
      await sleep(turbo?140:300);continue;
     }
     if(frame.type==='drop'){
-     draw(frame.grid,[],frame.cells||[]);
+     draw(frame.grid,[],frame.cells||[],false,[],[],null,frame.moves||[]);
      $('status').textContent='CARDS FALLING...';
      await sleep(turbo?180:420);continue;
     }
