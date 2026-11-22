@@ -109,7 +109,8 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
  const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
  const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
- grid.forEach((id,index)=>{
+ grid.forEach((rawId,index)=>{
+  const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
   const cell=document.createElement('div');
   cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(spinning?' reel-spin':'');
   cell.style.setProperty('--reel',String(index%5));
@@ -120,7 +121,9 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
   }
   if(id===null||id===undefined||id==='empty'){$('board').appendChild(cell);return;}
   if(id==='scatter'){
-   const img=document.createElement('img');img.className='scatter-art';img.alt='SCATTER';img.draggable=false;img.decoding='async';img.src=art.scatter;$('board').appendChild(cell);cell.appendChild(img);return;
+   const img=document.createElement('img');img.className='scatter-art';img.alt='SCATTER';img.draggable=false;img.decoding='async';img.src=art.scatter;
+   img.onerror=()=>{img.remove();cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>＄</b><small>SCATTER</small></div>';};
+   $('board').appendChild(cell);cell.appendChild(img);return;
   }
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
