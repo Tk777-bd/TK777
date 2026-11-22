@@ -1097,20 +1097,21 @@ async function route(req, env) {
       const bet = isFreeSpin ? Number(saved.bet_amount) : Number(body.betAmount);
       const betMultiplier = isFreeSpin ? Number(saved.bet_multiplier) : Number(body.betMultiplier || 1);
       if (!Number.isSafeInteger(bet) || bet < 1 || ![1,2,3,5].includes(betMultiplier) || bet * betMultiplier > 1000000) return json({ error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন" }, 400);
-      const cards=[{id:"ace",rate:5},{id:"king",rate:4},{id:"queen",rate:3.5},{id:"jack",rate:3},{id:"spade",rate:2},{id:"heart",rate:2},{id:"diamond",rate:2},{id:"club",rate:2},{id:"wild",rate:0},{id:"scatter",rate:0}];
-      const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.16,.10];
+      const cards=[{id:"ace",rate:5},{id:"king",rate:4},{id:"queen",rate:3.5},{id:"jack",rate:3},{id:"spade",rate:2},{id:"heart",rate:2},{id:"diamond",rate:2},{id:"club",rate:2},{id:"scatter",rate:0}];
+      // Ordinary wild cards never drop. A winning yellow K creates a temporary wild.
+      const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.10];
       const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
-      // Golden Cards land only on reels 2, 3 and 4, using the user's existing card artwork.
+      // Yellow K special cards appear only on reels 2–4 and count as K, not as wild.
       const pickCard=col=>(col>=1&&col<=3&&rand()<.065)?"goldenCard":pickBaseCard();
       const findWins=grid=>{
         const groups=[],all=[];
-        for(const symbol of cards.filter(c=>!["wild","scatter"].includes(c.id))){
+        for(const symbol of cards.filter(c=>c.id!=="scatter")){
           const reels=[];
           for(let col=0;col<5;col++){
             const cells=[];
             for(let row=0;row<4;row++){
               const ix=row*5+col,card=grid[ix];
-              if(card===symbol.id||["wild","bigJoker","littleJoker","goldenJoker","goldenCard"].includes(card))cells.push(ix);
+              if(card===symbol.id||card==="wild"||(symbol.id==="king"&&card==="goldenCard"))cells.push(ix);
             }
             reels.push(cells);
           }
@@ -1150,30 +1151,16 @@ async function route(req, env) {
         frames.push({type:"win",grid:[...grid],wins:found.wins,cascadeX});
         for(const g of found.groups)totalWin+=g.rate*Math.max(1,g.reels-2)*g.ways*bet*cascadeX*.0035;
         cascadeCount++;
-        // Golden Cards convert to wild Golden Jokers; converted Jokers may be removed in later cascades.
-        const goldenCells=found.wins.filter(ix=>grid[ix]==="goldenCard");
+        // Only yellow K cards that are part of a K win transform into temporary wilds.
+        const goldenCells=found.groups.filter(group=>group.id==="king").flatMap(group=>group.cells).filter(ix=>grid[ix]==="goldenCard");
         const nextAfterGolden=[...grid];
-        const transformedCells=[];
-        for(const ix of goldenCells){
-          const makeBig=rand()<0.5;
-          nextAfterGolden[ix]=makeBig?"bigJoker":"littleJoker";
-          transformedCells.push(ix);
-          if(makeBig){
-            const candidates=[];
-            for(let col=1;col<=4;col++)for(let row=0;row<4;row++){
-              const target=row*5+col,card=nextAfterGolden[target];
-              if(target!==ix&&!["scatter","wild","bigJoker","littleJoker","goldenJoker","goldenCard"].includes(card))candidates.push(target);
-            }
-            // Big Joker duplicates into 1–4 eligible positions on reels 2–5.
-            for(const target of candidates.sort(()=>rand()-.5).slice(0,1+Math.floor(rand()*4))){
-              nextAfterGolden[target]="bigJoker";
-              transformedCells.push(target);
-            }
-          }
+        if(goldenCells.length){
+          for(const ix of goldenCells)nextAfterGolden[ix]="wild";
+          frames.push({type:"golden",grid:[...nextAfterGolden],cells:goldenCells,cascadeX});
         }
-        if(goldenCells.length)frames.push({type:"golden",grid:[...nextAfterGolden],cells:transformedCells,cascadeX});
-        const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard");
-        if(!removed.length){grid=nextAfterGolden;continue;}
+        // Converted wilds remain for the next cascade; when they help form a win,
+        // they are included in found.wins and removed with that winning group.
+        const removed=found.wins.filter(ix=>grid[ix]!=="goldenCard"||goldenCells.includes(ix));
         frames.push({type:"remove",grid:[...nextAfterGolden],cells:removed,cascadeX});
         const removedSet=new Set(removed);
         const compacted=Array(20).fill(null),moved=[],moves=[],refillCells=[];
