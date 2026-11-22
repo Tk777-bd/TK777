@@ -1172,7 +1172,7 @@ async function route(req, env) {
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
       let freeSpins=isFreeSpin?Math.max(0,Number(saved.free_spins)-1):Number(saved?.free_spins||0);
-      const freeSpinAward=scatterTriggered?(isFreeSpin?5:10):0;
+      const freeSpinAward=scatterTriggered?10:0;
       freeSpins+=freeSpinAward;
       await env.DB.prepare("INSERT INTO superace_state(user_id,free_spins,bet_amount,bet_multiplier) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,bet_amount=excluded.bet_amount,bet_multiplier=excluded.bet_multiplier").bind(user.id,freeSpins,bet,betMultiplier).run();
       if(!isFreeSpin){const debit=await env.DB.prepare("UPDATE users SET balance=balance-? WHERE id=? AND balance>=?").bind(stake,user.id,stake).run();if(!debit.meta.changes)return json({error:"পর্যাপ্ত ব্যালেন্স নেই"},400);}
