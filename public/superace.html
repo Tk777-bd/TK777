@@ -13,7 +13,10 @@
 .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:100%;max-width:410px;aspect-ratio:1.04/1;margin:auto;background:transparent;align-items:stretch;justify-items:stretch}
 .tile{position:relative;overflow:hidden;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;transition:filter .2s,transform .2s}
 .tile img{width:100%;height:100%;object-fit:fill;display:block;padding:0;margin:0;background:transparent;min-width:0;min-height:0}
-.tile.dim{filter:brightness(.28) saturate(.65)}\n.tile.golden-joker{border:0;background:transparent;box-shadow:0 0 7px 1px rgba(255,202,42,.65)}\n.tile.golden-joker:before{content:'GOLDEN JOKER';position:absolute;z-index:3;bottom:2px;left:0;right:0;text-align:center;font:bold 7px Arial;color:#fff4a8;text-shadow:0 1px 3px #542500;pointer-events:none}
+.tile.dim{filter:brightness(.28) saturate(.65)}
+.tile.scatter-fallback{filter:none!important;background:radial-gradient(circle at 35% 28%,#fff6a6 0,#f7b72c 42%,#9b4b08 76%,#542304 100%);border:2px solid #ffe69a;box-shadow:inset 0 0 0 2px #b66a13,0 0 8px #ffbf37}
+.scatter-coin{width:90%;height:90%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fffbd0,#f8c23e 45%,#b66a12 78%,#6d3307);border:2px solid #fff0a8;box-shadow:inset 0 0 0 2px #d18b1e,0 1px 5px #0009;color:#7a3506;text-shadow:0 1px #fff5b8}
+.scatter-coin b{font:bold 34px Georgia;line-height:1}.scatter-coin small{font:bold 8px Arial;letter-spacing:.7px;color:#fff8d5;text-shadow:0 1px 2px #572500}\n.tile.golden-joker{border:0;background:transparent;box-shadow:0 0 7px 1px rgba(255,202,42,.65)}\n.tile.golden-joker:before{content:'GOLDEN JOKER';position:absolute;z-index:3;bottom:2px;left:0;right:0;text-align:center;font:bold 7px Arial;color:#fff4a8;text-shadow:0 1px 3px #542500;pointer-events:none}
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
 .tile.win:after{content:"";position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,210,.85) 48%,transparent 63%);transform:translateX(-130%);animation:shineSweep .72s ease-in-out infinite}
 .tile.drop{animation:cardDrop .48s cubic-bezier(.16,.78,.2,1) both}
@@ -85,7 +88,10 @@ function draw(grid,wins,drop){
  const hit=new Set(wins||[]);$('board').innerHTML='';
  grid.forEach((id,index)=>{
   const cell=document.createElement('div');cell.className='tile'+(id==='wild'?' golden-joker':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'');
-  const img=document.createElement('img');img.src=art[id]||art.ace;img.alt=id;img.draggable=false;cell.appendChild(img);$('board').appendChild(cell);
+  const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
+  const cardKey=String(id||'ace').trim().toLowerCase();
+  img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>$</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
+  img.src=art[cardKey]||art.ace;cell.appendChild(img);$('board').appendChild(cell);
  });
 }
 function update(){
