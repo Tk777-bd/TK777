@@ -1159,7 +1159,7 @@ async function route(req, env) {
           for(let row=0;row<emptyCount;row++)refillCells.push(row*5+col);
           for(const item of survivors){
             compacted[item.newIx]=item.id;
-            if(item.oldIx!==item.newIx){moved.push(newIx);moves.push({from:item.oldIx,to:newIx});}
+            if(item.oldIx!==item.newIx){moved.push(item.newIx);moves.push({from:item.oldIx,to:item.newIx});}
           }
         }
         frames.push({type:"drop",grid:[...compacted],cells:moved,moves,cascadeX});
