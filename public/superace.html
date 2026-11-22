@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Super Ace</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#08091a;color:#fff;font-family:Arial,sans-serif}
-.game{width:min(100%,430px);min-height:100%;margin:auto;overflow:hidden;background:radial-gradient(ellipse at center,#12606a,#073d49 70%,#071525);padding-bottom:5px}
-.top{height:72px;background:linear-gradient(#090b20,#15152b 65%,#4c1c0b);position:relative;text-align:center}
-.close{position:absolute;left:12px;top:12px;border:0;background:transparent;color:#fff;font-size:26px;line-height:1}
-.brand{position:absolute;bottom:5px;width:100%;font:bold 22px Georgia;color:#ffe8a4;text-shadow:0 2px #5d1b05,0 0 9px #ffae2b}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#08091a;color:#fff;font-family:Arial,sans-serif}
+.game{width:100%;height:100dvh;min-height:100dvh;margin:0 auto;overflow:hidden;background:radial-gradient(ellipse at center,#12606a,#073d49 70%,#071525);padding-bottom:5px}
+.top{height:44px;background:linear-gradient(#090b20,#15152b 65%,#4c1c0b);position:relative;text-align:center}
+.close{position:absolute;left:10px;top:7px;border:0;background:transparent;color:#fff;font-size:26px;line-height:1}
+.brand{display:none;position:absolute;bottom:5px;width:100%;font:bold 22px Georgia;color:#ffe8a4;text-shadow:0 2px #5d1b05,0 0 9px #ffae2b}
 .multis{height:38px;width:78%;margin:-1px auto 0;position:relative;z-index:2;display:flex;justify-content:space-around;align-items:center;border:2px solid #ffe7a2;border-radius:24px;background:linear-gradient(#ffefb2,#e4a02a 58%,#a74c0b);box-shadow:0 0 12px #ffb82e}
 .multi{border:0;background:transparent;color:#38200a;font-weight:900;font-size:17px;padding:5px 11px;border-radius:17px}
 .multi.active{background:linear-gradient(#fff4b7,#ff9f16);color:#fff;text-shadow:0 1px #6b2a00;box-shadow:0 0 9px #fff4b0}
@@ -36,7 +36,7 @@
 @media(min-width:500px){.game{min-height:650px}.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,min(21.8vw,88px));gap:1px;max-width:410px;margin:auto;background:transparent}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
 </style></head><body><main class="game">
-<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button><div class="brand">SuperAce</div></header>
+<header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button></header>
 <div class="multis"><button class="multi active" data-x="1">×1</button><button class="multi" data-x="2">×2</button><button class="multi" data-x="3">×3</button><button class="multi" data-x="5">×5</button></div>
 <section class="stage"><div class="board" id="board"></div></section>
 <div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">WIN&nbsp; <span id="win">0.000</span></div>
