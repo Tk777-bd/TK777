@@ -1122,8 +1122,9 @@ async function route(req, env) {
       };
       const stake=bet*betMultiplier,roundId=uid();
       let grid=Array.from({length:20},(_,ix)=>pickCard(ix%5)),cascadeX=1,totalWin=0,cascadeCount=0;
-      const scatterCount=grid.filter(x=>x==="scatter").length;
-      const scatterTriggered=scatterCount>=3;
+      let scatterCount=grid.filter(x=>x==="scatter").length;
+      let scatterTriggered=scatterCount>=3;
+      const trackScatters=board=>{const count=board.filter(x=>x==="scatter").length;if(count>scatterCount)scatterCount=count;if(count>=3)scatterTriggered=true;};
       let maxCascadeX=0;
       const frames=[];
       const comboSteps=[1,2,3,5];
@@ -1166,6 +1167,7 @@ async function route(req, env) {
         const refilled=[...compacted];
         for(const ix of refillCells)refilled[ix]=pickCard(ix%5);
         grid=refilled;
+        trackScatters(grid);
         frames.push({type:"refill",grid:[...grid],cells:refillCells,cascadeX});
       }
       const payout=Math.max(0,Math.floor(totalWin)),multiplier=Number((payout/stake).toFixed(2));
