@@ -125,7 +125,7 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
  grid.forEach((rawId,index)=>{
   const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
   const cell=document.createElement('div');
-  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
+  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'');
   cell.style.setProperty('--reel',String(index%5));
   if(falling.has(index)){
    const move=moveByTarget.get(index);
@@ -140,7 +140,7 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
   }
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
-  const artKey=cardKey==='goldenjoker'?'goldenJoker':cardKey==='goldencard'?'ace':cardKey;
+  const artKey=(cardKey==='goldenjoker'||cardKey==='littlejoker')?'goldenJoker':cardKey==='bigjoker'?'wild':cardKey==='goldencard'?'ace':cardKey;
   img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>★</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
   img.src=art[artKey]||art.ace;cell.appendChild(img);$('board').appendChild(cell);
  });
@@ -205,7 +205,7 @@ async function loadBalance(){
 }
 function setCardFace(cell,rawId){
  const id=String(rawId??'').trim().toLowerCase()==='scatter'?'scatter':rawId;
- cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'');
+ cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(['goldenJoker','littleJoker'].includes(id)?' golden-joker':'')+(id==='bigJoker'?' big-joker':'');
  cell.innerHTML='';
  if(id===null||id===undefined||id==='empty'){cell.classList.add('empty');return;}
  const img=document.createElement('img');
@@ -215,7 +215,7 @@ function setCardFace(cell,rawId){
   img.onerror=()=>{img.remove();cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>＄</b><small>SCATTER</small></div>';};
  }else{
   const key=String(id||'ace').trim().toLowerCase();
-  const artKey=key==='goldenjoker'?'goldenJoker':key==='goldencard'?'ace':key;
+  const artKey=(key==='goldenjoker'||key==='littlejoker')?'goldenJoker':key==='bigjoker'?'wild':key==='goldencard'?'ace':key;
   img.alt=String(id);img.src=art[artKey]||art.ace;
   img.onerror=()=>{img.onerror=null;img.src=art.ace;};
  }
