@@ -117,9 +117,11 @@ const art={
 };
 let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,comboX=1,totalWin=0;
 let freeSpinReady=false;
+let visibleGrid=[];
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
+ visibleGrid=Array.isArray(grid)?[...grid]:[];
  const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
  const moveByTarget=new Map((moves||[]).map(move=>[Number(move.to),move]));
  $('board').innerHTML='';
@@ -185,6 +187,15 @@ async function loadBalance(){
  try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins){$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';showFreeSpinOffer()}}
  catch(e){$('status').textContent=e.message;$('balance').textContent='Login required';if(!$('board').children.length)draw(randomBoard())}
 }
+async function dealCardsOneByOne(grid,cells){
+ const targets=Array.isArray(cells)?[...new Set(cells.map(Number).filter(ix=>ix>=0&&ix<20))]:Array.from({length:20},(_,ix)=>ix);
+ const next=visibleGrid.length===20?[...visibleGrid]:Array(20).fill("empty");
+ for(const ix of targets){
+  next[ix]=grid[ix];
+  draw([...next],[],[ix]);
+  await sleep(turbo?55:115);
+ }
+}
 function sendBalanceToParent(){
  try{parent.postMessage({type:'tk777-balance-update',balance:balance},location.origin)}catch(_){}
 }
@@ -202,7 +213,7 @@ async function play(){
   await sleep(turbo?360:780);
   const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
-  if(!result.frames||!result.frames.length){draw(result.finalGrid||randomBoard());await sleep(turbo?160:420)}
+  if(!result.frames||!result.frames.length){const finalGrid=result.finalGrid||randomBoard();await dealCardsOneByOne(finalGrid);await sleep(turbo?100:220)}
   else{
    for(const frame of result.frames){
     setCombo(frame.cascadeX||1,Boolean(result.freeSpin));
@@ -218,6 +229,12 @@ async function play(){
      draw(frame.grid);
      await sleep(turbo?90:170);
      continue;
+    }
+    if(frame.type==='win'){
+     await dealCardsOneByOne(frame.grid);
+     draw(frame.grid,frame.wins||[]);
+     $('status').textContent='WINNING CARDS';
+     await sleep(turbo?240:650);continue;
     }
     if(frame.type==='golden'){
      draw(frame.grid,[],[],false,frame.cells||[]);
@@ -238,14 +255,15 @@ async function play(){
      const arriving=[...new Set((frame.cells||[]).map(Number).filter(ix=>ix>=0&&ix<20))];
      $('status').textContent='NEW CARDS FROM ABOVE';
      // Render the complete refill once; repeated full-board redraws caused visible card shaking.
-     draw(frame.grid,[],arriving);
-     await sleep(turbo?220:420);
+     await dealCardsOneByOne(frame.grid,arriving);
+     await sleep(turbo?100:220);
      continue;
     }
     draw(frame.grid,frame.wins||[]);
     await sleep(turbo?240:650);
    }
-   draw(result.finalGrid||randomBoard());
+   // Keep the final settled board; do not redraw every card together.
+   if(Array.isArray(result.finalGrid)&&result.finalGrid.length===20)draw(result.finalGrid);
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
   totalWin+=Math.max(0,Number(result.payout||0));$('win').textContent=fmt(totalWin);
