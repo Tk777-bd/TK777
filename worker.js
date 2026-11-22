@@ -1098,7 +1098,7 @@ async function route(req, env) {
       const betMultiplier = isFreeSpin ? Number(saved.bet_multiplier) : Number(body.betMultiplier || 1);
       if (!Number.isSafeInteger(bet) || bet < 1 || ![1,2,3,5].includes(betMultiplier) || bet * betMultiplier > 1000000) return json({ error: "বেট ১ থেকে ১০,০০,০০০ ক্রেডিটের মধ্যে দিন" }, 400);
       const cards=[{id:"ace",rate:5},{id:"king",rate:4},{id:"queen",rate:3.5},{id:"jack",rate:3},{id:"spade",rate:2},{id:"heart",rate:2},{id:"diamond",rate:2},{id:"club",rate:2},{id:"wild",rate:0},{id:"scatter",rate:0}];
-      const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.28,.32];
+      const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.16,.10];
       const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
       // Golden Cards land only on reels 2, 3 and 4, using the user's existing card artwork.
       const pickCard=col=>(col>=1&&col<=3&&rand()<.065)?"goldenCard":pickBaseCard();
@@ -1121,13 +1121,27 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      let grid=Array.from({length:20},(_,ix)=>pickCard(ix%5)),cascadeX=1,totalWin=0,cascadeCount=0;
+      // Target about 30% of paid/free rounds to start with a winning combination.
+      // The remaining rounds are deliberately generated without a starting match.
+      const allowWin=rand()<0.30;
+      const makeBoard=()=>Array.from({length:20},(_,ix)=>pickCard(ix%5));
+      let grid=makeBoard();
+      for(let attempt=0;attempt<500;attempt++){
+        const hasWin=findWins(grid).groups.length>0;
+        if(hasWin===allowWin)break;
+        grid=makeBoard();
+      }
+      let cascadeX=1,totalWin=0,cascadeCount=0;
       let scatterCount=grid.filter(x=>x==="scatter").length;
       let scatterTriggered=scatterCount>=3;
       const trackScatters=board=>{const count=board.filter(x=>x==="scatter").length;if(count>scatterCount)scatterCount=count;if(count>=3)scatterTriggered=true;};
       let maxCascadeX=0;
       const frames=[];
       const comboSteps=[1,2,3,5];
+      // Two scatters on the first row: send an anticipation animation before any next cards fall.
+      if(grid.slice(0,5).filter(x=>x==="scatter").length===2){
+        frames.push({type:"anticipation",grid:[...grid],row:1});
+      }
       for(let step=0;step<8;step++){
         const found=findWins(grid),hit=new Set(found.wins);
         if(!found.groups.length)break;
