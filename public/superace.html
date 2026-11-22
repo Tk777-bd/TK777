@@ -98,15 +98,17 @@ let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,com
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType){
- const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]);$('board').innerHTML='';
+ const hit=new Set(wins||[]),transforms=new Set(goldenCells||[]),replacing=new Set(replaceCells||[]),falling=new Set(drop||[]);
+ $('board').innerHTML='';
  grid.forEach((id,index)=>{
   const cell=document.createElement('div');
-  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(replacing.has(index)&&replaceType==='in'?' flip-in':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'')+(spinning?' reel-spin':'');
+  cell.className='tile'+(id==='goldenCard'?' golden-card':'')+(id==='goldenJoker'?' golden-joker':'')+(transforms.has(index)?' golden-transform':'')+(replacing.has(index)&&replaceType==='out'?' flip-out':'')+(falling.has(index)?' drop':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(spinning?' reel-spin':'');
   cell.style.setProperty('--reel',String(index%5));
+  if(id===null||id===undefined||id==='empty'){$('board').appendChild(cell);return;}
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
   const artKey=(cardKey==='goldencard'||cardKey==='goldenjoker')?'ace':cardKey;
-  img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>$</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
+  img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>★</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
   img.src=art[artKey]||art.ace;cell.appendChild(img);$('board').appendChild(cell);
  });
 }
@@ -141,7 +143,7 @@ async function play(){
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
  if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
- busy=true;auto=auto;$('spin').disabled=true;update();$('win').textContent='0.000';$('status').textContent='কার্ড ঘুরছে...';
+ busy=true;$('spin').disabled=true;update();$('win').textContent='0.000';$('status').textContent='কার্ড ঘুরছে...';
  try{
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0}).then(value=>({value}),error=>({error}));
   draw(randomBoard(),[],[],true);
@@ -155,23 +157,25 @@ async function play(){
     if(frame.type==='golden'){
      draw(frame.grid,[],[],false,frame.cells||[]);
      $('status').textContent='✨ GOLDEN CARD → GOLDEN JOKER';
-     await sleep(turbo?260:620);
-     continue;
+     await sleep(turbo?260:620);continue;
     }
-    if(frame.type==='replaceOut'){
+    if(frame.type==='remove'){
      draw(frame.grid,[],[],false,[],frame.cells||[],'out');
-     $('status').textContent='WINNING CARDS · FLIPPING';
-     await sleep(turbo?120:280);
-     continue;
+     $('status').textContent='WINNING CARDS · REMOVED';
+     await sleep(turbo?140:300);continue;
     }
-    if(frame.type==='replace'){
-     draw(frame.grid,[],[],false,[],frame.cells||[],'in');
-     $('status').textContent='NEW CARDS · CASCADE';
-     await sleep(turbo?170:380);
-     continue;
+    if(frame.type==='drop'){
+     draw(frame.grid,[],frame.cells||[]);
+     $('status').textContent='CARDS FALLING...';
+     await sleep(turbo?180:420);continue;
     }
-    draw(frame.grid,frame.wins||[],frame.type==='drop'?frame.drop||[]:[]);
-    await sleep(turbo?(frame.type==='win'?240:150):(frame.type==='win'?650:380));
+    if(frame.type==='refill'){
+     draw(frame.grid,[],frame.cells||[]);
+     $('status').textContent='NEW CARDS FROM ABOVE';
+     await sleep(turbo?180:420);continue;
+    }
+    draw(frame.grid,frame.wins||[]);
+    await sleep(turbo?240:650);
    }
    draw(result.finalGrid||randomBoard());
   }
@@ -180,10 +184,7 @@ async function play(){
   const awarded=Number(result.freeSpinAward||0);
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
- finally{
-  busy=false;$('spin').disabled=false;update();
-  if(auto){await sleep(450);if(auto)play()}
- }
+ finally{busy=false;$('spin').disabled=false;update();if(auto){await sleep(450);if(auto)play()}}
 }
 $('spin').addEventListener('click',()=>{auto=false;play()});
 $('auto').addEventListener('click',()=>{if(busy)return;auto=!auto;$('auto').style.background=auto?'radial-gradient(circle,#ffe58a,#a65a08)':'';if(auto)play()});
