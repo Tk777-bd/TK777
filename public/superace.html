@@ -279,7 +279,7 @@ async function play(){
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
   if(!frames.length){await sleep(turbo?100:220)}
   else{
-   for(const frame of result.frames){
+   for(const frame of frames){
     setCombo(frame.cascadeX||1,Boolean(result.freeSpin));
     if(frame.type==='anticipation'){
      // Only the second reel row flashes; the other fifteen landed cards stay fixed.
