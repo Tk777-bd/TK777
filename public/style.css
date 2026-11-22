@@ -1541,3 +1541,8 @@ body{background:#063b39}
 @media(prefers-reduced-motion:reduce){
   .game::after{animation:none;opacity:0}
 }
+/* Super Ace standalone high-definition game frame */
+.superace-host{width:100%;padding:0 0 8px;overflow:hidden}
+.superace-host .game-top{margin:0 0 5px}
+.superace-frame{display:block;width:100%;height:calc(100dvh - 190px);min-height:520px;border:0;border-radius:12px;background:#08091a}
+@media(max-height:700px){.superace-frame{height:calc(100dvh - 160px);min-height:460px}}
