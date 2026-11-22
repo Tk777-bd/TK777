@@ -59,6 +59,13 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @media(min-width:500px){.game{width:min(94vw,500px);height:94dvh;margin:auto}.board{width:min(100%,420px)}}
 @media(max-height:590px){.top{height:62px;flex-basis:62px}.stage{padding:4px}.controls{flex-basis:58px;min-height:58px}.spin{width:49px;height:49px;flex-basis:49px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
+.free-overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78)}
+.free-overlay.show{display:flex}
+.free-panel{width:min(92vw,340px);padding:25px 18px;text-align:center;border:2px solid #f5cf67;border-radius:18px;background:radial-gradient(ellipse at top,#6e3c13,#17101b 72%);box-shadow:0 0 35px #f5b83b66;color:#fff}
+.free-panel h2{margin:0 0 10px;color:#ffe28a;font-size:25px;text-shadow:0 2px 8px #000}
+.free-panel p{margin:8px 0 18px;font-size:17px}
+.free-start{border:0;border-radius:30px;padding:13px 24px;font-weight:900;font-size:17px;color:#382000;background:linear-gradient(#fff0a8,#e9a82d);box-shadow:0 4px 0 #8a4b08}
+
 </style></head><body><main class="game">
 <header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button> <div class="brand">SuperAce</div></header>
 <div class="multis" id="comboMeter" aria-label="Combo multiplier"><div class="multi active" data-x="1">×1</div><div class="multi" data-x="2">×2</div><div class="multi" data-x="3">×3</div><div class="multi" data-x="5">×5</div></div>
@@ -71,6 +78,9 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
  <div class="ctrl"><button class="round" id="turbo" type="button">ϟ</button>Turbo</div>
 </section>
 <div class="balance">Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
+<div class="free-overlay" id="freeOverlay" role="dialog" aria-modal="true" aria-label="Free spins bonus">
+ <div class="free-panel"><h2>🎉 FREE SPINS UNLOCKED!</h2><p id="freeOfferText">আপনি ১০টি Free Spin পেয়েছেন</p><button class="free-start" id="freeStart" type="button">START FREE SPINS</button></div>
+</div>
 </main>
 <script>
 (function(){
@@ -104,6 +114,7 @@ const art={
  goldenJoker:"/golden-joker.svg",
 };
 let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,comboX=1;
+let freeSpinReady=false;
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
 function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves){
@@ -169,7 +180,7 @@ async function request(path,body){
 }
 async function loadBalance(){
  draw(randomBoard());
- try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins)$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER'}
+ try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins){$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';showFreeSpinOffer()}}
  catch(e){$('status').textContent=e.message;$('balance').textContent='Login required';if(!$('board').children.length)draw(randomBoard())}
 }
 function sendBalanceToParent(){
@@ -186,7 +197,7 @@ async function play(){
   draw(randomBoard(),[],[],true);
   await sleep(turbo?360:780);
   const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
-  balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);update();sendBalanceToParent();
+  balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
   if(!result.frames||!result.frames.length){draw(result.finalGrid||randomBoard());await sleep(turbo?160:420)}
   else{
    for(const frame of result.frames){
@@ -227,12 +238,30 @@ async function play(){
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
   $('win').textContent=fmt(result.payout||0);
-  const awarded=Number(result.freeSpinAward||0);
+  const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
- finally{busy=false;$('spin').disabled=false;update();if(auto){await sleep(450);if(auto)play()}}
+ finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
 }
-$('spin').addEventListener('click',()=>{auto=false;play()});
+function updateFreeSpinButton(){
+ if(freeSpins>0&&freeSpinReady){$('spin').innerHTML='✦<br>FREE SPIN<br><small>'+freeSpins+' LEFT</small>';}
+ else if(freeSpins>0){$('spin').innerHTML='✦<br>START<br>'+freeSpins+' FREE';}
+ else $('spin').innerHTML='✦<br>SPIN';
+}
+function showFreeSpinOffer(){
+ freeSpinReady=false;
+ $('freeOfferText').textContent='আপনি '+freeSpins+'টি Free Spin পেয়েছেন। শুরু করতে নিচের বাটনে চাপ দিন।';
+ $('freeStart').textContent='START '+freeSpins+' FREE SPINS';
+ $('freeOverlay').classList.add('show');
+ updateFreeSpinButton();
+}
+$('freeStart').addEventListener('click',()=>{
+ $('freeOverlay').classList.remove('show');
+ freeSpinReady=true;
+ $('status').textContent='FREE SPINS READY · '+freeSpins+' LEFT';
+ updateFreeSpinButton();
+});
+$('spin').addEventListener('click',()=>{auto=false;if(freeSpins>0&&!freeSpinReady){showFreeSpinOffer();return;}play()});
 $('auto').addEventListener('click',()=>{if(busy)return;auto=!auto;$('auto').style.background=auto?'radial-gradient(circle,#ffe58a,#a65a08)':'';if(auto)play()});
 $('turbo').addEventListener('click',()=>{turbo=!turbo;$('turbo').style.background=turbo?'radial-gradient(circle,#ffe58a,#a65a08)':''});
 $('betMinus').addEventListener('click',()=>{if(busy)return;bet=Math.max(1,bet-10);update()});
