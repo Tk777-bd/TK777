@@ -196,7 +196,9 @@ async function play(){
  busy=true;$('spin').disabled=true;update();$('status').textContent='কার্ড ঘুরছে...';
  try{
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0}).then(value=>({value}),error=>({error}));
-  draw(randomBoard(),[],[],true);
+  // Keep the currently landed cards visible while the server calculates the next result.
+  // Do not replace the board with a fresh random set during the spin animation.
+  [...$('board').children].forEach(cell=>cell.classList.add('reel-spin'));
   await sleep(turbo?360:780);
   const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);if(freeSpins<=0)freeSpinReady=false;update();updateFreeSpinButton();sendBalanceToParent();
