@@ -128,7 +128,7 @@ async function play(){
    }
    draw(result.finalGrid||randomBoard());
   }
-  setCombo(1,false);
+  setCombo(freeSpins>0?2:1,false);
   $('win').textContent=fmt(result.payout||0);
   $('status').textContent=(result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(Number(result.scatterCount||0)>=3?' · +8 FREE SPINS':'')+(freeSpins?' · FREE SPINS '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
