@@ -43,8 +43,8 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
 @keyframes cardDrop{0%{transform:translateY(var(--fall-from,-115%));opacity:.9}100%{transform:translateY(0);opacity:1}}
 .status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.win-line{display:none;flex:0 0 25px;height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
-.win-line.show{display:block}
+.win-line{display:block;visibility:hidden;flex:0 0 25px;height:25px;min-height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
+.win-line.show{visibility:visible}
 .controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
 .ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:#f6dfa6;min-width:35px;text-shadow:0 1px #000}
 .round{width:27px;height:27px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
