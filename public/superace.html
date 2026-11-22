@@ -94,7 +94,7 @@ function update(){
 }
 function setCombo(value,isFree){
  comboX=Number(value||1);
- const shown=isFree?comboX*2:comboX;
+ const shown=comboX;
  document.querySelectorAll('.multi').forEach(b=>b.classList.toggle('active',Number(b.dataset.x)===shown));
 }
 async function request(path,body){
@@ -104,7 +104,7 @@ async function request(path,body){
  if(!response.ok)throw Error(data.error||'গেম চালু করা যায়নি');return data;
 }
 async function loadBalance(){
- try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(1,freeSpins>0);update();if(freeSpins)$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';draw(randomBoard())}
+ try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,false);update();if(freeSpins)$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';draw(randomBoard())}
  catch(e){$('status').textContent=e.message;$('balance').textContent='Login required'}
 }
 function sendBalanceToParent(){
@@ -122,7 +122,7 @@ async function play(){
   if(!result.frames||!result.frames.length){draw(result.finalGrid||randomBoard());await sleep(turbo?160:420)}
   else{
    for(const frame of result.frames){
-    setCombo(frame.cascadeX||1,Boolean(result.freeSpin));
+    setCombo(frame.cascadeX||1,false);
     draw(frame.grid,frame.wins||[],frame.type==='drop'?frame.drop||[]:[]);
     await sleep(turbo?(frame.type==='win'?240:150):(frame.type==='win'?650:380));
    }
