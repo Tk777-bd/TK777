@@ -20,6 +20,10 @@
 .tile.win{z-index:4;border:2px solid #fff7bb;box-shadow:0 0 0 1px #ffcf3e,0 0 12px 5px #ffe15c,0 0 28px 10px rgba(255,170,25,.7);animation:winPulse .48s ease-in-out infinite alternate}
 .tile.win:after{content:"";position:absolute;inset:-20%;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,210,.85) 48%,transparent 63%);transform:translateX(-130%);animation:shineSweep .72s ease-in-out infinite}
 .tile.drop{animation:cardDrop .48s cubic-bezier(.16,.78,.2,1) both}
+.tile.reel-spin{overflow:hidden;animation:reelSpin .42s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--reel,0)*90ms);filter:brightness(1.25)}
+.tile.reel-spin img{animation:reelBlur .12s linear infinite}
+@keyframes reelSpin{0%{transform:translateY(-38%);filter:blur(2px) brightness(1.8)}65%{transform:translateY(8%);filter:blur(1px) brightness(1.35)}100%{transform:translateY(0);filter:none}}
+@keyframes reelBlur{0%{transform:translateY(-16%);opacity:.65}100%{transform:translateY(16%);opacity:1}}
 @keyframes winPulse{from{filter:brightness(1.05)}to{filter:brightness(1.65)}}
 @keyframes shineSweep{0%{transform:translateX(-130%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
 @keyframes cardDrop{0%{transform:translateY(-100%);opacity:.25}70%{transform:translateY(5%);opacity:1}100%{transform:translateY(0)}}
@@ -84,10 +88,10 @@ const art={
 let balance=0,bet=50,chosenX=1,busy=false,auto=false,turbo=false,freeSpins=0,comboX=1;
 const ids=Object.keys(definitions);
 function randomBoard(){return Array.from({length:20},()=>ids[Math.floor(Math.random()*ids.length)]);}
-function draw(grid,wins,drop){
+function draw(grid,wins,drop,spinning){
  const hit=new Set(wins||[]);$('board').innerHTML='';
  grid.forEach((id,index)=>{
-  const cell=document.createElement('div');cell.className='tile'+(id==='wild'?' golden-joker':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'');
+  const cell=document.createElement('div');cell.className='tile'+(id==='wild'?' golden-joker':'')+(hit.size&&!hit.has(index)?' dim':'')+(hit.has(index)?' win':'')+(drop&&drop.includes(index)?' drop':'')+(spinning?' reel-spin':'');cell.style.setProperty('--reel',String(index%5));
   const img=document.createElement('img');img.alt=id;img.draggable=false;img.decoding='async';img.loading='eager';
   const cardKey=String(id||'ace').trim().toLowerCase();
   img.onerror=()=>{if(cardKey==='scatter'){cell.classList.add('scatter-fallback');cell.innerHTML='<div class="scatter-coin"><b>$</b><small>SCATTER</small></div>';}else{img.onerror=null;img.src=art.ace;}};
@@ -123,7 +127,10 @@ async function play(){
  if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
  busy=true;auto=auto;$('spin').disabled=true;update();$('win').textContent='0.000';$('status').textContent='কার্ড ঘুরছে...';
  try{
-  const result=await request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0});
+  const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0}).then(value=>({value}),error=>({error}));
+  draw(randomBoard(),[],[],true);
+  await sleep(turbo?360:780);
+  const outcome=await pending;if(outcome.error)throw outcome.error;const result=outcome.value;
   balance=Number(result.balance||0);freeSpins=Number(result.freeSpins||0);update();sendBalanceToParent();
   if(!result.frames||!result.frames.length){draw(result.finalGrid||randomBoard());await sleep(turbo?160:420)}
   else{
