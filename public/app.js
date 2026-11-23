@@ -324,33 +324,56 @@ function toast(t) {
 }
 
 async function init() {
-  try {
-    if (token) me = (await api('/me')).user;
-  } catch {
-    token = '';
-    localStorage.removeItem('tk777_token');
+  // Load independent API resources together instead of waiting for each one in sequence.
+  const [meData, categoriesData, gamesData, homeBannerData, promotionBannerData, supportData, slotDisplayData] = await Promise.all([
+    token ? api('/me').catch(() => null) : Promise.resolve(null),
+    api('/categories').catch(() => null),
+    api('/games').catch(() => null),
+    api('/home-banners').catch(() => null),
+    api('/promotion-banners').catch(() => null),
+    api('/support-settings').catch(() => null),
+    api('/slot-display-images').catch(() => null)
+  ]);
+
+  if (token) {
+    if (meData?.user) me = meData.user;
+    else {
+      token = '';
+      localStorage.removeItem('tk777_token');
+    }
   }
 
-  try {
-    categories = (await api('/categories')).categories;
-    games = (await api('/games')).games;
-    homeBanners = (await api('/home-banners')).banners || [];
-    promotionBanners = (await api('/promotion-banners')).banners || [];
-    supportSettings = await api('/support-settings');
-    demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
-     withdrawButtonImages = supportSettings.withdraw_button_images || {bkash:'',nagad:'',rocket:''};
-    demoMethodNumbers = supportSettings.demo_numbers || demoMethodNumbers;
-    withdrawDemoIds = supportSettings.withdraw_demo_ids || withdrawDemoIds;
-    depositContent = supportSettings.deposit_content || DEFAULT_DEPOSIT_CONTENT;
-    withdrawContent = supportSettings.withdraw_content || DEFAULT_WITHDRAW_CONTENT;
-    const slotDisplayData = await api('/slot-display-images');
-    slotDisplayImages = slotDisplayData.images || {};
-    slotDisplayHidden = Array.isArray(slotDisplayData.hiddenIds) ? slotDisplayData.hiddenIds : [];
-    const slotNameOverrides = slotDisplayData.nameOverrides || {};
-    displaySlotGames.forEach(g => { if (typeof slotNameOverrides[g.id] === 'string' && slotNameOverrides[g.id].trim()) g.name = slotNameOverrides[g.id].trim(); });
-  } catch (e) {
-    toast(e.message);
-  }
+  categories = categoriesData?.categories || [];
+  games = gamesData?.games || [];
+  homeBanners = homeBannerData?.banners || [];
+  promotionBanners = promotionBannerData?.banners || [];
+
+  if (supportData) supportSettings = supportData;
+  demoPaymentImages = supportSettings.demo_payment_images || {bkash:'',nagad:'',rocket:''};
+  withdrawButtonImages = supportSettings.withdraw_button_images || {bkash:'',nagad:'',rocket:''};
+  demoMethodNumbers = supportSettings.demo_numbers || demoMethodNumbers;
+  withdrawDemoIds = supportSettings.withdraw_demo_ids || withdrawDemoIds;
+  depositContent = supportSettings.deposit_content || DEFAULT_DEPOSIT_CONTENT;
+  withdrawContent = supportSettings.withdraw_content || DEFAULT_WITHDRAW_CONTENT;
+
+  slotDisplayImages = {...(slotDisplayData?.images || {})};
+  // Use the original PG Soft title logos unless the admin has supplied a custom URL.
+  const originalPgLogos = {
+    'slot-display-fortune-rabbit': 'https://res.cloudinary.com/dqwcjnzgz/image/upload/f_auto/spacecas/games/pg-soft/fortune-rabbit-logo.png',
+    'slot-display-fortune-ox': 'https://res.cloudinary.com/dqwcjnzgz/image/upload/f_auto/spacecas/games/pg-soft/fortune-ox-logo.png',
+    'slot-display-treasures-of-aztec': 'https://res.cloudinary.com/dqwcjnzgz/image/upload/f_auto/spacecas/games/pg-soft/treasures-of-aztec-logo.png'
+  };
+  const previousPgArtwork = {
+    'slot-display-fortune-rabbit': 'https://apostas.gazetaesportiva.com/static/wp/imagem-destaque-fortune-rabbit-2.webp',
+    'slot-display-fortune-ox': 'https://es-mx.fortune-ox.online/image/fortune-ox-logo-poster.webp',
+    'slot-display-treasures-of-aztec': 'https://www.casinoplus.com.ph/cp-games/game/pg/treasures-of-aztec/icon.png'
+  };
+  Object.entries(originalPgLogos).forEach(([id, url]) => {
+    if (!slotDisplayImages[id] || slotDisplayImages[id] === previousPgArtwork[id]) slotDisplayImages[id] = url;
+  });
+  slotDisplayHidden = Array.isArray(slotDisplayData?.hiddenIds) ? slotDisplayData.hiddenIds : [];
+  const slotNameOverrides = slotDisplayData?.nameOverrides || {};
+  displaySlotGames.forEach(g => { if (typeof slotNameOverrides[g.id] === 'string' && slotNameOverrides[g.id].trim()) g.name = slotNameOverrides[g.id].trim(); });
 
   home();
 }
@@ -459,7 +482,7 @@ function home() {
     <div class="section">
       <div class="section-head">
         <span>🔥 HOT GAMES</span>
-        <small>${games.length + displaySlotGames.length} GAMES</small>
+        <small>${games.filter(g => !isLiveGame(g)).length + displaySlotGames.length} GAMES</small>
       </div>
       <div class="games">${homeGamesWithSlots().map(g => g.id.startsWith('slot-display-') ? displaySlotCard(g) : gameCard(g)).join('')}</div>
     </div>
@@ -488,18 +511,71 @@ function toggleFavorite(id, el) {
   if (el) el.textContent = ids.includes(id) ? '♥' : '♡';
 }
 
+const TK777_GAME_COVER_ART = {
+  aviator: 'https://d204vpor8h38p3.cloudfront.net/Game_Image/287x200/Online-Casino-Instant-Game-CRAZY-Aviator.webp?v=1795234292',
+  superace: 'https://slotcatalog.com/userfiles/image/games/Jili-Games/24610/Super-Ace-hot_cold.webp'
+};
 function gameCard(g) {
+  const type = String(g.game_type || '').toLowerCase();
+  const name = String(g.name || '').toLowerCase();
+  const id = String(g.id || '').toLowerCase();
+  const playableException = type === 'aviator' || /aviator/i.test(name) || type === 'superace' || /super\s*ace/i.test(name);
+  const cardClick = playableException ? `openGame('${esc(g.id)}')` : 'showGameDepositPopup()';
+  const liveArt = {
+    'european-roulette': ['🎡', 'EUROPEAN ROULETTE', 'live-roulette'],
+    'baccarat': ['🃏', 'BACCARAT', 'live-cards'],
+    'live-roulette': ['🎯', 'LIVE ROULETTE', 'live-roulette'],
+    'live-blackjack': ['♠️', 'LIVE BLACKJACK', 'live-cards'],
+    'live-baccarat': ['♦️', 'LIVE BACCARAT', 'live-cards'],
+    'evo-crazy-time': ['🎡', 'CRAZY TIME', 'live-show'],
+    'evo-funky-time': ['🪩', 'FUNKY TIME', 'live-show'],
+    'evo-disco-balls': ['🪩', 'DISCO BALLS', 'live-show'],
+    'evo-mega-ball': ['🔮', 'MEGA BALL', 'live-show'],
+    'evo-dream-catcher': ['🌙', 'DREAM CATCHER', 'live-show'],
+    'evo-lightning-roulette': ['⚡', 'LIGHTNING ROULETTE', 'live-show'],
+    'evo-monopoly-live': ['🏙️', 'MONOPOLY LIVE', 'live-show'],
+    'evo-deal-or-no-deal': ['💼', 'DEAL OR NO DEAL', 'live-show'],
+    'evo-crazy-coin-flip': ['🪙', 'CRAZY COIN FLIP', 'live-show'],
+    'evo-xxx-lightning': ['⚡', 'XXXTREME LIGHTNING', 'live-show']
+  };
+  const live = liveArt[id] || (type === 'evolution-demo' ? ['🎲', name.toUpperCase(), 'live-show'] : type === 'live' && /roulette/.test(name)
+    ? ['🎡', name.toUpperCase(), 'live-roulette']
+    : type === 'live' && /blackjack/.test(name)
+      ? ['♠️', name.toUpperCase(), 'live-cards']
+      : type === 'live' && /baccarat/.test(name)
+        ? ['🃏', name.toUpperCase(), 'live-cards'] : null);
+  const officialCover = /aviator/.test(name) || type === 'aviator'
+    ? TK777_GAME_COVER_ART.aviator
+    : /super\s*ace/.test(name) || type === 'superace'
+      ? TK777_GAME_COVER_ART.superace
+      : '';
+  const liveCoverArt = {
+    'evo-crazy-time': 'https://games.evolution.com/wp-content/uploads/2023/03/crazy-time-logo.svg',
+    'evo-funky-time': 'https://games.evolution.com/wp-content/uploads/2023/05/funky_time_logo_eng_2023_01.svg',
+    'evo-disco-balls': 'https://games.evolution.com/wp-content/uploads/2026/07/disco_balls_ui_logo_eng_2026_05.svg',
+    'evo-mega-ball': 'https://games.evolution.com/wp-content/uploads/2023/03/mega-ball-logo.svg',
+    'evo-dream-catcher': 'https://games.evolution.com/wp-content/uploads/2023/03/dream-catcher-logo.svg',
+    'evo-lightning-roulette': 'https://games.evolution.com/wp-content/uploads/2023/03/lightning-roulette-logo.svg',
+    'evo-monopoly-live': 'https://games.evolution.com/wp-content/uploads/2023/03/monopoly-live-game-logo.png',
+    'evo-deal-or-no-deal': 'https://games.evolution.com/wp-content/uploads/2023/03/deal-or-no-deal-logo.svg',
+    'evo-crazy-coin-flip': 'https://games.evolution.com/wp-content/uploads/2023/05/crazy-coin-flip-logo-s-1.png',
+    'evo-xxx-lightning': 'https://games.evolution.com/wp-content/uploads/2023/03/xxxtreme-lightning-roulette-logo.svg'
+  };
+  const cover = g.image_url || officialCover || liveCoverArt[id] || '';
+  const placeholder = live
+    ? `<div class="placeholder live-game-cover ${live[2]}"><span>${live[0]}</span><small>${esc(live[1])}</small></div>`
+    : `<div class="placeholder">${type === 'aviator' ? '✈️' : type === 'superace' ? '🂡' : '🎮'}</div>`;
   return `
-    <button class="game" onclick="openGame('${esc(g.id)}')">
+    <button class="game" onclick="${cardClick}">
       <span class="favorite-toggle"
         onclick="event.stopPropagation();toggleFavorite('${esc(g.id)}',this)">
         ${favoriteIds().includes(g.id) ? '♥' : '♡'}
       </span>
-      ${g.image_url
-        ? `<img src="${esc(g.image_url)}" alt="" onerror="this.style.display='none'">`
-        : `<div class="placeholder">${g.game_type === 'aviator' ? '✈️' : g.game_type === 'superace' ? '🂡' : '🎮'}</div>`}
+      ${cover
+        ? `<img ${live ? 'class="live-game-logo"' : ''} src="${esc(cover)}" data-fallback="${esc(liveCoverArt[id] || '')}" alt="${esc(g.name)}" loading="lazy" onerror="if(this.dataset.fallback && this.src!==this.dataset.fallback){this.src=this.dataset.fallback}else{this.style.display='none'}">`
+        : placeholder}
       <strong>${esc(g.name)}</strong>
-      <small>${g.game_type === 'aviator' ? 'CRASH GAME' : g.game_type === 'superace' ? 'CARD GAME' : 'ARCADE GAME'}</small>
+      <small>${live ? 'LIVE CASINO' : type === 'aviator' ? 'CRASH GAME' : type === 'superace' ? 'CARD GAME' : 'ARCADE GAME'}</small>
     </button>`;
 }
 
@@ -536,16 +612,60 @@ const displaySlotGames = [
   {id:'slot-display-ways-of-the-qilin',name:'Ways of the Qilin',mark:'🐉',tone:'anubis'}
 ];
 
+// Verified game artwork. Admin-uploaded artwork takes priority over these defaults.
+const TK777_SLOT_LOGOS = {
+  'slot-display-super-elements': 'https://fachaigaming.com/uploads/d5b58980-9bdc-4e61-9584-bc01d71e1ddd-22055_feature-front_en.webp',
+  'slot-display-flyx': 'https://www.fluffyspins.com/images/local/misc/FlyXSlotCrashStyleCasinoGame.jpg',
+  'slot-display-treasures-of-aztec': 'https://www.casinoplus.com.ph/cp-games/game/pg/treasures-of-aztec/icon.png',
+  'slot-display-anubis-wrath': 'https://casinocompendium.com/wp-content/uploads/2024/05/PG-Soft-releases-Anubis-Wrath.jpg',
+  'slot-display-mahjong-ways-2': 'https://www.casinomeerkat.com/_next/image?q=100&url=https%3A%2F%2Fv2-prod-supabase.casinomeerkat.com%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fimages%2Fmahjong-ways-2_demo_slot.webp%3Fv%3D1750968003876&w=1920',
+  'slot-display-wild-bandito': 'https://www.casinos.com/cdn-cgi/image/f%3Dwebp%2Cq%3D86%2Cg%3Dauto/https%3A/objects.kaxmedia.com/genesis/wild-bandito-slot.jpg?v=d254865b199cf6775b2b2a9f0027a69e9a3cb105',
+  'slot-display-circus-joker': 'https://www.ph-golden-panda.com/casino/images/circus-joker-4096.webp',
+  'slot-display-fortune-gems-3': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/bPW0fMkqGM6aXc0p4UeegcJp6kGI1L1vvYwqe0oa.png',
+  'slot-display-super-ace-ii': 'https://www.ph-royal-panda.com/casino/images/super-ace-ii.webp',
+  'slot-display-boxing-king': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/7aygh0MAxhIcoy8eEQLaiEi2YkALj8vzQL5eAVz3.png',
+  'slot-display-super-ace-deluxe': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/wyk22swsN05seukkxRdqAjzOIZCwhkvsUGFedrC6.png',
+  'slot-display-golden-empire': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/hGWLb9j2LOPPHyKFxKV2iiFb6ZUyTqvqVDkIhtPi.png',
+  'slot-display-money-coming': 'https://www.newvvjl.net/casino/images/money-coming.webp',
+  'slot-display-fortune-gems': 'https://www.bejilifish.net/casino/images/fortune-gems.webp',
+  'slot-display-fortune-gems-2': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/KZv0aJk9dsNFcVWIfOPPhtZ22NVxM1rhpGr1ZI9k.png',
+  'slot-display-devil-fire-2': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/j5wu4aZMm9X8b1w9sg8cDFprm9hSfcxzYV3H7LMO.png',
+  'slot-display-zeus': 'https://www.jiligames.shop/Games%20_%20JILI%20Games_files/MBHlzTphKgp5qXO9qwVxxsCXEghEZeJm0YySTchp.png',
+  'slot-display-wild-ace': 'https://miro.medium.com/v2/resize%3Afit%3A623/1%2AtkK6fXUpd3p2lDbdnQwgXw.png',
+  'slot-display-fortune-tiger': 'https://resourcesbr.sbcnoticias.com/sbcnoticiasbr/sites/3/2026/06/Onde-Jogar-O-Jogo-do-Tigrinho.jpg',
+  'slot-display-fortune-ox': 'https://es-mx.fortune-ox.online/image/fortune-ox-logo-poster.webp',
+  'slot-display-fortune-rabbit': 'https://apostas.gazetaesportiva.com/static/wp/imagem-destaque-fortune-rabbit-2.webp',
+  'slot-display-lucky-neko': 'https://slotcatalog.com/userfiles/image/games/PG-Soft/19433/Lucky-Neko-1_sq.jpg',
+  'slot-display-dragon-hatch': 'https://slotslaunch.nyc3.digitaloceanspaces.com/18193/dragon-hatch.jpg',
+  'slot-display-ganesha-fortune': 'https://www.play-mx.com/casino/images/pgs-ganesha-fortune.webp',
+  'slot-display-mahjong-ways': 'https://media.leovegas.com/images/games/mahjong-ways/mahjong-ways-tile-auth.jpg?tr=w-800',
+  'slot-display-azteca-legacy': 'https://auth.spindex.net/storage/v1/object/public/slot-thumbnails/azteca-legacy.webp',
+  'slot-display-magic-ace': 'https://assets.socino.com/game/magic-ace-66e93a311c73e24c12d4150e/magic-ace-thumb-en.webp',
+  'slot-display-dragon-gems': 'https://img.rationalcdn.com/starsweb/prod/43384_0.png',
+  'slot-display-golden-bank': 'https://wbgame.jlfafafa3.com/All-In-One/production/img/jiliPlusPlayer/games/CzjCNYAOnopzNiDJgdfg7I6ZqWoO2bwqxGRMV8t5.png',
+  'slot-display-party-night': 'https://www.jiligames.games/wp-content/uploads/2022/07/Party-Night.png',
+  'slot-display-lucky-goldbricks': 'https://wbgame.jlfafafa3.com/All-In-One/production/img/jiliPlusPlayer/games/wb6WqSCuNMSdhjDBksI5jFNlUPDuJiOsT5nO0UCB.png',
+  'slot-display-ways-of-the-qilin': 'https://surebet247.com/static/img/icons/PG%20Soft/ways-of-the-qilin.png'
+};
+
 function displaySlotCard(g) {
-  const image = slotDisplayImages[g.id] || '';
+  const image = slotDisplayImages[g.id] || TK777_SLOT_LOGOS[g.id] || '';
   const art = image
-    ? '<img class="slot-admin-image" src="' + esc(image) + '" alt="' + esc(g.name) + '" loading="lazy">'
+    ? '<img class="slot-admin-image" src="' + esc(image) + '" alt="' + esc(g.name) + '" loading="lazy" onerror="this.style.display=\'none\'">'
     : '<div class="slot-poster slot-' + esc(g.tone) + '"><span class="slot-poster-mark">' + g.mark + '</span></div>';
-  return '<div class="game display-slot-game" aria-label="' + esc(g.name) + '">' + art + '<strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div>';
+  const exempt = /super\s*ace/i.test(String(g.name || ''));
+  const clickAction = exempt ? '' : ' onclick="showGameDepositPopup()"';
+  return '<div class="game display-slot-game" role="button" tabindex="0" aria-label="' + esc(g.name) + '"' + clickAction + '><div class="slot-art">' + art + '</div><strong>' + esc(g.name) + '</strong><small>SLOT GAME</small></div>';
+}
+
+function isLiveGame(g) {
+  const type = String(g?.game_type || '').toLowerCase();
+  const id = String(g?.id || '').toLowerCase();
+  return type === 'live' || type === 'evolution-demo' || id.startsWith('evo-') || id.startsWith('live-');
 }
 
 function homeGamesWithSlots() {
-  const list = [...games];
+  const list = games.filter(g => !isLiveGame(g));
   const at = list.findIndex(g => /super\s*ace/i.test(String(g.name || '')));
   list.splice(at < 0 ? list.length : at + 1, 0, ...displaySlotGames.filter(g => !slotDisplayHidden.includes(g.id)));
   return list;
@@ -553,10 +673,13 @@ function homeGamesWithSlots() {
 function filterGames(id) {
   isPlayingGame = false;
   const c = categories.find(x => x.id === id);
-  const isSlotsCategory = /slot/i.test(String(c?.name || ''));
+  const categoryName = String(c?.name || '');
+  const isSlotsCategory = /slot/i.test(categoryName);
+  const isLiveCategory = /live/i.test(categoryName);
+  const categoryGames = games.filter(g => g.category_id === id);
   const list = id === 'favorites'
-    ? games.filter(g => favoriteIds().includes(g.id))
-    : [...games.filter(g => g.category_id === id), ...(isSlotsCategory ? displaySlotGames.filter(g => !slotDisplayHidden.includes(g.id)) : [])];
+    ? games.filter(g => favoriteIds().includes(g.id) && !isLiveGame(g))
+    : [...categoryGames.filter(g => isLiveCategory ? isLiveGame(g) : !isLiveGame(g)), ...(isSlotsCategory ? displaySlotGames.filter(g => !slotDisplayHidden.includes(g.id)) : [])];
 
   stopCrashMonitor();
 
@@ -566,7 +689,7 @@ function filterGames(id) {
         <span>${esc(c?.name || 'Games')}</span>
         <small>${list.length} GAMES</small>
       </div>
-      <div class="games">
+      <div class="games${isLiveCategory ? " live-games-grid" : ""}">
         ${list.map(g => g.id.startsWith('slot-display-') ? displaySlotCard(g) : gameCard(g)).join('') || '<p class="muted">এই ক্যাটাগরিতে এখনো গেম যোগ করা হয়নি।</p>'}
       </div>
       <button class="secondary" onclick="home()">ফিরে যান</button>
@@ -997,8 +1120,7 @@ async function depositPage(){
 }
 function copyDemoNumber(button){
   const number=document.getElementById('demoDisplayNumber')?.textContent.trim()||'01790365006';
-  const done=()=>{if(button){button.textContent=depositText('copiedButton');setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast(depositText('copySuccess'));};
-  if(navigator.clipboard && window.isSecureContext){
+  const done=()=>{if(button){button.textContent=depositText('copiedButton');setTimeout(()=>{if(button.isConnected)button.textContent='Copy';},1800);}toast(depositText('copySuccess'));};  if(navigator.clipboard && window.isSecureContext){
     navigator.clipboard.writeText(number).then(done).catch(()=>fallbackCopyDemoNumber(number,done));
   }else fallbackCopyDemoNumber(number,done);
 }
@@ -1082,10 +1204,73 @@ function logout() {
 
 /* GAME ROUTING */
 
+let gameDepositPopupTimer = null;
+
+// Catch clicks on every game tile in the home/category grids before any legacy inline handler.
+if (!window.tk777GameTilePopupBound) {
+  window.tk777GameTilePopupBound = true;
+  document.addEventListener('click', function(event) {
+    const tile = event.target.closest('.games .game');
+    if (!tile) return;
+    const label = String(tile.getAttribute('aria-label') || tile.textContent || '').trim();
+    // Keep Super Ace and Aviator playable even when their names are outside <strong>.
+    if (/aviator/i.test(label) || /super\s*ace/i.test(label)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+    showGameDepositPopup();
+  }, true);
+}
+
+function showGameDepositPopup() {
+  const existing = document.getElementById('gameDepositPopup');
+  if (existing) existing.remove();
+  if (gameDepositPopupTimer) clearTimeout(gameDepositPopupTimer);
+
+  const popup = document.createElement('div');
+  popup.id = 'gameDepositPopup';
+  popup.className = 'game-deposit-overlay';
+  popup.innerHTML = `
+    <div class="game-deposit-modal" role="dialog" aria-modal="true" aria-labelledby="gameDepositTitle">
+      <button class="game-deposit-close" type="button" aria-label="বন্ধ করুন" onclick="closeGameDepositPopup()">×</button>
+      <div class="game-deposit-icon">＋</div>
+      <h3 id="gameDepositTitle">এই গেম টা খেলতে ব্যালেন্স যোগ করুন</h3>
+      <p>ডিপোজিট পেজে গিয়ে টাকা জমা ও ব্যালেন্স যোগ করার তথ্য দেখুন।</p>
+      <button class="game-deposit-button" type="button" onclick="closeGameDepositPopup();page('deposit')">ডিপোজিট</button>
+    </div>`;
+  document.body.appendChild(popup);
+  gameDepositPopupTimer = setTimeout(closeGameDepositPopup, 4000);
+}
+
+function closeGameDepositPopup() {
+  if (gameDepositPopupTimer) {
+    clearTimeout(gameDepositPopupTimer);
+    gameDepositPopupTimer = null;
+  }
+  document.getElementById('gameDepositPopup')?.remove();
+}
+
+function showAviatorLoading() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = '<div class="aviator-loading-screen"><div class="aviator-loading-brand">SPRIBE AVIATOR<span class="aviator-loading-line"></span></div></div>';
+}
+
 function openGame(id) {
-  isPlayingGame = true;
   const g = games.find(x => x.id === id);
   if (!g) return;
+
+  const gameName = String(g.name || '');
+  const gameType = String(g.game_type || '').toLowerCase();
+  const isAviator = gameType === 'aviator' || /aviator/i.test(gameName);
+  const isSuperAce = gameType === 'superace' || /super\s*ace/i.test(gameName);
+  if (!isAviator && !isSuperAce) {
+    isPlayingGame = false;
+    showGameDepositPopup();
+    return;
+  }
+
+  isPlayingGame = true;
 
   if (!me) {
     showAuth();
@@ -1115,9 +1300,13 @@ function openGame(id) {
     return;
   }
 
-  if (g.game_type === 'aviator') aviator(g);
+  if (g.game_type === 'aviator') {
+    showAviatorLoading();
+    window.setTimeout(() => aviator(g), 1000);
+  }
   else if (g.game_type === 'superace') superAce(g);
   else if (g.game_type === 'minigame') miniGame(g);
+  else if (g.game_type === 'evolution-demo') evolutionDemo(g);
 }
 
 /* ==========================================
@@ -1138,6 +1327,45 @@ const MINI_GAME_INFO = {
   'live-blackjack':{icon:'🂡',subtitle:'Live Blackjack Table',choices:[],hint:'অ্যানিমেটেড ডিলার কার্ড খুলবে। এটি সিমুলেটেড টেবিল, আসল লাইভ ডিলার নয়।'},
   'live-baccarat':{icon:'♠️',subtitle:'Live Baccarat Table',choices:[['player','PLAYER'],['banker','BANKER'],['tie','TIE']],hint:'ডিলার-স্টাইল সিমুলেটেড Baccarat। Player/Banker 1.95x, Tie 8x।'}
 };
+/* Evolution-style preview screens. Visual-only demo, not provider streams. */
+function evolutionDemo(g) {
+  stopCrashMonitor();
+  const demos = {
+    'evo-crazy-time': ['🎡', 'BONUS WHEEL', 'crazy', '/live-casino/game-shows/crazy-time/'],
+    'evo-funky-time': ['🪩', 'FUNKY BONUS', 'funky', '/live-casino/game-shows/funky-time/'],
+    'evo-disco-balls': ['🪩', 'DISCO BALLS', 'disco', '/live-casino/game-shows/disco-balls/'],
+    'evo-mega-ball': ['🔮', 'MEGA BALL', 'mega', '/live-casino/game-shows/mega-ball/'],
+    'evo-dream-catcher': ['🌙', 'DREAM CATCHER', 'dream', '/live-casino/game-shows/dream-catcher/'],
+    'evo-lightning-roulette': ['⚡', 'LIGHTNING ROULETTE', 'lightning', '/live-casino/live-roulette/lightning-roulette/'],
+    'evo-monopoly-live': ['🏙️', 'MONOPOLY LIVE', 'monopoly', '/live-casino/game-shows/monopoly-live/'],
+    'evo-deal-or-no-deal': ['💼', 'DEAL OR NO DEAL', 'deal', '/live-casino/game-shows/deal-or-no-deal-live/'],
+    'evo-crazy-coin-flip': ['🪙', 'CRAZY COIN FLIP', 'coin', '/live-casino/crazy-coin-flip/'],
+    'evo-xxx-lightning': ['⚡', 'XXXTREME LIGHTNING', 'lightning', '/live-casino/live-roulette/xxxtreme-lightning-roulette/']
+  };
+  const [symbol, label, theme, path] = demos[g.id] || ['🎲', 'LIVE GAME', 'crazy', '/'];
+  const officialUrl = 'https://games.evolution.com' + path;
+  shell(`
+    <div class="page evo-demo-page">
+      <div class="evo-demo-top">
+        <button class="secondary" onclick="home()">‹ BACK</button>
+        <span class="evo-demo-live"><i></i> OFFICIAL VIDEO</span>
+      </div>
+      <h2 class="evo-video-title">${esc(g.name)}</h2>
+      <section class="evo-video-frame-wrap">
+        <iframe class="evo-video-frame" title="${esc(g.name)} official Evolution video page"
+          src="${officialUrl}" loading="lazy" allow="autoplay; fullscreen; picture-in-picture"
+          referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>
+      <section class="card evo-demo-notice">
+        <b>OFFICIAL EVOLUTION FREEPLAY</b>
+        <p>এটি Evolution-এর অফিসিয়াল ফ্রি-প্লে ভিডিও পেজ। TK777 থেকে কোনো বেট বা টাকা জমা হবে না। ভিডিওটি এখানে না চললে নিচের অফিসিয়াল লিংক ব্যবহার করুন।</p>
+        <a class="button secondary evo-official-link" href="${officialUrl}" target="_blank" rel="noopener noreferrer">Evolution-এ ভিডিও খুলুন ↗</a>
+      </section>
+      <button class="secondary evo-demo-back" onclick="home()">গেম তালিকায় ফিরে যান</button>
+    </div>
+  `);
+}
+
 function miniGameStage(gameId) {
   const stages = {
     'gold-mines':'<div class="mg-mines-grid">'+Array.from({length:5},(_,i)=>'<span class="mg-mine-tile" style="--i:'+i+'">?</span>').join('')+'</div>',
@@ -1398,7 +1626,7 @@ function startCrashMonitor(gameId) {
 
   crashTimer = setInterval(() => {
     pollCrashState();
-  },400);
+  },300);
 }
 
 function multiplierHistoryClass(value) {
@@ -1651,52 +1879,24 @@ async function pollCrashState() {
 
       const flash = $('#stageFlash');
       if (flash) flash.classList.add('show');
+
+      // The global state already confirms the crash; avoid one extra API call per bet slot.
+      for (let i=0;i<crashSlots.length;i++) {
+        const slot = crashSlots[i];
+        if (!slot.roundId || slot.busy || slot.status !== 'active') continue;
+
+        slot.status = 'crashed';
+        slot.roundId = null;
+        slot.auto = false;
+        updateSlotStatus(i,'CRASHED');
+        const result = $('#result'+i);
+        if (result) result.textContent = 'ক্র্যাশ হয়েছে · পেআউট ০';
+        updateSlotButtons(i);
+      }
     }
 
     updateCrashHistory(state.previous || []);
     updateAllSlotButtons();
-
-    for (let i=0;i<crashSlots.length;i++) {
-      const slot = crashSlots[i];
-
-      if (!slot.roundId || slot.busy) continue;
-
-      if (slot.status === 'active') {
-        try {
-          const t = await api('/crash/tick',{
-            roundId:slot.roundId
-          });
-
-          if (t.balance !== undefined && me) {
-            me.balance = t.balance;
-            const bal = $('#gameBalance');
-            if (bal) bal.textContent = money(me.balance);
-          }
-
-          if (t.betStatus !== 'active') {
-            slot.status = t.betStatus;
-            slot.roundId = null;
-
-            updateSlotStatus(
-              i,
-              t.betStatus === 'cashed_out' ? 'CASHED OUT' : 'CRASHED'
-            );
-
-            const result = $('#result'+i);
-
-            if (result) {
-              result.textContent = t.betStatus === 'cashed_out'
-                ? `Cash Out: ${t.multiplier}x · পেআউট ${t.payout} ক্রেডিট`
-                : 'ক্র্যাশ হয়েছে · পেআউট ০';
-            }
-
-            updateSlotButtons(i);
-          }
-        } catch (e) {
-          console.error('Crash bet status error',e);
-        }
-      }
-    }
 
   } catch (e) {
     console.error('Crash state error',e);
@@ -1997,8 +2197,7 @@ async function startCrash(index) {
 
     if (result) {
       result.textContent = 'বেট সফল! প্লেন উড়লে Cash Out করতে পারবেন।';
-    }
-  } catch (e) {
+    }  } catch (e) {
     const errorText = String(e?.message || '');
     const displayMessage = /পর্যাপ্ত ফ্রি কয়েন নেই|insufficient.*(coin|balance)|not enough.*(coin|balance)/i.test(errorText)
       ? 'পর্যাপ্ত ব্যালেন্স নেই'
