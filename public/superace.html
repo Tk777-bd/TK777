@@ -490,23 +490,23 @@ async function showWinSequence(amount,showSuper,stake){
  title.textContent='BIG WIN';
  $('winPopupAmount').textContent=fmt(1);
  overlay.classList.add('show');
- await sleep(420);
- // BIG WIN counts up to the 15x threshold when SUPER WIN is also due.
- await countWinAmount(1,superStart,1450);
- await sleep(450);
+ await sleep(650);
+ // Slower, more readable BIG WIN count-up.
+ await countWinAmount(1,superStart,3800);
+ await sleep(900);
  if(showSuper){
   // Keep the same amount on screen while the title and glow smoothly transform.
   overlay.classList.add('super');
   title.textContent='SUPER WIN';
-  await sleep(220);
-  // Continue counting from the 15x amount; never reset to 1.
-  await countWinAmount(superStart,amount,1050);
-  await sleep(850);
+  await sleep(500);
+  // Continue slowly from the 15x amount; never reset to 1.
+  await countWinAmount(superStart,amount,3000);
+  await sleep(1500);
  }else{
-  await sleep(650);
+  await sleep(1400);
  }
  overlay.classList.remove('show');
- await sleep(420);
+ await sleep(600);
 }
 function updateFreeSpinButton(){
  // During the bonus, show only the remaining count on the spin button.
