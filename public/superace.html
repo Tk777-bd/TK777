@@ -87,11 +87,21 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .bet-adjust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;color:#e8c98e;font-size:10px;letter-spacing:.8px}
 .bet-adjust button{width:42px;height:34px;border:1px solid #e5bd68;border-radius:8px;background:linear-gradient(#9b672d,#4a2a13);color:#fff;font-size:21px;font-weight:900}
 .bet-confirm{width:100%;padding:12px;border:1px solid #fff0a3;border-radius:24px;background:linear-gradient(#fff0a8,#ffc33d 55%,#b96a12);color:#5c2807;font-weight:1000;letter-spacing:1px;box-shadow:0 3px 0 #713b0b,0 0 12px #ffca4b66}
-.win-popup{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72)}
-.win-popup.show{display:flex}
-.win-popup-panel{width:min(86vw,320px);padding:25px 16px;text-align:center;border:3px solid #ffe28a;border-radius:18px;background:radial-gradient(ellipse at top,#8a4a13 0,#32190c 58%,#100b10 100%);box-shadow:0 0 35px #ffbd35aa,0 12px 35px #000c}
-.win-popup-title{margin:0 0 12px;color:#ffe98b;font:bold 30px Georgia,serif;text-shadow:0 2px 3px #5b2100,0 0 12px #ffb52a}
-.win-popup-amount{color:#fff;font:bold 25px Arial,sans-serif;text-shadow:0 2px 5px #000}
+.win-popup{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);opacity:0}
+.win-popup.show{display:flex;animation:winOverlayIn .38s ease-out forwards}
+.win-popup-panel{position:relative;overflow:hidden;width:min(86vw,320px);padding:28px 16px;text-align:center;border:3px solid #ffe28a;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#ffcf55 0,#8a4a13 24%,#32190c 62%,#100b10 100%);box-shadow:0 0 18px #ffbd35aa,0 0 55px #ff9d2877,0 12px 35px #000c;transform:translateY(35px) scale(.72);opacity:0;animation:winPanelIn .62s cubic-bezier(.16,.85,.25,1.18) forwards}
+.win-popup-panel:before{content:"";position:absolute;inset:-60% -80%;pointer-events:none;background:linear-gradient(110deg,transparent 42%,#fff8 50%,transparent 58%);transform:translateX(-65%) rotate(12deg);animation:winShine 1.15s .25s ease-out forwards}
+.win-popup-title{position:relative;margin:0 0 13px;color:#fff0a0;font:bold 31px Georgia,serif;letter-spacing:1.5px;text-shadow:0 2px 3px #5b2100,0 0 12px #ffb52a,0 0 25px #ff9b20;animation:winTitlePop .55s .18s cubic-bezier(.2,.9,.25,1.3) both}
+.win-popup-amount{position:relative;color:#fff;font:1000 28px Arial,sans-serif;font-variant-numeric:tabular-nums;text-shadow:0 2px 5px #000,0 0 12px #ffe58a;min-height:34px}
+.win-popup.super .win-popup-panel{border-color:#fff0a0;background:radial-gradient(ellipse at 50% 0%,#fff2a1 0,#b77a16 25%,#48200d 63%,#100b10 100%);box-shadow:0 0 22px #fff0a0,0 0 60px #ffb52a99,0 12px 35px #000c}
+.win-popup.super .win-popup-title{color:#fff8cb;text-shadow:0 0 10px #fff2a0,0 0 24px #ffbd35}
+.win-popup.super .win-popup-panel{animation:winSuperShift .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes winOverlayIn{to{opacity:1}}
+@keyframes winPanelIn{to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes winTitlePop{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes winShine{to{transform:translateX(65%) rotate(12deg)}}
+@keyframes winSuperShift{0%{transform:scale(1);filter:brightness(1)}45%{transform:scale(1.055);filter:brightness(1.65)}100%{transform:scale(1);filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){.win-popup.show,.win-popup-panel,.win-popup-title,.win-popup-panel:before{animation-duration:.01ms!important}}
 
 
 
@@ -442,22 +452,48 @@ async function play(){
   totalWin=Math.max(0,Number(result.payout||0));$('cascadeWin').textContent=fmt(frames.filter(f=>f.type==='win').slice(-1)[0]?.winAmount||0);$('win').textContent=fmt(totalWin);if(totalWin>0||frames.some(f=>f.type==='win'))$('win').parentElement.classList.add('show');
   const winMultiplier=stake>0?totalWin/stake:0;
   if(!result.freeSpin&&winMultiplier>=6){
-   await showWinPopup('BIG WIN',totalWin);
-   if(winMultiplier>=15)await showWinPopup('SUPER WIN',totalWin);
+   await showWinSequence(totalWin,winMultiplier>=15);
   }
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
  finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(freeSpinReady&&freeSpins>0){await sleep(turbo?180:500);if(freeSpinReady&&freeSpins>0)play()}else if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
 }
-async function showWinPopup(title,amount){
- const overlay=$('winPopup');
- $('winPopupTitle').textContent=title;
- $('winPopupAmount').textContent=fmt(amount);
+function countWinAmount(target,duration){
+ return new Promise(resolve=>{
+  const amount=$('winPopupAmount');
+  const end=Math.max(1,Number(target)||1),start=1,started=performance.now();
+  amount.textContent=fmt(start);
+  function tick(now){
+   const progress=Math.min(1,(now-started)/duration);
+   const eased=1-Math.pow(1-progress,3);
+   amount.textContent=fmt(start+(end-start)*eased);
+   if(progress<1)requestAnimationFrame(tick);
+   else{amount.textContent=fmt(end);resolve();}
+  }
+  requestAnimationFrame(tick);
+ });
+}
+async function showWinSequence(amount,showSuper){
+ const overlay=$('winPopup'),title=$('winPopupTitle');
+ overlay.classList.remove('super');
+ title.textContent='BIG WIN';
+ $('winPopupAmount').textContent=fmt(1);
  overlay.classList.add('show');
- await sleep(1700);
+ await sleep(420);
+ await countWinAmount(amount,1450);
+ await sleep(650);
+ if(showSuper){
+  // Keep the same popup on screen; smoothly transform its look and title.
+  overlay.classList.add('super');
+  title.textContent='SUPER WIN';
+  $('winPopupAmount').textContent=fmt(1);
+  await sleep(180);
+  await countWinAmount(amount,1450);
+  await sleep(850);
+ }
  overlay.classList.remove('show');
- await sleep(220);
+ await sleep(420);
 }
 function updateFreeSpinButton(){
  // During the bonus, show only the remaining count on the spin button.
