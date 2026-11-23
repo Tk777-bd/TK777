@@ -3,7 +3,7 @@ const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{m
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
 function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">Cloudflare ADMIN_EMAIL এবং ADMIN_PASSWORD secrets-এ সেট করা তথ্য দিয়ে প্রবেশ করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin Email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
-async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="userManagement()">ইউজার ম্যানেজমেন্ট</button><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="referralSettings()">Referral System</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="pageTextEditor()">Deposit & Withdrawal Page Editor</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="promotionSettings()">Promotion</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
+async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="userManagement()">ইউজার ম্যানেজমেন্ট</button><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="referralSettings()">Referral System</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="pageTextEditor()">Deposit & Withdrawal Page Editor</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="superAceControl()">Super Ace Control</button><button onclick="banners()">Home Banners</button><button onclick="promotionSettings()">Promotion</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
   try{
@@ -425,6 +425,43 @@ async function saveWithdrawTextFields(){
  try{const fields={};document.querySelectorAll('.withdraw-text-field').forEach(el=>fields[el.dataset.key]=el.value);
  if(!/(কোনো ওয়ালেট নম্বর|কোনো টাকা পাঠানো|no real money|no wallet)/i.test(fields.safetyNote||''))throw Error('Demo নির্দেশনায় কোনো ওয়ালেট নম্বর বা টাকা পাঠানো হয় না—এ কথা রাখতে হবে।');
  await api('/admin/settings',{key:'withdraw_content',value:JSON.stringify({fields})});msg.textContent='Withdrawal পেজের সব লেখা সংরক্ষণ হয়েছে。';
+ }catch(e){msg.textContent=e.message;}
+}
+
+
+async function superAceControl(){
+ try{
+  const d=await api('/admin/settings');
+  const values=Object.fromEntries(d.settings.map(s=>[s.key,s.value]));
+  const images=[['ace','Ace'],['king','King'],['queen','Queen'],['jack','Jack'],['spade','Spade'],['heart','Heart'],['diamond','Diamond'],['club','Club'],['wild','Wild / Big Joker'],['scatter','Scatter'],['goldenJoker','Golden Joker']];
+  const defaults={ace:[0.50,1.50,2.50],king:[0.40,1.20,2.00],queen:[0.30,0.90,1.50],jack:[0.20,0.60,1.00],spade:[0.10,0.30,0.50],heart:[0.10,0.30,0.50],diamond:[0.05,0.15,0.25],club:[0.05,0.15,0.25]};
+  const imageHtml=images.map(([id,label])=>{const value=values['superace_card_image_'+id]||'';return '<div class="card" style="margin:10px 0"><label>'+label+' Card Image HTTPS URL</label><input class="field" type="url" maxlength="1000" id="sa-image-'+id+'" placeholder="https://example.com/'+id+'.png" value="'+esc(value)+'"><img id="sa-preview-'+id+'" src="'+esc(value)+'" alt="'+label+'" style="max-width:110px;max-height:95px;object-fit:contain;margin-top:8px" '+(value?'':'hidden')+'></div>';}).join('');
+  const payHtml=Object.keys(defaults).map(id=>'<div class="card" style="margin:10px 0"><h4>'+id.toUpperCase()+'</h4><div class="admin-grid">'+[3,4,5].map((n,i)=>'<div><label>'+n+'টি মিললে Multiplier (×)</label><input class="field" type="number" min="0" max="1000" step="0.01" id="sa-pay-'+id+'-'+n+'" value="'+esc(values['superace_pay_'+id+'_'+n]??String(defaults[id][i].toFixed(2)))+'"></div>').join('')+'</div></div>').join('');
+  $('#view').innerHTML='<div class="card"><h3>Super Ace Control</h3><p class="muted">এখানকার সেটিংস Super Ace গেমের সার্ভার-সাইড ফলাফল ও পেআউটে কার্যকর হবে। অন্য গেমে প্রভাব পড়বে না।</p><label>Win Rate (%) — ০ থেকে ১০০</label><input class="field" id="sa-win-rate" type="number" min="0" max="100" step="1" value="'+esc(values.superace_win_rate_pct??'30')+'"><p class="muted">এটি প্রতিটি Spin-এ জেতার কম্বিনেশন তৈরি হওয়ার সম্ভাবনা। আসল কয়েন পেআউট নিচের Card Multiplier অনুযায়ী হিসাব হবে।</p></div><div class="card"><h3>সব Card Image পরিবর্তন</h3><p class="muted">HTTPS Image URL দিন। Golden Ace/King/Queen ইত্যাদি সংশ্লিষ্ট সাধারণ তাসের ছবি থেকেই গোল্ডেন ইফেক্ট পাবে। Wild, Scatter ও Golden Joker আলাদা করে বদলানো যাবে।</p>'+imageHtml+'</div><div class="card"><h3>Card Payout Multiplier</h3><p class="muted">একই তাস ৩, ৪ বা ৫টি Reel-এ মিললে Bet-এর কত গুণ Virtual Coin দেওয়া হবে।</p>'+payHtml+'</div><div class="card"><button class="primary" onclick="saveSuperAceControl()">সব Super Ace সেটিংস সংরক্ষণ করুন</button><div id="sa-control-msg" class="muted"></div></div>';
+  for(const [id] of images){const input=$('#sa-image-'+id),preview=$('#sa-preview-'+id);input.addEventListener('input',()=>{preview.src=input.value;preview.hidden=!input.value;});}
+ }catch(e){$('#view').textContent=e.message;}
+}
+async function saveSuperAceControl(){
+ const msg=$('#sa-control-msg');
+ try{
+  const winRate=Number($('#sa-win-rate').value);
+  if(!Number.isFinite(winRate)||winRate<0||winRate>100)throw Error('Win Rate ০ থেকে ১০০-এর মধ্যে দিন।');
+  const images={},paytable={};
+  for(const id of ['ace','king','queen','jack','spade','heart','diamond','club','wild','scatter','goldenJoker']){
+   images[id]=$('#sa-image-'+id).value.trim();
+   if(images[id]&&!/^https:\/\//i.test(images[id]))throw Error(id+' ছবির URL অবশ্যই HTTPS হতে হবে।');
+  }
+  for(const id of ['ace','king','queen','jack','spade','heart','diamond','club']){
+   paytable[id]={};
+   for(const n of [3,4,5]){
+    const value=Number($('#sa-pay-'+id+'-'+n).value);
+    if(!Number.isFinite(value)||value<0||value>1000)throw Error(id.toUpperCase()+' '+n+'টি কার্ডের Multiplier ০ থেকে ১০০০-এর মধ্যে দিন।');
+    paytable[id][n]=value;
+   }
+  }
+  msg.textContent='সংরক্ষণ হচ্ছে…';
+  await api('/admin/superace-control',{winRate,images,paytable});
+  msg.textContent='Super Ace-এর ছবি, Win Rate ও সব Card Multiplier সার্ভারে সংরক্ষণ হয়েছে। নতুন Spin থেকে কার্যকর হবে।';
  }catch(e){msg.textContent=e.message;}
 }
 
