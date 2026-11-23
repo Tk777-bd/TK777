@@ -87,6 +87,12 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .bet-adjust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;color:#e8c98e;font-size:10px;letter-spacing:.8px}
 .bet-adjust button{width:42px;height:34px;border:1px solid #e5bd68;border-radius:8px;background:linear-gradient(#9b672d,#4a2a13);color:#fff;font-size:21px;font-weight:900}
 .bet-confirm{width:100%;padding:12px;border:1px solid #fff0a3;border-radius:24px;background:linear-gradient(#fff0a8,#ffc33d 55%,#b96a12);color:#5c2807;font-weight:1000;letter-spacing:1px;box-shadow:0 3px 0 #713b0b,0 0 12px #ffca4b66}
+.win-popup{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72)}
+.win-popup.show{display:flex}
+.win-popup-panel{width:min(86vw,320px);padding:25px 16px;text-align:center;border:3px solid #ffe28a;border-radius:18px;background:radial-gradient(ellipse at top,#8a4a13 0,#32190c 58%,#100b10 100%);box-shadow:0 0 35px #ffbd35aa,0 12px 35px #000c}
+.win-popup-title{margin:0 0 12px;color:#ffe98b;font:bold 30px Georgia,serif;text-shadow:0 2px 3px #5b2100,0 0 12px #ffb52a}
+.win-popup-amount{color:#fff;font:bold 25px Arial,sans-serif;text-shadow:0 2px 5px #000}
+
 
 
 /* Super Ace one-second JILI intro */
@@ -124,6 +130,9 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
   <div class="bet-adjust"><button type="button" id="betPanelMinus">−</button><span>BET AMOUNT</span><button type="button" id="betPanelPlus">+</button></div>
   <button type="button" class="bet-confirm" id="betConfirm">CONFIRM</button>
  </div>
+</div>
+<div class="win-popup" id="winPopup" aria-live="assertive">
+ <div class="win-popup-panel"><div class="win-popup-title" id="winPopupTitle">BIG WIN</div><div class="win-popup-amount" id="winPopupAmount">0.00</div></div>
 </div>
 </main>
 <script>
@@ -431,10 +440,24 @@ async function play(){
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
   totalWin=Math.max(0,Number(result.payout||0));$('cascadeWin').textContent=fmt(frames.filter(f=>f.type==='win').slice(-1)[0]?.winAmount||0);$('win').textContent=fmt(totalWin);if(totalWin>0||frames.some(f=>f.type==='win'))$('win').parentElement.classList.add('show');
+  const winMultiplier=stake>0?totalWin/stake:0;
+  if(!result.freeSpin&&winMultiplier>=6){
+   await showWinPopup('BIG WIN',totalWin);
+   if(winMultiplier>=15)await showWinPopup('SUPER WIN',totalWin);
+  }
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
  finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(freeSpinReady&&freeSpins>0){await sleep(turbo?180:500);if(freeSpinReady&&freeSpins>0)play()}else if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
+}
+async function showWinPopup(title,amount){
+ const overlay=$('winPopup');
+ $('winPopupTitle').textContent=title;
+ $('winPopupAmount').textContent=fmt(amount);
+ overlay.classList.add('show');
+ await sleep(1700);
+ overlay.classList.remove('show');
+ await sleep(220);
 }
 function updateFreeSpinButton(){
  // During the bonus, show only the remaining count on the spin button.
