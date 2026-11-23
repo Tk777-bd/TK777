@@ -177,6 +177,15 @@ const art={
  goldenJoker:"/golden-joker.svg",
 };
 
+let customKingArt=false;
+function applySuperAceCardImages(images){
+ if(!images||typeof images!=='object')return;
+ for(const key of ['ace','king','queen','jack','spade','heart','diamond','club','wild','scatter','goldenJoker']){
+  const value=String(images[key]||'').trim();
+  if(value&&/^https:\/\//i.test(value)){art[key]=value;if(key==='king')customKingArt=true;}
+ }
+}
+
 // Create a white version of the ordinary King from the same card artwork.
 // Yellow/gold pixels are neutralized; the special goldenCard keeps the original gold artwork.
 const whiteKingArtPromise=(async()=>{
@@ -309,7 +318,7 @@ async function request(path,body){
 }
 async function loadBalance(){
  draw(randomBoard());
- try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins){$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';showFreeSpinOffer()}}
+ try{const d=await request('/me');balance=Number(d.user.balance||0);const state=await request('/superace-state');applySuperAceCardImages(state.cardImages||{});if(visibleGrid.length)draw(visibleGrid);freeSpins=Number(state.freeSpins||0);bet=Number(state.betAmount||bet);chosenX=1;setCombo(freeSpins>0?2:1,freeSpins>0);update();if(freeSpins){$('status').textContent='FREE SPINS '+freeSpins+' · GOLDEN JOKER';showFreeSpinOffer()}}
  catch(e){$('status').textContent=e.message;$('balance').textContent='Login required';if(!$('board').children.length)draw(randomBoard())}
 }
 function setCardFace(cell,rawId){
@@ -329,7 +338,7 @@ function setCardFace(cell,rawId){
   img.onerror=()=>{img.onerror=null;img.src=art.ace;};
   // Keep the ordinary white King consistent during falling/cascade animations.
   // The separate goldenCard must retain its original gold artwork.
-  if(key==='king')whiteKingArtPromise.then(src=>{if(img.isConnected&&key==='king')img.src=src;});
+  if(key==='king')whiteKingArtPromise.then(src=>{if(img.isConnected&&key==='king'&&!customKingArt)img.src=src;});
  }
  cell.appendChild(img);
 }
