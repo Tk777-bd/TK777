@@ -997,8 +997,7 @@ body{background:#063b39}
   box-shadow:0 0 2px #28df55;
 }
 .aviator-crowd .crowd-avatar-two{background:linear-gradient(145deg,#73d5c7,#17556a)}
-.aviator-crowd .crowd-avatar-three{background:linear-gradient(145deg,#a99be9,#3a3278);margin-right:8px}
-.aviator-crowd .crowd-avatar i{
+.aviator-crowd .crowd-avatar-three{background:linear-gradient(145deg,#a99be9,#3a3278);margin-right:8px}.aviator-crowd .crowd-avatar i{
   position:absolute;left:50%;top:5px;width:8px;height:8px;
   transform:translateX(-50%);border-radius:50%;background:#18212d;
 }
@@ -1230,7 +1229,7 @@ body{background:#063b39}
 
 /* Display-only Slot cards: match the existing Aviator / Super Ace home-card frame */
 .display-slot-game{padding:0;min-width:0;overflow:hidden;cursor:default;pointer-events:none;border:1px solid #18746a;background:#0b353d;box-shadow:0 3px 8px #001c1c66}
-.display-slot-game .slot-poster{width:100%;height:clamp(58px,18vw,82px);min-height:0;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:5px;text-align:center;isolation:isolate}
+.display-slot-game .slot-art{width:100%;height:clamp(58px,18vw,82px);min-height:0;overflow:hidden;display:block}.display-slot-game .slot-art img,.display-slot-game .slot-art .slot-poster{width:100%;height:100%;display:block;object-fit:cover}.display-slot-game .slot-poster{width:100%;height:clamp(58px,18vw,82px);min-height:0;aspect-ratio:auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:5px;text-align:center;isolation:isolate}
 .display-slot-game .slot-poster:before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(circle at 50% 28%,#fff8,transparent 32%),linear-gradient(155deg,#116d78,#052c36 72%)}
 .display-slot-game .slot-poster:after{content:"";position:absolute;inset:5px;border:1px solid #fff5;border-radius:7px;z-index:-1;box-shadow:inset 0 0 25px #0007}
 .display-slot-game .slot-poster-mark{font-size:clamp(26px,8vw,42px);line-height:1.1;text-shadow:0 4px 8px #000b,0 0 14px #ffe27a;filter:drop-shadow(0 2px 2px #0008)}
@@ -1583,3 +1582,86 @@ body{background:#063b39}
 @media(prefers-reduced-motion:reduce){
   .aviator-stage::before{transition:none}
 }
+
+/* Original TK777 live-table game artwork */
+.game .live-game-cover{height:100px;display:flex;flex-direction:column;justify-content:center;gap:5px;color:#ffe9b0;border-bottom:1px solid rgba(255,214,130,.35);text-shadow:0 2px 8px #000}
+.game .live-game-cover span{font-size:38px;line-height:1}
+.game .live-game-cover small{font-size:8px;letter-spacing:1.2px;font-weight:800;color:#fff2ce}
+.game .live-game-cover.live-roulette{background:radial-gradient(circle at 50% 35%,#9b252d 0,#40151f 42%,#101b1c 100%)}
+.game .live-game-cover.live-cards{background:radial-gradient(circle at 50% 35%,#246b55 0,#123c36 48%,#101b1c 100%)}
+
+/* TK777 Evolution-style demo preview screens */
+.evo-demo-page{padding-top:12px}
+.evo-demo-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.evo-demo-live{display:flex;align-items:center;gap:7px;color:#ffd5d5;font-size:11px;font-weight:900;letter-spacing:1.5px}
+.evo-demo-live i{width:8px;height:8px;border-radius:50%;background:#ff4d61;box-shadow:0 0 12px #ff4d61}
+.evo-demo-stage{min-height:340px;border:1px solid rgba(255,220,150,.35);border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:25px 14px;text-align:center;background:radial-gradient(circle at 50% 40%,#70451d,#24142f 65%,#0b2020);box-shadow:inset 0 0 55px #0008}
+.evo-demo-stage:before,.evo-demo-stage:after{content:"";position:absolute;inset:12px;border:1px solid #f7d58a55;border-radius:14px;pointer-events:none}
+.evo-demo-orbit{position:absolute;width:235px;height:235px;border:2px dashed #f9d37b66;border-radius:50%;animation:evoOrbit 18s linear infinite}
+.evo-demo-symbol{font-size:90px;line-height:1.2;z-index:1;filter:drop-shadow(0 8px 15px #0009);animation:evoFloat 3s ease-in-out infinite}
+.evo-demo-label{z-index:1;color:#ffe6a8;font-size:11px;font-weight:900;letter-spacing:3px;margin-top:8px}
+.evo-demo-stage h2{z-index:1;color:#fff;font-size:25px;margin:9px 0;text-shadow:0 3px 15px #000}
+.evo-demo-pills{display:flex;gap:8px;z-index:1;margin-top:8px}
+.evo-demo-pills span{border:1px solid #ffe3a077;border-radius:30px;padding:6px 10px;color:#ffe8bd;font-size:9px;letter-spacing:1px}
+.evo-theme-funky,.evo-theme-disco{background:radial-gradient(circle at 50% 35%,#7c287f,#28154c 65%,#0b2020)}
+.evo-theme-mega,.evo-theme-dream{background:radial-gradient(circle at 50% 35%,#236c80,#15234c 65%,#0b2020)}
+.evo-theme-lightning{background:radial-gradient(circle at 50% 35%,#735c17,#292044 65%,#0b2020)}
+.evo-theme-monopoly,.evo-theme-deal{background:radial-gradient(circle at 50% 35%,#25684e,#142c34 65%,#0b2020)}
+.evo-theme-coin{background:radial-gradient(circle at 50% 35%,#8a5720,#332044 65%,#0b2020)}
+.evo-demo-notice{margin-top:13px;background:#103d39;border-color:#28685d}
+.evo-demo-notice b{color:#ffe3a1;font-size:12px;letter-spacing:1px}
+.evo-demo-notice p{font-size:13px;line-height:1.6;margin:8px 0}
+.evo-demo-notice small{color:#a9c9bf}
+.evo-demo-back{width:100%;margin-top:12px}
+@keyframes evoOrbit{to{transform:rotate(360deg)}}
+@keyframes evoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-9px) scale(1.04)}}
+
+
+/* Official Evolution freeplay video page inside the TK777 live-game screen */
+.evo-video-title{margin:8px 0 12px;text-align:center;color:#fff;font-size:21px}
+.evo-video-frame-wrap{width:100%;height:min(72vh,620px);min-height:420px;overflow:hidden;border:1px solid rgba(255,220,150,.35);border-radius:14px;background:#080b12;box-shadow:0 8px 28px #0005}
+.evo-video-frame{display:block;width:100%;height:100%;border:0;background:#080b12}
+.evo-official-link{display:block;text-align:center;text-decoration:none;margin-top:10px}
+.evo-demo-notice .evo-official-link{color:#fff}
+@media(max-width:480px){.evo-video-frame-wrap{height:68vh;min-height:380px}}
+
+
+/* Tall two-column Evolution live game cards in the Live category */
+.games:has(.live-game-tall){grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.game.live-game-tall{min-height:214px;border-radius:14px;border:1px solid rgba(246,201,75,.48);background:linear-gradient(160deg,#123f3a,#071f25);box-shadow:0 5px 14px #0004}
+.game.live-game-tall .live-game-cover{height:166px;min-height:166px;gap:12px;padding:14px 7px;position:relative;overflow:hidden;border-bottom:1px solid rgba(246,201,75,.35)}
+.game.live-game-tall .live-game-cover:before{content:"";position:absolute;width:145px;height:145px;border:1px solid #f6c94b44;border-radius:50%;box-shadow:0 0 0 12px #f6c94b0b,0 0 0 26px #f6c94b08}
+.game.live-game-tall .live-game-cover span{font-size:56px;z-index:1;filter:drop-shadow(0 5px 8px #0008)}
+.game.live-game-tall .live-game-cover small{z-index:1;font-size:12px;line-height:1.25;letter-spacing:1.4px;font-weight:900;text-align:center;padding:0 4px;color:#fff4cf}
+.game.live-game-tall strong{font-size:14px;line-height:1.3;min-height:42px;padding:8px 5px 2px}
+.game.live-game-tall>small{display:block;color:#f6d66d;font-size:10px;letter-spacing:1.5px;padding:2px 4px 9px}
+.game.live-game-tall .favorite-toggle{z-index:2}
+@media(max-width:360px){.games:has(.live-game-tall){gap:8px}.game.live-game-tall .live-game-cover{height:148px;min-height:148px}}
+
+
+/* Live games: compact image-sized cards in a four-column grid. */
+.live-games-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px}
+.live-games-grid .game img,.live-games-grid .game .placeholder{height:clamp(58px,18vw,82px);aspect-ratio:1.25;object-fit:cover}
+.live-games-grid .game strong{font-size:11px;padding:6px 2px;line-height:1.2;min-height:0}
+.live-games-grid .game small{font-size:8px;padding:0 2px 7px}
+
+/* Keep original live-game logo artwork fully visible inside compact tiles. */
+.game img.live-game-logo{object-fit:contain!important;padding:6px;background:#082b2b;box-sizing:border-box}
+
+
+/* Deposit prompt shown when selecting non-exempt games */
+.game-deposit-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(0,12,14,.68);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:gameDepositFade .16s ease-out}
+.game-deposit-modal{position:relative;width:min(100%,360px);padding:27px 20px 20px;text-align:center;border:1px solid #d9b84d;border-radius:18px;background:linear-gradient(145deg,#10564d,#082f32);box-shadow:0 16px 48px #0009;animation:gameDepositPop .2s ease-out}
+.game-deposit-close{position:absolute;right:9px;top:8px;width:32px;height:32px;padding:0;border-radius:50%;background:#ffffff18;color:#fff;font-size:25px;line-height:1}
+.game-deposit-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ffe27b,#e9a82f);color:#35250a;font-size:34px;font-weight:700}
+.game-deposit-modal h3{margin:4px 18px 8px;color:#ffdc69;font-size:20px}
+.game-deposit-modal p{margin:0 0 18px;color:#d1eee5;font-size:13px}
+.game-deposit-button{width:100%;padding:12px;background:linear-gradient(90deg,#f8d75d,#eaa52d);color:#30230c;font-size:15px}
+@keyframes gameDepositFade{from{opacity:0}to{opacity:1}}
+@keyframes gameDepositPop{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Minimal one-second Aviator launch screen */
+.aviator-loading-screen{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#080808}
+.aviator-loading-brand{display:inline-flex;flex-direction:column;align-items:center;color:#fff;font-size:clamp(25px,7vw,38px);font-weight:800;letter-spacing:1.8px;line-height:1.2;white-space:nowrap}
+.aviator-loading-line{display:block;width:100%;height:2px;margin-top:9px;background:#e50914;transform:scaleX(1);transform-origin:center;animation:aviatorLineShrink 1s linear forwards}
+@keyframes aviatorLineShrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
