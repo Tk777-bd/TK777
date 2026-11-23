@@ -1211,7 +1211,9 @@ async function route(req, env) {
     if (p === "/api/superace-state" && method === "GET") {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS superace_state (user_id TEXT PRIMARY KEY,free_spins INTEGER NOT NULL DEFAULT 0,bet_amount INTEGER NOT NULL DEFAULT 50,bet_multiplier INTEGER NOT NULL DEFAULT 1)").run();
       const state = await env.DB.prepare("SELECT free_spins,bet_amount,bet_multiplier FROM superace_state WHERE user_id=?").bind(user.id).first();
-      return json({freeSpins:Number(state?.free_spins||0),betAmount:Number(state?.bet_amount||50),betMultiplier:Number(state?.bet_multiplier||1)});
+      const imageRows = await env.DB.prepare("SELECT key,value FROM settings WHERE key LIKE 'superace_card_image_%'").all();
+      const cardImages = Object.fromEntries(imageRows.results.map(row => [row.key.slice("superace_card_image_".length), row.value]));
+      return json({freeSpins:Number(state?.free_spins||0),betAmount:Number(state?.bet_amount||50),betMultiplier:Number(state?.bet_multiplier||1),cardImages});
     }
 
     /* SUPER ACE: 5x4 ways game with Golden Card -> persistent Golden Joker cascades */
@@ -1238,6 +1240,16 @@ async function route(req, env) {
         diamond:{3:0.05,4:0.15,5:0.25},
         club:{3:0.05,4:0.15,5:0.25}
       };
+      const gameSettingRows=await env.DB.prepare("SELECT key,value FROM settings WHERE key='superace_win_rate_pct' OR key LIKE 'superace_pay_%'").all();
+      const gameSettings=Object.fromEntries(gameSettingRows.results.map(row=>[row.key,row.value]));
+      for(const symbol of Object.keys(cardPaytable)){
+        for(const reels of [3,4,5]){
+          const raw=gameSettings["superace_pay_"+symbol+"_"+reels];
+          if(raw!==undefined){const amount=Number(raw);if(Number.isFinite(amount)&&amount>=0&&amount<=1000)cardPaytable[symbol][reels]=amount;}
+        }
+      }
+      const configuredWinRate=Number(gameSettings.superace_win_rate_pct??30);
+      const winRate=Number.isFinite(configuredWinRate)?Math.max(0,Math.min(100,configuredWinRate)):30;
       // Ordinary wild cards never drop. A winning yellow K creates a temporary wild.
       const weights=[.7,.8,.9,1,1.15,1.15,1.15,1.15,.10];
       const pickBaseCard=()=>{const total=weights.reduce((x,y)=>x+y,0);let v=rand()*total;for(let i=0;i<cards.length;i++){v-=weights[i];if(v<=0)return cards[i].id;}return "ace";};
@@ -1265,9 +1277,9 @@ async function route(req, env) {
         return {groups,wins:[...new Set(all)]};
       };
       const stake=bet*betMultiplier,roundId=uid();
-      // Target about 30% of paid/free rounds to start with a winning combination.
-      // The remaining rounds are deliberately generated without a starting match.
-      const allowWin=rand()<0.30;
+      // Admin-controlled server-side probability for a winning starting board.
+      // The remaining rounds are generated without a starting match.
+      const allowWin=rand()<(winRate/100);
       const makeBoard=()=>Array.from({length:20},(_,ix)=>pickCard(ix%5));
       let grid=makeBoard();
       for(let attempt=0;attempt<500;attempt++){
@@ -2348,6 +2360,33 @@ async function route(req, env) {
       }
       await env.DB.prepare("UPDATE coin_requests SET status=?,reviewed_at=CURRENT_TIMESTAMP,reviewed_by=? WHERE id=? AND status='pending'").bind(status,user.id,cr.id).run();
       return json({ok:true});
+    }
+
+    if (p === "/api/admin/superace-control" && method === "POST") {
+      if (!await admin()) return json({ error: "Admin access প্রয়োজন" }, 403);
+      const body = await req.json();
+      const winRate = Number(body.winRate);
+      if (!Number.isFinite(winRate) || winRate < 0 || winRate > 100) return json({ error: "Win Rate ০ থেকে ১০০ শতাংশের মধ্যে দিন" }, 400);
+      const imageKeys = ["ace","king","queen","jack","spade","heart","diamond","club","wild","scatter","goldenJoker"];
+      const paySymbols = ["ace","king","queen","jack","spade","heart","diamond","club"];
+      if (!body.images || typeof body.images !== "object" || !body.paytable || typeof body.paytable !== "object") return json({ error: "Super Ace settings সঠিক নয়" }, 400);
+      const statements = [];
+      for (const imageKey of imageKeys) {
+        const value = String(body.images[imageKey] ?? "").trim();
+        if (value.length > 1000 || (value && !/^https:\/\//i.test(value))) return json({ error: imageKey + " ছবির জন্য সঠিক HTTPS URL দিন" }, 400);
+        statements.push(env.DB.prepare("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind("superace_card_image_" + imageKey, value));
+      }
+      for (const symbol of paySymbols) {
+        if (!body.paytable[symbol] || typeof body.paytable[symbol] !== "object") return json({ error: symbol + " paytable সঠিক নয়" }, 400);
+        for (const reels of [3,4,5]) {
+          const amount = Number(body.paytable[symbol][reels]);
+          if (!Number.isFinite(amount) || amount < 0 || amount > 1000) return json({ error: symbol + " " + reels + " কার্ডের multiplier ০ থেকে ১০০০-এর মধ্যে দিন" }, 400);
+          statements.push(env.DB.prepare("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind("superace_pay_" + symbol + "_" + reels, amount.toFixed(2)));
+        }
+      }
+      statements.push(env.DB.prepare("INSERT INTO settings(key,value) VALUES('superace_win_rate_pct',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(winRate)));
+      await env.DB.batch(statements);
+      return json({ ok: true, winRate, savedImages: imageKeys.length, savedPaytable: paySymbols.length * 3 });
     }
 
     /* ADMIN SETTINGS */
