@@ -1287,6 +1287,13 @@ async function route(req, env) {
         if(hasWin===allowWin)break;
         grid=makeBoard();
       }
+      // Guarantee the configured 0% and 100% endpoints even if random retries are exhausted.
+      if((findWins(grid).groups.length>0)!==allowWin){
+        grid=Array.from({length:20},(_,ix)=>{
+          const col=ix%5;
+          return allowWin?(col<3?"ace":col===3?"king":"queen"):["ace","king","queen","jack","spade"][col];
+        });
+      }
       let cascadeX=1,totalWin=0,cascadeCount=0;
       let scatterCount=grid.filter(x=>x==="scatter").length;
       let scatterTriggered=scatterCount>=3;
