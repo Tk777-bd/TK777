@@ -452,17 +452,17 @@ async function play(){
   totalWin=Math.max(0,Number(result.payout||0));$('cascadeWin').textContent=fmt(frames.filter(f=>f.type==='win').slice(-1)[0]?.winAmount||0);$('win').textContent=fmt(totalWin);if(totalWin>0||frames.some(f=>f.type==='win'))$('win').parentElement.classList.add('show');
   const winMultiplier=stake>0?totalWin/stake:0;
   if(!result.freeSpin&&winMultiplier>=6){
-   await showWinSequence(totalWin,winMultiplier>=15);
+   await showWinSequence(totalWin,winMultiplier>=15,stake);
   }
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
  finally{busy=false;$('spin').disabled=false;update();updateFreeSpinButton();if(freeSpinReady&&freeSpins>0){await sleep(turbo?180:500);if(freeSpinReady&&freeSpins>0)play()}else if(auto&&freeSpins<=0){await sleep(450);if(auto)play()}}
 }
-function countWinAmount(target,duration){
+function countWinAmount(startValue,targetValue,duration){
  return new Promise(resolve=>{
   const amount=$('winPopupAmount');
-  const end=Math.max(1,Number(target)||1),start=1,started=performance.now();
+  const start=Math.max(1,Number(startValue)||1),end=Math.max(start,Number(targetValue)||start),started=performance.now();
   amount.textContent=fmt(start);
   function tick(now){
    const progress=Math.min(1,(now-started)/duration);
@@ -474,23 +474,27 @@ function countWinAmount(target,duration){
   requestAnimationFrame(tick);
  });
 }
-async function showWinSequence(amount,showSuper){
+async function showWinSequence(amount,showSuper,stake){
  const overlay=$('winPopup'),title=$('winPopupTitle');
+ const superStart=showSuper?Math.min(amount,stake*15):amount;
  overlay.classList.remove('super');
  title.textContent='BIG WIN';
  $('winPopupAmount').textContent=fmt(1);
  overlay.classList.add('show');
  await sleep(420);
- await countWinAmount(amount,1450);
- await sleep(650);
+ // BIG WIN counts up to the 15x threshold when SUPER WIN is also due.
+ await countWinAmount(1,superStart,1450);
+ await sleep(450);
  if(showSuper){
-  // Keep the same popup on screen; smoothly transform its look and title.
+  // Keep the same amount on screen while the title and glow smoothly transform.
   overlay.classList.add('super');
   title.textContent='SUPER WIN';
-  $('winPopupAmount').textContent=fmt(1);
-  await sleep(180);
-  await countWinAmount(amount,1450);
+  await sleep(220);
+  // Continue counting from the 15x amount; never reset to 1.
+  await countWinAmount(superStart,amount,1050);
   await sleep(850);
+ }else{
+  await sleep(650);
  }
  overlay.classList.remove('show');
  await sleep(420);
