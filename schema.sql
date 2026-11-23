@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = ON;
+-- TK777 base schema for a NEW D1 database only.\n-- This file is not a live-database reset or migration script.\n-- Never run migrations/0002_reset_old_demo_balances.sql on a live site.\n\nPRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
