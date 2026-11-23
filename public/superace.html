@@ -3,7 +3,7 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#02040b;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center}
-.game{width:min(96vw,500px);height:94vh;height:94svh;min-height:0;margin:auto;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:radial-gradient(ellipse at 50% 43%,#174d58 0,#092b3b 48%,#050a19 100%);padding:0 0 3px;border:1px solid #28394b;border-radius:9px;box-shadow:0 8px 28px #000b}
+.game{width:100vw;height:100vh;height:100dvh;min-height:0;margin:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#050a19;padding:0;border:0;border-radius:0;box-shadow:none}
 .top{height:76px;flex:0 0 76px;position:relative;text-align:center;background:linear-gradient(180deg,#070a18 0%,#111528 72%,#281515 73%,#6e2d19 83%,#25100c 100%);border-bottom:3px solid #d28a36;box-shadow:0 4px 12px #000b}
 
 
@@ -14,10 +14,10 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .multis{height:36px;flex:0 0 36px;width:min(82%,330px);margin:-1px auto 0;position:relative;z-index:3;display:flex;justify-content:space-around;align-items:center;border:2px solid #f5c86c;border-radius:20px;background:linear-gradient(180deg,#fff0a8 0%,#ffb52f 48%,#a94b0a 100%);box-shadow:0 2px 0 #55250b,0 0 12px #ff9e27}
 .multi{border:0;background:transparent;color:#63310c;font-weight:900;font-size:16px;padding:4px 9px;border-radius:15px;min-width:42px;text-align:center;opacity:.82;transition:all .2s;text-shadow:0 1px #ffe8a0}
 .multi.active{background:linear-gradient(180deg,#fffbd1,#ffc23b 65%,#f08a16);color:#6b2107;box-shadow:inset 0 1px 2px #fff,0 0 9px #fff0a5;opacity:1;transform:scale(1.08)}
-.stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:7px 5px 5px;margin-top:0;background:linear-gradient(180deg,#0c2738 0%,#0d4551 45%,#082b39 100%);border-top:5px solid #8b9294;border-bottom:5px solid #a95a24;box-shadow:inset 0 0 18px #000a,0 5px 12px #0008;position:relative}
+.stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:7px 5px 5px;margin-top:0;background:#050a19;border-top:5px solid #8b9294;border-bottom:5px solid #a95a24;box-shadow:inset 0 0 18px #000a,0 5px 12px #0008;position:relative}
 .stage:before,.stage:after{content:"";position:absolute;left:0;right:0;height:5px;background:linear-gradient(90deg,#424a4d,#d7d6c8 22%,#777d7a 50%,#eee4c8 78%,#424a4d);box-shadow:0 1px 3px #000}
 .stage:before{top:-5px}.stage:after{bottom:-5px}
-.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:min(100%,420px);height:100%;max-height:100%;max-width:100%;aspect-ratio:.88/1;margin:auto;background:#4b5356;align-items:stretch;justify-items:stretch;padding:2px;border:2px solid #aeb8b8;box-shadow:0 0 0 2px #27343b,0 5px 16px #000b}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:2px;width:min(100%,420px);height:97%;max-height:97%;max-width:100%;aspect-ratio:.88/1;margin:auto;background:#4b5356;align-items:stretch;justify-items:stretch;padding:2px;border:2px solid #aeb8b8;box-shadow:0 0 0 2px #27343b,0 5px 16px #000b}
 .tile{position:relative;overflow:hidden;border:1px solid #8b999c;border-radius:2px;background:linear-gradient(145deg,#e9f2ed,#a9c4ce);box-shadow:inset 0 0 0 1px #fff8,0 1px 2px #0008;display:flex;align-items:center;justify-content:center;transition:filter .12s}
 .tile.empty{background:rgba(2,10,20,.38);border:1px solid rgba(130,157,166,.22);box-shadow:inset 0 0 7px rgba(0,0,0,.42)}
 .tile img{width:100%;height:100%;object-fit:fill;display:block;padding:0;margin:0;background:transparent;min-width:0;min-height:0}.tile img.scatter-art{object-fit:contain}
@@ -46,19 +46,21 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .status{flex:0 0 18px;height:18px;text-align:center;padding-top:2px;font:bold 10px Arial;color:#ffe7a4;text-shadow:0 1px #321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .win-line{display:block;visibility:hidden;flex:0 0 25px;height:25px;min-height:25px;text-align:center;color:#ffdf72;font:bold 15px Georgia;text-shadow:0 1px 3px #000}
 .win-line.show{visibility:visible}
-.controls{flex:0 0 67px;min-height:67px;display:flex;align-items:center;justify-content:space-around;padding:4px 7px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
+.controls{position:relative;flex:0 0 86px;min-height:86px;display:flex;align-items:center;justify-content:flex-start;padding:4px 10px;background:linear-gradient(180deg,#3a2117 0%,#1a120f 42%,#090b12 100%);border-top:3px solid #9b5b2c;border-bottom:1px solid #6d4929;gap:3px;box-shadow:0 -5px 16px #0009}
 .ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:#f6dfa6;min-width:35px;text-shadow:0 1px #000}
 .round{width:27px;height:27px;border-radius:50%;border:1px solid #d7ad61;background:radial-gradient(circle at 35% 25%,#9c7950,#39251a 72%);color:#fff1bd;font-size:16px;font-weight:900;box-shadow:inset 0 1px 3px #fff5,0 2px 3px #000}
-.bet-control{display:flex;flex-direction:row;gap:3px;align-items:center;min-width:98px}
+.bet-control{display:flex;flex-direction:row;gap:3px;align-items:center;min-width:0}.bet-value.bet-open{width:46px;height:46px;min-width:46px;padding:3px;border-radius:50%;justify-content:center}.bet-value.bet-open small{font-size:7px}.bet-value.bet-open b{font-size:11px}
 .bet-value{min-width:34px;text-align:center;display:flex;flex-direction:column;gap:2px}
 .bet-value small{font-size:8px;color:#f6dfa6}.bet-value b{font-size:12px;color:#fff}
-.spin{width:57px;height:57px;flex:0 0 57px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fffbd0,#ffc02b 48%,#a64a05 82%);color:#672605;font-weight:1000;font-size:12px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a,inset 0 0 0 2px #fff8}
+.spin-control{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.spin{width:70px;height:70px;flex:0 0 70px;border-radius:50%;border:4px solid #ffdf85;background:radial-gradient(circle at 35% 25%,#fffbd0,#ffc02b 48%,#a64a05 82%);color:#672605;font-weight:1000;font-size:12px;box-shadow:0 0 0 3px #87400c,0 0 18px #ffb32a,inset 0 0 0 2px #fff8}
+.right-controls{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:12px}
 .spin:disabled,.round:disabled{opacity:.5}
 .balance{text-align:center;background:linear-gradient(90deg,#090b11,#322018,#090b11);padding:5px 4px 2px;color:#f2dca5;font-size:10px;border-top:1px solid #795a30;flex:0 0 24px}
 .balance b{font-size:13px;color:white}
 .note{text-align:center;background:#090b11;color:#b8ad98;font-size:8px;padding:1px 0 3px;flex:0 0 14px}
-@media(min-width:500px){.game{width:min(94vw,500px);height:94vh;height:94svh;margin:auto}.board{width:min(100%,420px)}}
-@media(max-height:590px){.top{height:62px;flex-basis:62px}.stage{padding:4px}.controls{flex-basis:58px;min-height:58px}.spin{width:49px;height:49px;flex-basis:49px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
+@media(min-width:500px){.game{width:100vw;height:100vh;height:100dvh;margin:0}.board{width:min(100%,420px)}}
+@media(max-height:590px){.top{height:62px;flex-basis:62px}.stage{padding:4px}.controls{flex-basis:80px;min-height:80px}.spin{width:70px;height:70px;flex:0 0 70px}.status{flex-basis:16px;height:16px}.win-line{flex-basis:21px;height:21px}}
 @media(prefers-reduced-motion:reduce){.tile.win,.tile.drop,.tile.win:after{animation:none}}
 .free-overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78)}
 .free-overlay.show{display:flex}
@@ -67,20 +69,61 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .free-panel p{margin:8px 0 18px;font-size:17px}
 .free-start{border:0;border-radius:30px;padding:13px 24px;font-weight:900;font-size:17px;color:#382000;background:linear-gradient(#fff0a8,#e9a82d);box-shadow:0 4px 0 #8a4b08}
 
+
+.bet-value.bet-open{border:1px solid #d7ad61;border-radius:8px;background:linear-gradient(180deg,#5a3a20,#21150f);padding:4px 8px;min-width:57px;color:#fff;cursor:pointer;box-shadow:inset 0 1px 3px #fff3,0 2px 4px #000}
+.bet-value.bet-open small{color:#ffdf85;font-size:8px}.bet-value.bet-open b{font-size:13px;color:#fff}
+.bet-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.76);backdrop-filter:blur(3px)}
+.bet-overlay.show{display:flex}
+.bet-panel{width:min(92vw,350px);padding:15px;border:2px solid #e4b85b;border-radius:16px;background:radial-gradient(ellipse at top,#70431b 0,#24160f 58%,#100d12 100%);box-shadow:0 0 28px #f2b63b55,0 12px 35px #000c;color:#fff}
+.bet-panel-head{display:flex;align-items:center;justify-content:space-between;color:#ffe29a;font:bold 17px Georgia,serif;letter-spacing:1px}
+.bet-panel-head button{width:30px;height:30px;border:1px solid #d6a94d;border-radius:50%;background:#281912;color:#fff;font-size:22px;line-height:20px}
+.bet-current{margin:13px 0 10px;padding:9px;border-radius:8px;background:#100d12;border:1px solid #795326;text-align:center;color:#e9c98c;font-size:10px;letter-spacing:1px}
+.bet-current strong{display:block;margin-top:3px;color:#fff;font-size:22px}
+.bet-options{display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-auto-columns:minmax(0,1fr);gap:8px;transform:rotate(180deg)}
+.bet-option{transform:rotate(180deg)}
+.bet-option{padding:10px 3px;border:1px solid #b17c32;border-radius:8px;background:linear-gradient(180deg,#68421e,#302015);color:#ffe8b0;font-weight:900;font-size:13px;box-shadow:inset 0 1px 2px #fff2,0 2px 3px #0008}
+.bet-option.active{background:linear-gradient(180deg,#fff2b4,#ffc33f 58%,#b96812);color:#542607;border:2px solid #fff0a2;box-shadow:0 0 12px #ffca4b88}
+.bet-option:disabled{opacity:.28}
+.bet-adjust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;color:#e8c98e;font-size:10px;letter-spacing:.8px}
+.bet-adjust button{width:42px;height:34px;border:1px solid #e5bd68;border-radius:8px;background:linear-gradient(#9b672d,#4a2a13);color:#fff;font-size:21px;font-weight:900}
+.bet-confirm{width:100%;padding:12px;border:1px solid #fff0a3;border-radius:24px;background:linear-gradient(#fff0a8,#ffc33d 55%,#b96a12);color:#5c2807;font-weight:1000;letter-spacing:1px;box-shadow:0 3px 0 #713b0b,0 0 12px #ffca4b66}
+
+
+/* Super Ace one-second JILI intro */
+.jili-loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#050a19;opacity:1;visibility:visible;transition:opacity .18s ease,visibility .18s ease}
+.jili-loading.hide{opacity:0;visibility:hidden;pointer-events:none}
+.jili-logo{font:1000 56px Georgia,serif;letter-spacing:5px;color:#ffd76a;background:linear-gradient(180deg,#fff8c9 0%,#ffe98a 18%,#d99519 42%,#fff0a0 55%,#a85b08 78%,#ffe08a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:2px 3px 0 #70400b,4px 6px 0 #3b2108,0 0 14px #ffbf36;filter:drop-shadow(0 4px 3px #000)}
+.jili-subtitle{margin-top:8px;color:#fff;font:16px Arial,sans-serif;letter-spacing:1px}
+.jili-underline{width:190px;height:2px;margin-top:22px;border-radius:2px;background:linear-gradient(90deg,transparent,#ffe9a0 18%,#d99a27 50%,#ffe9a0 82%,transparent);box-shadow:0 0 8px #d99a27;transform-origin:center;animation:jiliLineShrink 1s linear forwards}
+@keyframes jiliLineShrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){.jili-underline{animation-duration:1s}}
+
 </style></head><body><main class="game">
+<div class="jili-loading" id="jiliLoading" aria-label="JILI Super Ace 2026 loading"><div class="jili-logo">JILI</div><div class="jili-subtitle">Super Ace 2026</div><div class="jili-underline"></div></div>
 <header class="top"><button class="close" type="button" onclick="parent.home()" aria-label="Back">×</button> <div class="brand">SuperAce</div></header>
 <div class="multis" id="comboMeter" aria-label="Combo multiplier"><div class="multi active" data-x="1">×1</div><div class="multi" data-x="2">×2</div><div class="multi" data-x="3">×3</div><div class="multi" data-x="5">×5</div></div>
 <section class="stage"><div class="board" id="board"></div></section>
-<div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">TOTAL WIN&nbsp; <span id="win">0.00</span></div>
+<div class="status" id="status">কার্ড মিলিয়ে জিতুন</div><div class="win-line">WIN&nbsp; <span id="cascadeWin">0.00</span>&nbsp; · &nbsp;TOTAL WIN&nbsp; <span id="win">0.00</span></div>
 <section class="controls">
- <div class="ctrl bet-control"><button class="round" id="betMinus" type="button">−</button><div class="bet-value"><small>BET</small><b id="bet">50</b></div><button class="round" id="betPlus" type="button">+</button></div>
- <div class="ctrl"><button class="spin" id="spin" type="button">✦<br>SPIN</button></div>
- <div class="ctrl"><button class="round" id="auto" type="button">⟳</button>Auto</div>
- <div class="ctrl"><button class="round" id="turbo" type="button">ϟ</button>Turbo</div>
+ <div class="ctrl bet-control"><button class="bet-value bet-open" id="betOpen" type="button" aria-label="Select bet amount"><small>BET ▾</small><b id="bet">50</b></button></div>
+ <div class="ctrl spin-control"><button class="spin" id="spin" type="button">✦<br>SPIN</button></div>
+ <div class="right-controls">
+  <div class="ctrl"><button class="round" id="auto" type="button">⟳</button>Auto</div>
+  <div class="ctrl"><button class="round" id="turbo" type="button">ϟ</button>Turbo</div>
+ </div>
 </section>
-<div class="balance">Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div><div class="note">Virtual credits only · no cash value</div>
+<div class="balance">Balance&nbsp; BDT <b id="balance">লোড হচ্ছে...</b></div>
 <div class="free-overlay" id="freeOverlay" role="dialog" aria-modal="true" aria-label="Free spins bonus">
  <div class="free-panel"><h2>🎉 FREE SPINS UNLOCKED!</h2><p id="freeOfferText">আপনি ১০টি Free Spin পেয়েছেন</p><button class="free-start" id="freeStart" type="button">START FREE SPINS</button></div>
+</div>
+<div class="bet-overlay" id="betOverlay" role="dialog" aria-modal="true" aria-labelledby="betTitle">
+ <div class="bet-panel">
+  <div class="bet-panel-head"><b id="betTitle">SELECT BET</b><button type="button" id="betClose" aria-label="Close">×</button></div>
+  <div class="bet-current">CURRENT BET <strong id="betCurrent">50</strong></div>
+  <div class="bet-options" id="betOptions"></div>
+  <div class="bet-adjust"><button type="button" id="betPanelMinus">−</button><span>BET AMOUNT</span><button type="button" id="betPanelPlus">+</button></div>
+  <button type="button" class="bet-confirm" id="betConfirm">CONFIRM</button>
+ </div>
 </div>
 </main>
 <script>
@@ -179,8 +222,23 @@ function draw(grid,wins,drop,spinning,goldenCells,replaceCells,replaceType,moves
 }
 function update(){
  $('balance').textContent=fmt(balance);$('bet').textContent=String(bet);
- $('betMinus').disabled=busy||bet<=1;$('betPlus').disabled=busy||bet>=1000000;
+ 
+ $('betCurrent').textContent=fmt(bet);
+ renderBetOptions();
 }
+const BET_OPTIONS=[1,2,3,5,10,15,20,50,100,200,300,400,500,600,700,800,900,1000];
+function renderBetOptions(){
+ const host=$('betOptions');if(!host)return;
+ host.innerHTML='';
+ BET_OPTIONS.forEach(amount=>{
+  const button=document.createElement('button');button.type='button';button.className='bet-option'+(amount===bet?' active':'');
+  button.textContent=amount.toLocaleString('en-US');button.disabled=busy||amount>balance;
+  button.addEventListener('click',()=>{if(busy||amount>balance)return;bet=amount;update();$('betOverlay').classList.remove('show');});
+  host.appendChild(button);
+ });
+}
+function openBetPicker(){if(busy)return;update();$('betOverlay').classList.add('show');}
+function closeBetPicker(){$('betOverlay').classList.remove('show');}
 function setCombo(value,isFree){
  const factor=isFree?2:1;
  const allowed=[1,2,3,5];
@@ -315,7 +373,7 @@ async function play(){
  const stake=bet;
  if(stake>1000000){$('status').textContent='সর্বোচ্চ বেট ১,০০,০০০';return}
  if(freeSpins<=0&&balance<stake){$('status').textContent='পর্যাপ্ত ব্যালেন্স নেই';auto=false;return}
- busy=true;$('spin').disabled=true;update();totalWin=0;$('win').textContent='';$('win').parentElement.classList.remove('show');$('status').textContent='Spin';
+ busy=true;$('spin').disabled=true;update();totalWin=0;$('cascadeWin').textContent='0.00';$('win').textContent='0.00';$('win').parentElement.classList.remove('show');$('status').textContent='Spin';
  try{
   const pending=request('/play',{gameId:gameId,betAmount:bet,betMultiplier:1,freeSpin:freeSpins>0,requestId}).then(value=>({value}),error=>({error}));
   // Keep the landed board untouched until the server returns the real result.
@@ -336,7 +394,10 @@ async function play(){
     }
     if(frame.type==='win'){
      highlightExisting(frame.wins||[]);
-     $('status').textContent='WINNING CARDS';
+     $('cascadeWin').textContent=fmt(frame.winAmount||0);
+     $('win').textContent=fmt(frame.totalWin||0);
+     $('win').parentElement.classList.add('show');
+     $('status').textContent='WIN +'+fmt(frame.winAmount||0)+' · TOTAL WIN '+fmt(frame.totalWin||0);
      await sleep(turbo?240:650);continue;
     }
     if(frame.type==='golden'){
@@ -369,7 +430,7 @@ async function play(){
    if(Array.isArray(result.finalGrid)&&result.finalGrid.length===20&&JSON.stringify(visibleGrid)!==JSON.stringify(result.finalGrid))draw(result.finalGrid);
   }
   setCombo(freeSpins>0?2:1,freeSpins>0);
-  totalWin=Math.max(0,Number(result.payout||0));if(totalWin>0){$('win').textContent=fmt(totalWin);$('win').parentElement.classList.add('show');}
+  totalWin=Math.max(0,Number(result.payout||0));$('cascadeWin').textContent=fmt(frames.filter(f=>f.type==='win').slice(-1)[0]?.winAmount||0);$('win').textContent=fmt(totalWin);if(totalWin>0||frames.some(f=>f.type==='win'))$('win').parentElement.classList.add('show');
   const awarded=Number(result.freeSpinAward||0);if(awarded>0)showFreeSpinOffer();
   $('status').textContent=(awarded?'🎉 SCATTER BONUS · +'+awarded+' FREE SPINS · ':result.freeSpin?'FREE SPIN · ':'')+(Number(result.payout||0)>0?'WIN · MAX COMBO ×'+Number(result.maxCascadeX||1)+' · '+Number(result.cascadeCount||0)+' CASCADES':'NO WIN · TRY AGAIN')+(freeSpins?' · FREE SPINS LEFT '+freeSpins:'');
  }catch(e){$('status').textContent=e.message;try{const d=await request('/me');balance=Number(d.user.balance||0);update();sendBalanceToParent()}catch(_){}}
@@ -398,10 +459,15 @@ $('freeStart').addEventListener('click',()=>{
 $('spin').addEventListener('click',()=>{auto=false;if(freeSpins>0&&!freeSpinReady){showFreeSpinOffer();return;}play()});
 $('auto').addEventListener('click',()=>{if(busy)return;auto=!auto;$('auto').style.background=auto?'radial-gradient(circle,#ffe58a,#a65a08)':'';if(auto)play()});
 $('turbo').addEventListener('click',()=>{turbo=!turbo;$('turbo').style.background=turbo?'radial-gradient(circle,#ffe58a,#a65a08)':''});
-$('betMinus').addEventListener('click',()=>{if(busy)return;bet=Math.max(1,bet-10);update()});
-$('betPlus').addEventListener('click',()=>{if(busy)return;bet=Math.min(1000000,bet+10);update()});
+$('betOpen').addEventListener('click',openBetPicker);
+$('betClose').addEventListener('click',closeBetPicker);
+$('betConfirm').addEventListener('click',closeBetPicker);
+$('betOverlay').addEventListener('click',event=>{if(event.target===$('betOverlay'))closeBetPicker();});
+$('betPanelMinus').addEventListener('click',()=>{if(busy)return;bet=Math.max(1,bet-10);update();});
+$('betPanelPlus').addEventListener('click',()=>{if(busy)return;bet=Math.min(1000000,bet+10);update();});
 window.addEventListener('beforeunload',()=>{auto=false});
 loadBalance();
+const jiliLoading=$('jiliLoading');if(jiliLoading){setTimeout(()=>{jiliLoading.classList.add('hide');setTimeout(()=>jiliLoading.remove(),220);},1000);}
 })();
 
 function startTk777WelcomeAudio(){window.parent.postMessage({type:'tk777-welcome-audio'},'*');}
