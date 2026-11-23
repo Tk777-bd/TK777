@@ -3,7 +3,7 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#02040b;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center}
-.game{width:100vw;height:100vh;height:100dvh;min-height:0;margin:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#050a19;padding:0;border:0;border-radius:0;box-shadow:none}
+.game{width:100vw;height:100vh;height:100dvh;min-height:0;margin:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#050a19;padding:0;border:0;border-radius:0;box-shadow:none;position:relative}
 .top{height:76px;flex:0 0 76px;position:relative;text-align:center;background:linear-gradient(180deg,#070a18 0%,#111528 72%,#281515 73%,#6e2d19 83%,#25100c 100%);border-bottom:3px solid #d28a36;box-shadow:0 4px 12px #000b}
 
 
@@ -87,9 +87,9 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;backgr
 .bet-adjust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;color:#e8c98e;font-size:10px;letter-spacing:.8px}
 .bet-adjust button{width:42px;height:34px;border:1px solid #e5bd68;border-radius:8px;background:linear-gradient(#9b672d,#4a2a13);color:#fff;font-size:21px;font-weight:900}
 .bet-confirm{width:100%;padding:12px;border:1px solid #fff0a3;border-radius:24px;background:linear-gradient(#fff0a8,#ffc33d 55%,#b96a12);color:#5c2807;font-weight:1000;letter-spacing:1px;box-shadow:0 3px 0 #713b0b,0 0 12px #ffca4b66}
-.win-popup{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);opacity:0}
+.win-popup{position:absolute;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:20px;background:transparent;backdrop-filter:none;opacity:0;pointer-events:none}
 .win-popup.show{display:flex;animation:winOverlayIn .38s ease-out forwards}
-.win-popup-panel{position:relative;overflow:hidden;width:min(86vw,320px);padding:28px 16px;text-align:center;border:3px solid #ffe28a;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#ffcf55 0,#8a4a13 24%,#32190c 62%,#100b10 100%);box-shadow:0 0 18px #ffbd35aa,0 0 55px #ff9d2877,0 12px 35px #000c;transform:translateY(35px) scale(.72);opacity:0;animation:winPanelIn .62s cubic-bezier(.16,.85,.25,1.18) forwards}
+.win-popup-panel{position:relative;overflow:hidden;width:min(86vw,320px);padding:28px 16px;text-align:center;border:3px solid #fff0a6;border-radius:20px;background:linear-gradient(145deg,#fff4b8 0%,#e6a92e 12%,#9a570b 28%,#4b2608 48%,#c88718 68%,#5a2b06 84%,#f7d875 100%);box-shadow:inset 0 0 0 2px #7a4308,inset 0 0 22px #fff0a066,0 0 18px #ffdf70,0 0 55px #ffae2a99,0 12px 35px #000c;transform:translateY(35px) scale(.72);opacity:0;animation:winPanelIn .62s cubic-bezier(.16,.85,.25,1.18) forwards}
 .win-popup-panel:before{content:"";position:absolute;inset:-60% -80%;pointer-events:none;background:linear-gradient(110deg,transparent 42%,#fff8 50%,transparent 58%);transform:translateX(-65%) rotate(12deg);animation:winShine 1.15s .25s ease-out forwards}
 .win-popup-title{position:relative;margin:0 0 13px;color:#fff0a0;font:bold 31px Georgia,serif;letter-spacing:1.5px;text-shadow:0 2px 3px #5b2100,0 0 12px #ffb52a,0 0 25px #ff9b20;animation:winTitlePop .55s .18s cubic-bezier(.2,.9,.25,1.3) both}
 .win-popup-amount{position:relative;color:#fff;font:1000 28px Arial,sans-serif;font-variant-numeric:tabular-nums;text-shadow:0 2px 5px #000,0 0 12px #ffe58a;min-height:34px}
