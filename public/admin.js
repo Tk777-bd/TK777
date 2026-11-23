@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s);let token=localStorage.getItem('tk777_admin
 const api=async(path,body=null,method=null)=>{const r=await fetch('/api'+path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');return d};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function frame(content){$('#admin').innerHTML=`<div class="admin-wrap"><header class="top" style="position:static;border-radius:10px"><div class="brand">TK777 <small>ADMIN PANEL</small></div><button onclick="location.href='/'">User Site ↗</button></header>${content}</div>`}
-function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">প্রথমবার ADMIN_EMAIL ও ADMIN_PASSWORD Worker secrets দিয়ে bootstrap করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
+function login(){frame(`<div class="card" style="max-width:480px;margin:40px auto"><h2>Admin Login</h2><p class="muted">Cloudflare ADMIN_EMAIL এবং ADMIN_PASSWORD secrets-এ সেট করা তথ্য দিয়ে প্রবেশ করুন।</p><form id="login"><input class="field" name="email" placeholder="Admin Email" type="email" required><input class="field" name="password" placeholder="Admin password" type="password" required><input class="field" name="username" placeholder="Admin display name"><button class="primary">Secure Login / Bootstrap</button></form><div id="msg"></div></div>`);$('#login').onsubmit=async e=>{e.preventDefault();try{const d=Object.fromEntries(new FormData(e.target));const r=await api('/admin/bootstrap',d);token=r.token;localStorage.setItem('tk777_admin_token',token);admin=r.user;dashboard()}catch(err){$('#msg').textContent=err.message}}}
 async function dashboard(){try{admin=(await api('/me')).user;if(admin.role!=='admin')throw Error('Admin permission নেই');const d=await api('/admin/overview');frame(`<h2>Dashboard</h2><div class="admin-grid"><div class="stat">Users<b>${d.users}</b></div><div class="stat">Games<b>${d.games}</b></div><div class="stat">Categories<b>${d.categories}</b></div><div class="stat">Rounds<b>${d.rounds}</b></div></div><div class="admin-nav"><button onclick="userManagement()">ইউজার ম্যানেজমেন্ট</button><button onclick="users()">Users & Free Credits</button><button onclick="coinRequests()">Coin Requests</button><button onclick="referralSettings()">Referral System</button><button onclick="demoDepositRequests()">Demo Deposit Requests</button><button onclick="pageTextEditor()">Deposit & Withdrawal Page Editor</button><button onclick="withdrawRequests()">Demo Withdrawal Requests</button><button onclick="demoNumberSettings()">নাম্বার চেঞ্জ</button><button onclick="cats()">Categories</button><button onclick="games()">Games</button><button onclick="gameNameEdit()">গেম নাম এডিট</button><button onclick="aviatorControl()">Aviator Control</button><button onclick="banners()">Home Banners</button><button onclick="promotionSettings()">Promotion</button><button onclick="settings()">Settings</button><button onclick="logout()">Logout</button></div><div class="card"><h3>Admin Control Center</h3><p>সাইটের ক্যাটাগরি, গেম, ছবি, HTML গেম ফাইল এবং ইউজার অ্যাকাউন্ট এখান থেকে নিয়ন্ত্রণ করুন।</p></div><div id="view"></div>`)}catch(e){login()}}
 async function loadAviatorControl(){
   if(!$('#aviatorCurrent'))return;
@@ -126,6 +126,26 @@ async function games(){
  <input class="field" name="sort_order" id="gameSort" type="number" placeholder="Sort order">
  <button class="primary">Save Game</button></form></div>
   <div class="card"><h3>আগের গেমগুলো — Delete Control</h3><p class="muted">Delete করলে গেমটি ইউজার সাইট থেকে লুকানো হবে; পুরোনো রাউন্ড/হিস্ট্রি অক্ষত থাকবে।</p>${d.games.map(g=>`<div class="row" style="justify-content:space-between;margin:8px 0"><span>${esc(g.name)} · ${esc(g.game_type)} · ${g.active ? 'চালু' : 'মুছে রাখা'}</span><span>${g.active ? `<button type="button" onclick="editGame('${esc(g.id)}')">Edit</button> <button type="button" onclick="delGame('${esc(g.id)}')">Delete</button>` : 'Deleted'}</span></div>`).join('')}</div>`;
+
+ // Universal image URL controls for every database game
+ $('#view').insertAdjacentHTML('afterbegin',`<div class="card"><h3>সব গেমের Image URL নিয়ন্ত্রণ</h3>
+ <p class="muted">Aviator, Super Ace, Live এবং Games তালিকার প্রতিটি গেমের ছবি এখানে পরিবর্তন করতে পারবেন। HTTPS Image URL দিন; খালি রাখলে ডিফল্ট ছবি থাকবে।</p>
+ ${d.games.map(g=>`<div style="margin:12px 0;padding:8px;border-bottom:1px solid #ffffff22"><label>${esc(g.name)} · ${esc(g.game_type)} — Image URL</label><input class="field all-game-image-url" data-game-id="${esc(g.id)}" type="url" maxlength="1000" placeholder="https://example.com/game-image.jpg" value="${esc(g.image_url||'')}"></div>`).join('')}
+ <button type="button" class="primary" id="saveAllGameImages">সব গেমের Image URL Save</button><div id="allGameImageMsg" class="muted"></div></div>`);
+ $('#saveAllGameImages').onclick=async()=>{
+  const msg=$('#allGameImageMsg');msg.textContent='Saving…';
+  try{
+   for(const input of document.querySelectorAll('.all-game-image-url')){
+    const g=d.games.find(x=>x.id===input.dataset.gameId);
+    if(!g)continue;
+    const image_url=input.value.trim();
+    if(image_url&&!/^https:\/\//i.test(image_url))throw Error(g.name+': শুধু HTTPS Image URL দিন');
+    await api('/admin/games',{id:g.id,name:g.name,category_id:g.category_id||'',image_url,game_type:g.game_type,html_content:g.html_content||'',sort_order:g.sort_order||0});
+   }
+   msg.textContent='সব গেমের Image URL সংরক্ষণ হয়েছে। User Site রিফ্রেশ করুন।';
+  }catch(e){msg.textContent=e.message;}
+ };
+
 
  const slotPosterItems=[
   ['slot-display-super-elements','Super Elements'],['slot-display-azteca-legacy','Azteca Legacy'],['slot-display-flyx','FlyX'],
